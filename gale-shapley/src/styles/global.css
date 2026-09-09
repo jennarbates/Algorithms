@@ -429,6 +429,137 @@ body {
   font-weight: 600;
 }
 
+/* --- the challenge ------------------------------------------------------ */
+
+.challenge {
+  margin-top: 34px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 18px 18px;
+}
+
+/* This is the centrepiece of the page, so it does not get the same quiet
+   small-caps label as the other sections. */
+.challenge .section-title {
+  margin: 18px 0 8px;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--ink);
+}
+
+.challenge__prompt {
+  margin: 0 0 16px;
+  font-size: 15px;
+  color: var(--ink);
+  max-width: 66ch;
+}
+
+.challenge__pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+}
+
+.picker__label {
+  display: block;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+
+.picker__row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.picker__btn {
+  padding: 4px;
+  line-height: 0;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.picker__btn:hover {
+  border-color: var(--border-strong);
+}
+
+.picker__btn--on {
+  border-color: var(--live);
+  background: color-mix(in srgb, var(--live) 16%, transparent);
+}
+
+.challenge__empty {
+  margin: 18px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-faint);
+}
+
+.verdict {
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.bubble {
+  position: relative;
+  background: var(--surface-sunk);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+}
+
+.bubble__quote {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.bubble__detail {
+  margin-top: 3px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+.verdict__outcome {
+  margin: 4px 0 0;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 650;
+}
+
+/* Every attempt on a finished board lands here, and it should feel like a
+   closed door rather than an error. */
+.verdict__outcome--holds {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.verdict__outcome--breaks {
+  color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--bad) 40%, transparent);
+}
+
+.verdict__outcome--void {
+  color: var(--ink-faint);
+  background: var(--surface-sunk);
+  border: 1px dashed var(--border-strong);
+  font-weight: 500;
+}
+
+.challenge__tally {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
 .footnote {
   margin-top: 34px;
   font-size: 12.5px;

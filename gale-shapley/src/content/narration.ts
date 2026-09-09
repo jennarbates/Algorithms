@@ -1,4 +1,5 @@
 import type { EngineState, StepEvent } from '../core/engine';
+import type { PairVerdict } from '../core/stability';
 import type { Instance } from '../core/types';
 
 /**
@@ -121,6 +122,110 @@ export function narrationText(instance: Instance, narration: Narration): string 
       return found?.name ?? segment.id;
     })
     .join('');
+}
+
+// ---------------------------------------------------------------------------
+// The challenge
+// ---------------------------------------------------------------------------
+
+/**
+ * Two speech bubbles and a verdict, for any pair a reader picks.
+ *
+ * This is the page's centrepiece. Rather than announcing that the result holds,
+ * the page dares the reader to break it, and every attempt comes back with one
+ * side saying they are happy where they are.
+ *
+ * "It takes two" is the whole definition of the thing, in three words, with no
+ * vocabulary to learn first. Everything else about the concept follows from it.
+ */
+export interface PairExplanation {
+  readonly studentQuote: string;
+  readonly studentDetail: readonly NarrationSegment[];
+  readonly schoolQuote: string;
+  readonly schoolDetail: readonly NarrationSegment[];
+  readonly outcome: string;
+  readonly blocks: boolean;
+  readonly alreadyTogether: boolean;
+}
+
+export function explainPair(verdict: PairVerdict): PairExplanation {
+  const S = (id: string): NarrationSegment => ({ kind: 'party', id, party: 'student' });
+  const C = (id: string): NarrationSegment => ({ kind: 'party', id, party: 'school' });
+
+  if (verdict.alreadyTogether) {
+    return {
+      studentQuote: '',
+      studentDetail: [],
+      schoolQuote: '',
+      schoolDetail: [],
+      outcome: 'These two already have each other. Pick two who do not.',
+      blocks: false,
+      alreadyTogether: true,
+    };
+  }
+
+  const studentDetail: NarrationSegment[] =
+    verdict.studentsSchool === null
+      ? [S(verdict.student), text(' has nowhere yet, so anywhere is an improvement.')]
+      : verdict.studentWouldSwitch
+        ? [
+            S(verdict.student),
+            text(' is at '),
+            C(verdict.studentsSchool),
+            text(', and would rather have '),
+            C(verdict.school),
+            text('.'),
+          ]
+        : [
+            S(verdict.student),
+            text(' is at '),
+            C(verdict.studentsSchool),
+            text(', and puts it above '),
+            C(verdict.school),
+            text('.'),
+          ];
+
+  const schoolDetail: NarrationSegment[] =
+    verdict.schoolsStudent === null
+      ? [C(verdict.school), text(' has nobody yet, so anyone is an improvement.')]
+      : verdict.schoolWouldSwitch
+        ? [
+            C(verdict.school),
+            text(' has '),
+            S(verdict.schoolsStudent),
+            text(', and would rather have '),
+            S(verdict.student),
+            text('.'),
+          ]
+        : [
+            C(verdict.school),
+            text(' has '),
+            S(verdict.schoolsStudent),
+            text(', and puts them above '),
+            S(verdict.student),
+            text('.'),
+          ];
+
+  return {
+    studentQuote: verdict.studentWouldSwitch ? 'I would go.' : 'I am happy where I am.',
+    schoolQuote: verdict.schoolWouldSwitch
+      ? 'We would take them.'
+      : 'We are happy with who we have.',
+    studentDetail,
+    schoolDetail,
+    outcome: verdict.blocks
+      ? 'Both of them would move. This pairing can still come apart.'
+      : 'Nothing happens. It takes two.',
+    blocks: verdict.blocks,
+    alreadyTogether: false,
+  };
+}
+
+/** The framing above the challenge, which changes once the process is over. */
+export function challengePrompt(state: EngineState): string {
+  return state.phase === 'done'
+    ? 'Now try to break it. Find two people who would BOTH rather have each other than what they ended up with.'
+    : 'Test any pair while this is still running. Right now some of them really would come apart.';
 }
 
 /**

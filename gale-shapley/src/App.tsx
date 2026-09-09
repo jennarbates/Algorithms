@@ -6,6 +6,7 @@ import { boardStatus } from './content/narration';
 import { ActionBar } from './components/ActionBar';
 import { AskerPanel } from './components/AskerPanel';
 import { NarrationLog } from './components/NarrationLog';
+import { PairChallenge } from './components/PairChallenge';
 import { ReceiverPanel } from './components/ReceiverPanel';
 import type { Side } from './core/types';
 
@@ -27,13 +28,20 @@ const INSTANCE = presetById('opener');
 export function App() {
   const [askingSide, setAskingSide] = useState<Side>('students');
   const [state, setState] = useState<EngineState>(() => createEngine(INSTANCE, 'students'));
+  /** Bumped whenever a fresh run starts, so the challenge forgets what was tried. */
+  const [runId, setRunId] = useState(0);
 
   const onStep = useCallback(() => setState((current) => step(current)), []);
-  const onReset = useCallback(() => setState(createEngine(INSTANCE, askingSide)), [askingSide]);
+
+  const onReset = useCallback(() => {
+    setState(createEngine(INSTANCE, askingSide));
+    setRunId((n) => n + 1);
+  }, [askingSide]);
 
   const switchSide = useCallback((side: Side) => {
     setAskingSide(side);
     setState(createEngine(INSTANCE, side));
+    setRunId((n) => n + 1);
   }, []);
 
   const settled = state.phase === 'done';
@@ -78,6 +86,8 @@ export function App() {
         <AskerPanel instance={INSTANCE} state={state} />
         <ReceiverPanel instance={INSTANCE} state={state} />
       </div>
+
+      <PairChallenge key={runId} instance={INSTANCE} state={state} />
 
       <h2 className="section-title">What has happened so far</h2>
       <NarrationLog state={state} />
