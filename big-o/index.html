@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Big-O Building</title>
+    <meta
+      name="description"
+      content="The definition of Big-O, T(n) <= c f(n) for all n > n0, told as a building: the small terms jump off the roof, and f(n) can only get back up if it brings c."
+    />
+    <style>
+:root{
+  --paper:#EDF0F3; --paper2:#E2E7EC; --ink:#1B2A41; --ink2:#4E5D70; --line:#B9C3CE;
+  --roof:#2E7D5B; --roof-soft:#D7EBE1; --fall:#C8432B; --fall-soft:#F5DCD6;
+  --brass:#B8862B; --brass-soft:#F1E6CB; --sky:#DCE5EE; --dirt:#CFC6B8; --dirt2:#B9AE9C;
+  --chip-bg:#FFFFFF;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F161E; --paper2:#182230; --ink:#DCE3EA; --ink2:#95A3B3; --line:#33424F;
+    --roof:#5CBF93; --roof-soft:#173A2C; --fall:#E8705A; --fall-soft:#4A211A;
+    --brass:#D9AA4E; --brass-soft:#3E3116; --sky:#1A2635; --dirt:#2B2621; --dirt2:#3A332B;
+    --chip-bg:#1E2A38;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F161E; --paper2:#182230; --ink:#DCE3EA; --ink2:#95A3B3; --line:#33424F;
+  --roof:#5CBF93; --roof-soft:#173A2C; --fall:#E8705A; --fall-soft:#4A211A;
+  --brass:#D9AA4E; --brass-soft:#3E3116; --sky:#1A2635; --dirt:#2B2621; --dirt2:#3A332B;
+  --chip-bg:#1E2A38;
+}
+*{box-sizing:border-box}
+body{margin:0;-webkit-font-smoothing:antialiased;background:var(--paper);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5;padding-inline:20px;padding-block:28px 56px}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-weight:700;font-size:clamp(28px,4vw,42px);line-height:1.05;margin:0 0 6px;text-wrap:balance;letter-spacing:-.01em}
+.lede{color:var(--ink2);margin:0 0 22px;max-width:62ch}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.rule{display:flex;flex-wrap:wrap;gap:10px 28px;align-items:baseline;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 0;margin-bottom:22px}
+.rule .mono{font-size:18px;font-weight:600}
+.rule .eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+.stage{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:stretch}
+@media (max-width:760px){.stage{grid-template-columns:1fr}}
+.panel{background:var(--paper2);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.panel svg{display:block;width:100%;height:auto}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;padding:10px 14px 0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+.caption{margin-top:20px;display:grid;grid-template-columns:auto 1fr;gap:6px 18px;align-items:start}
+@media (max-width:560px){.caption{grid-template-columns:1fr}}
+.stepnum{font-weight:700;font-size:44px;line-height:1;color:var(--ink2);font-variant-numeric:tabular-nums}
+.caption h2{font-weight:700;font-size:24px;margin:2px 0 6px;line-height:1.15;text-wrap:balance}
+.caption p{margin:0 0 8px;max-width:66ch}
+.pair{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin-top:8px;padding:10px 14px;border-left:3px solid var(--line);font-size:15px}
+.pair .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);padding-top:3px}
+.pair .mono{font-size:15px}
+.controls{display:flex;gap:10px;align-items:center;margin-top:22px;flex-wrap:wrap}
+button{font:inherit;font-weight:600;background:var(--ink);color:var(--paper);border:0;border-radius:10px;padding:9px 16px;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:disabled{opacity:.35;cursor:default}
+button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.dots{display:flex;gap:6px;margin-left:auto}
+.dots span{width:9px;height:9px;border-radius:50%;background:var(--line);transition:background .3s}
+.dots span.on{background:var(--ink)}
+.hint{font-size:13px;color:var(--ink2);margin-top:8px}
+/* SVG pieces */
+.chip{transition:transform 1.1s cubic-bezier(.4,0,.2,1),opacity .6s}
+.chip rect{fill:var(--chip-bg);stroke:var(--ink);stroke-width:1.5}
+.chip text{fill:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;font-weight:600;text-anchor:middle;dominant-baseline:central}
+.chip.fall rect{stroke:var(--fall)} .chip.fall text{fill:var(--fall)}
+.chip.roof rect{stroke:var(--roof);fill:var(--roof-soft)} .chip.roof text{fill:var(--roof)}
+.chip.dead rect{stroke:var(--fall);fill:var(--fall-soft)}
+.chip.dead text{fill:var(--fall)}
+.chip.dead .eyes{opacity:1}
+.eyes{opacity:0;fill:none;stroke:var(--fall);stroke-width:1.5;transition:opacity .3s 1s}
+.car{transition:transform 1.4s cubic-bezier(.45,0,.2,1)}
+.label{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;fill:var(--ink2)}
+.label.big{font-size:14px;fill:var(--ink);font-weight:600}
+.roofline{fill:var(--roof-soft);stroke:var(--roof)}
+.marker{opacity:0;transition:opacity .5s}
+.marker.on{opacity:1}
+/* chart */
+.ax{stroke:var(--line);stroke-width:1}
+.curve{fill:none;stroke-width:2.5;transition:opacity .5s,stroke-width .3s}
+.curve.dim{opacity:.22}
+.tlabel{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;fill:var(--ink2)}
+.tlabel.strong{fill:var(--ink);font-weight:600;font-size:12px}
+@media (prefers-reduced-motion:reduce){.chip,.car,.marker,.curve{transition:none}}
+
+.back{display:inline-block;font-size:13px;color:var(--ink2);text-decoration:none;margin-bottom:18px}
+.back:hover{color:var(--ink);text-decoration:underline}
+.foot{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2);max-width:70ch}
+.foot a{color:inherit}
+</style>
+  </head>
+  <body>
+
+<div class="wrap">
+  <a class="back" href="../">&larr; All visuals</a>
+  <h1>The Big-O Building</h1>
+  <p class="lede">A five-scene story for the definition of Big-O: what gets thrown off the roof, what has to stay up there, and why f(n) is stuck in the basement unless it brings c with it.</p>
+
+  <div class="rule">
+    <span class="eyebrow">The rule</span>
+    <span class="mono">T(n) ≤ c·f(n) for all n &gt; n₀</span>
+    <span class="eyebrow">Our example</span>
+    <span class="mono">T(n) = 14n² + 4n + 6</span>
+  </div>
+
+  <div class="stage">
+    <div class="panel">
+      <div class="panel-head"><span>Section view</span><span id="scene-tag">Roof</span></div>
+      <svg viewBox="0 0 560 560" role="img" aria-label="A building with a roof, street and basement; terms of T(n) move between them">
+        <!-- sky -->
+        <rect x="0" y="0" width="560" height="380" fill="var(--sky)"/>
+        <!-- ground / dirt -->
+        <rect x="0" y="380" width="560" height="180" fill="var(--dirt)"/>
+        <line x1="0" y1="380" x2="560" y2="380" stroke="var(--ink)" stroke-width="2"/>
+        <text x="14" y="398" class="label">street level</text>
+
+        <!-- building -->
+        <rect x="200" y="110" width="220" height="270" fill="var(--paper)" stroke="var(--ink)" stroke-width="2"/>
+        <!-- floors -->
+        <g stroke="var(--line)" stroke-width="1">
+          <line x1="200" y1="164" x2="420" y2="164"/><line x1="200" y1="218" x2="420" y2="218"/>
+          <line x1="200" y1="272" x2="420" y2="272"/><line x1="200" y1="326" x2="420" y2="326"/>
+        </g>
+        <!-- windows -->
+        <g fill="var(--sky)" stroke="var(--line)">
+          <rect x="216" y="124" width="26" height="26"/><rect x="258" y="124" width="26" height="26"/><rect x="300" y="124" width="26" height="26"/><rect x="342" y="124" width="26" height="26"/>
+          <rect x="216" y="178" width="26" height="26"/><rect x="258" y="178" width="26" height="26"/><rect x="300" y="178" width="26" height="26"/><rect x="342" y="178" width="26" height="26"/>
+          <rect x="216" y="232" width="26" height="26"/><rect x="258" y="232" width="26" height="26"/><rect x="300" y="232" width="26" height="26"/><rect x="342" y="232" width="26" height="26"/>
+          <rect x="216" y="286" width="26" height="26"/><rect x="258" y="286" width="26" height="26"/><rect x="300" y="286" width="26" height="26"/><rect x="342" y="286" width="26" height="26"/>
+          <rect x="216" y="340" width="26" height="26"/><rect x="258" y="340" width="26" height="26"/><rect x="300" y="340" width="26" height="26"/>
+        </g>
+        <!-- roof slab -->
+        <rect x="192" y="104" width="236" height="8" class="roofline" stroke-width="1.5"/>
+        <text x="14" y="60" class="label">roof: the upper</text><text x="14" y="76" class="label">bound lives here</text><line x1="120" y1="70" x2="190" y2="104" stroke="var(--line)"/>
+
+        <!-- basement -->
+        <rect x="200" y="380" width="220" height="150" fill="var(--dirt2)" stroke="var(--ink)" stroke-width="2" stroke-dasharray="5 4"/>
+        <text x="210" y="522" class="label">basement</text>
+
+        <!-- elevator shaft -->
+        <rect x="384" y="70" width="36" height="460" fill="var(--paper2)" stroke="var(--brass)" stroke-width="1.5"/>
+        <g stroke="var(--brass)" stroke-width="1" stroke-dasharray="2 4"><line x1="402" y1="70" x2="402" y2="530"/></g>
+        <text x="424" y="84" class="label">elevator</text>
+        <!-- elevator car (transforms in JS) -->
+        <g id="car" class="car">
+          <rect x="386" y="62" width="32" height="48" fill="var(--brass-soft)" stroke="var(--brass)" stroke-width="2"/>
+          <line x1="402" y1="62" x2="402" y2="110" stroke="var(--brass)" stroke-width="1"/>
+        </g>
+
+        <!-- n0 marker at street -->
+        <g id="n0mark" class="marker">
+          <line x1="440" y1="380" x2="540" y2="380" stroke="var(--roof)" stroke-width="3"/>
+          <text x="440" y="368" class="label big">n &gt; n₀ = 5</text>
+          <text x="440" y="400" class="label">15n² clears T(n)</text>
+        </g>
+
+        <!-- plus signs on the roof -->
+        <text id="plus1" x="297" y="88" class="label big" text-anchor="middle">+</text>
+        <text id="plus2" x="355" y="88" class="label big" text-anchor="middle">+</text>
+        <text id="dot" x="248" y="88" class="label big" text-anchor="middle" opacity="0">·</text>
+
+        <!-- chips, each drawn around its own origin -->
+        <g id="chipC" class="chip">
+          <rect x="-20" y="-15" width="40" height="30" rx="4"/><text>14</text>
+        </g>
+        <g id="chipF" class="chip">
+          <rect x="-20" y="-15" width="40" height="30" rx="4"/><text>n²</text>
+        </g>
+        <g id="chip4n" class="chip">
+          <rect x="-20" y="-15" width="40" height="30" rx="4"/><text>4n</text>
+          <g class="eyes"><path d="M-14 -9 l5 5 m0 -5 l-5 5"/><path d="M9 -9 l5 5 m0 -5 l-5 5"/></g>
+        </g>
+        <g id="chip6" class="chip">
+          <rect x="-20" y="-15" width="40" height="30" rx="4"/><text>6</text>
+          <g class="eyes"><path d="M-14 -9 l5 5 m0 -5 l-5 5"/><path d="M9 -9 l5 5 m0 -5 l-5 5"/></g>
+        </g>
+      </svg>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span>The real curves</span><span>n from 0 to 12</span></div>
+      <svg id="chart" viewBox="0 0 400 560" role="img" aria-label="Plot of T(n), 15 n squared, and n squared"></svg>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="stepnum" id="stepnum">1</div>
+    <div>
+      <h2 id="title"></h2>
+      <p id="body"></p>
+      <div class="pair">
+        <span class="k">Symbols</span><span class="mono" id="sym"></span>
+        <span class="k">Numbers</span><span class="mono" id="num"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="ghost" id="prev">Back</button>
+    <button id="next">Next scene</button>
+    <div class="dots" id="dots"></div>
+  </div>
+  <p class="hint">Arrow keys also step through the scenes.</p>
+
+  <footer class="foot">
+    The building is a metaphor; the plot on the right is the real thing. Every claim in the captions
+    can be checked against it: 15n² is above T(n) exactly from n = 6 onward, and n² alone never is.
+    Source on <a href="https://github.com/jennarbates/Algorithms">GitHub</a>.
+  </footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const chips = {C:$('chipC'), F:$('chipF'), a:$('chip4n'), b:$('chip6')};
+  const car = $('car');
+
+  // Positions (chip centers). Roof top is y=104, so a standing chip sits at y=89.
+  const ROOF = {C:[226,89], F:[268,89], a:[326,89], b:[384,89]};
+  const CAR = {roofY:0, basementY:420};       // car rect drawn at y 62..110; basement floor 530
+  const IN_CAR = {C:[402,86], F:[402,86]};    // chip inside car at roof height
+  const DEAD = {a:[92,360,-92], b:[150,361,80]};
+  const BASE = {F:[402,506], C:[402,506]};
+
+  function place(chip, x, y, r){ chip.style.transform = `translate(${x}px,${y}px) rotate(${r||0}deg)`; }
+  function cls(chip, add, remove){ (remove||[]).forEach(c=>chip.classList.remove(c)); (add||[]).forEach(c=>chip.classList.add(c)); }
+
+  const scenes = [
+    { tag:'Roof', title:'T(n) stands on the roof',
+      body:'T(n) is the running time we actually measured. Every term of it is up on the roof. The Big-O question is: which single, simpler function f(n) can we put up there instead, and still promise it stays above T(n)?',
+      sym:'T(n) = (leading term) + (lower order terms)', num:'T(n) = 14n² + 4n + 6',
+      chart:['T'],
+      run(){ place(chips.C,...ROOF.C); place(chips.F,...ROOF.F); place(chips.a,...ROOF.a); place(chips.b,...ROOF.b);
+        Object.values(chips).forEach(c=>cls(c,[],['fall','dead','roof'])); chips.C.querySelector('text').textContent='14';
+        $('plus1').setAttribute('opacity',1); $('plus2').setAttribute('opacity',1); $('dot').setAttribute('opacity',0);
+        car.style.transform='translateY(0)'; $('n0mark').classList.remove('on'); } },
+    { tag:'Street', title:'The lower order terms jump',
+      body:'As n grows, 4n and 6 become a rounding error next to 14n². Big-O only cares about the roof for large n, so those terms leave the building the fast way. They land on the street and stay there.',
+      sym:'lower order terms → dropped', num:'4n + 6 is gone; 14n² remains',
+      chart:['T','lower'],
+      run(){ place(chips.C,...ROOF.C); place(chips.F,...ROOF.F); place(chips.a,...DEAD.a); place(chips.b,...DEAD.b);
+        cls(chips.a,['fall','dead'],[]); cls(chips.b,['fall','dead'],[]); cls(chips.C,[],['roof']); cls(chips.F,[],['roof']);
+        chips.C.querySelector('text').textContent='14';
+        $('plus1').setAttribute('opacity',0); $('plus2').setAttribute('opacity',0); $('dot').setAttribute('opacity',0);
+        car.style.transform='translateY(0)'; $('n0mark').classList.remove('on'); } },
+    { tag:'Roof', title:'What stays up is c·f(n)',
+      body:'The survivor splits into a constant c and a shape f(n) = n². But 14n² alone is always a little below T(n), since 4n + 6 is positive. So c has to grow just enough to cover for the dead terms: c = 15 works once n² ≥ 4n + 6, which is true from n = 6 on. That gives n₀ = 5.',
+      sym:'T(n) ≤ c·f(n) for all n > n₀', num:'14n² + 4n + 6 ≤ 15·n² for all n > 5',
+      chart:['T','cf'],
+      run(){ place(chips.C,...ROOF.C); place(chips.F,...ROOF.F); place(chips.a,...DEAD.a); place(chips.b,...DEAD.b);
+        cls(chips.C,['roof'],[]); cls(chips.F,['roof'],[]); chips.C.querySelector('text').textContent='15';
+        $('plus1').setAttribute('opacity',0); $('plus2').setAttribute('opacity',0); $('dot').setAttribute('opacity',1);
+        car.style.transform='translateY(0)'; $('n0mark').classList.add('on'); } },
+    { tag:'Basement', title:'f(n) alone rides the elevator down',
+      body:'Try to send f(n) up without c. n² by itself is smaller than 14n² + 4n + 6 for every single n, so it cannot sit above T(n). It takes the elevator all the way to the basement, lower than even the terms that jumped. f(n) has the right shape for the bound, but by itself it is the wrong size.',
+      sym:'f(n) is not ≥ T(n) on its own', num:'n² < 14n² + 4n + 6 for every n',
+      chart:['T','f'],
+      run(){ place(chips.C,...ROOF.C); place(chips.F,...BASE.F); place(chips.a,...DEAD.a); place(chips.b,...DEAD.b);
+        cls(chips.F,['fall'],['roof']); cls(chips.C,['roof'],[]); chips.C.querySelector('text').textContent='15';
+        $('dot').setAttribute('opacity',0);
+        car.style.transform=`translateY(${CAR.basementY}px)`; $('n0mark').classList.remove('on'); } },
+    { tag:'Roof', title:'With c, f(n) is back on top',
+      body:'Multiply by the constant and the same shape rises straight back to the roof. That is the whole definition: f(n) is an asymptotic upper bound on T(n) precisely because some fixed c and some n₀ exist that put c·f(n) above T(n) forever after. The constant is the elevator ticket.',
+      sym:'T(n) = O(f(n))  ⇔  ∃ c, n₀ : T(n) ≤ c·f(n) for all n > n₀', num:'14n² + 4n + 6 = O(n²)  with c = 15, n₀ = 5',
+      chart:['T','cf','f'],
+      run(){ place(chips.C,...ROOF.C); place(chips.F,...ROOF.F); place(chips.a,...DEAD.a); place(chips.b,...DEAD.b);
+        cls(chips.F,['roof'],['fall']); cls(chips.C,['roof'],[]); chips.C.querySelector('text').textContent='15';
+        $('dot').setAttribute('opacity',1);
+        car.style.transform='translateY(0)'; $('n0mark').classList.add('on'); } }
+  ];
+
+  // ---- chart ----
+  const W=400,H=560,L=46,R=16,T=28,B=44;
+  const N=12, YMAX=2300;
+  const sx=n=>L+(W-L-R)*n/N, sy=y=>H-B-(H-T-B)*y/YMAX;
+  const fT=n=>14*n*n+4*n+6, fcf=n=>15*n*n, ff=n=>n*n, flow=n=>4*n+6;
+  function path(fn){ let d=''; for(let i=0;i<=N*4;i++){const n=i/4; d+=(i?'L':'M')+sx(n).toFixed(1)+' '+sy(fn(n)).toFixed(1)+' ';} return d; }
+  const chart=$('chart');
+  let svg='';
+  for(let y=0;y<=2000;y+=500){ svg+=`<line class="ax" x1="${L}" y1="${sy(y)}" x2="${W-R}" y2="${sy(y)}"/><text class="tlabel" x="${L-6}" y="${sy(y)+4}" text-anchor="end">${y}</text>`; }
+  for(let n=0;n<=N;n+=2){ svg+=`<text class="tlabel" x="${sx(n)}" y="${H-B+16}" text-anchor="middle">${n}</text>`; }
+  svg+=`<line class="ax" x1="${L}" y1="${sy(0)}" x2="${W-R}" y2="${sy(0)}"/><line class="ax" x1="${L}" y1="${T}" x2="${L}" y2="${sy(0)}"/>`;
+  svg+=`<text class="tlabel" x="${W-R}" y="${H-B+32}" text-anchor="end">n</text>`;
+  svg+=`<g id="n0line"><line x1="${sx(5)}" y1="${T}" x2="${sx(5)}" y2="${sy(0)}" stroke="var(--roof)" stroke-dasharray="4 4"/><text class="tlabel strong" x="${sx(5)+5}" y="${T+12}" fill="var(--roof)">n₀ = 5</text></g>`;
+  svg+=`<path id="cv-lower" class="curve" stroke="var(--fall)" stroke-dasharray="3 3" d="${path(flow)}"/>`;
+  svg+=`<path id="cv-f" class="curve" stroke="var(--brass)" d="${path(ff)}"/>`;
+  svg+=`<path id="cv-cf" class="curve" stroke="var(--roof)" d="${path(fcf)}"/>`;
+  svg+=`<path id="cv-T" class="curve" stroke="var(--ink)" d="${path(fT)}"/>`;
+  svg+=`<text class="tlabel strong" x="${sx(9.6)}" y="${sy(fT(9.6))+30}" text-anchor="end">T(n) = 14n²+4n+6</text>`;
+  svg+=`<text class="tlabel strong" x="${sx(9.2)}" y="${sy(fcf(9.2))-14}" text-anchor="end" fill="var(--roof)">c·f(n) = 15n²</text>`;
+  svg+=`<text class="tlabel strong" x="${sx(12)}" y="${sy(ff(12))-6}" text-anchor="end" fill="var(--brass)">n² alone</text>`;
+  svg+=`<text class="tlabel" x="${sx(12)}" y="${sy(flow(12))+14}" text-anchor="end" fill="var(--fall)">4n+6</text>`;
+  chart.innerHTML=svg;
+  function showCurves(keys){ ['T','cf','f','lower'].forEach(k=>$('cv-'+k).classList.toggle('dim',!keys.includes(k))); $('n0line').style.opacity = keys.includes('cf')?1:.25; }
+
+  // ---- stepping ----
+  let i=0;
+  const dots=$('dots'); scenes.forEach((_,k)=>{const s=document.createElement('span'); s.addEventListener('click',()=>go(k)); dots.appendChild(s);});
+  function go(k){ i=Math.max(0,Math.min(scenes.length-1,k)); const s=scenes[i];
+    s.run(); showCurves(s.chart);
+    $('stepnum').textContent=i+1; $('title').textContent=s.title; $('body').textContent=s.body; $('sym').textContent=s.sym; $('num').textContent=s.num; $('scene-tag').textContent=s.tag;
+    [...dots.children].forEach((d,k2)=>d.classList.toggle('on',k2===i));
+    $('prev').disabled=i===0; $('next').textContent = i===scenes.length-1 ? 'Start over' : 'Next scene';
+  }
+  $('next').addEventListener('click',()=>go(i===scenes.length-1?0:i+1));
+  $('prev').addEventListener('click',()=>go(i-1));
+  document.addEventListener('keydown',e=>{ if(e.key==='ArrowRight')go(i+1); if(e.key==='ArrowLeft')go(i-1); });
+  go(0);
+})();
+</script>
+  </body>
+</html>

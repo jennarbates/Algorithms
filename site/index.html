@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Algorithms, seen</title>
+    <meta
+      name="description"
+      content="Interactive visuals for an algorithms course. Each one explains an algorithm to someone with no maths background, without simplifying it into something untrue."
+    />
+    <style>
+      /* Palette shared with the gale-shapley page, so the two read as one site. */
+      :root {
+        color-scheme: light dark;
+
+        --bg: #fbfaf8;
+        --surface: #ffffff;
+        --surface-sunk: #f4f1ec;
+        --border: #e3ded7;
+        --border-strong: #cdc5ba;
+        --ink: #1b1a18;
+        --ink-soft: #5f5b55;
+        --ink-faint: #8b857d;
+
+        --accent: #2f6f5e;
+        --live: #b8860b;
+
+        --radius: 14px;
+        --radius-sm: 10px;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --bg: #14161a;
+          --surface: #1c1f24;
+          --surface-sunk: #171a1e;
+          --border: #2e333a;
+          --border-strong: #454c55;
+          --ink: #f0eee9;
+          --ink-soft: #b3aea6;
+          --ink-faint: #837e77;
+
+          --accent: #7fc4ac;
+          --live: #e3bf5e;
+        }
+      }
+
+      :root[data-theme='dark'] {
+        --bg: #14161a;
+        --surface: #1c1f24;
+        --surface-sunk: #171a1e;
+        --border: #2e333a;
+        --border-strong: #454c55;
+        --ink: #f0eee9;
+        --ink-soft: #b3aea6;
+        --ink-faint: #837e77;
+
+        --accent: #7fc4ac;
+        --live: #e3bf5e;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          15px/1.55 ui-sans-serif,
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .page {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 40px 20px 90px;
+      }
+
+      /* --- masthead ------------------------------------------------------- */
+
+      .masthead {
+        margin-bottom: 36px;
+      }
+
+      .masthead h1 {
+        font-size: 30px;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+        margin: 0 0 10px;
+      }
+
+      .lede {
+        color: var(--ink-soft);
+        margin: 0;
+        max-width: 62ch;
+      }
+
+      .masthead__meta {
+        margin-top: 16px;
+        font-size: 13px;
+        color: var(--ink-faint);
+      }
+
+      .masthead__meta a {
+        color: inherit;
+      }
+
+      /* --- the shelf of visuals --------------------------------------------- */
+
+      .shelf {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 18px;
+      }
+
+      .card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px 22px 18px;
+        transition:
+          border-color 120ms ease,
+          transform 120ms ease;
+      }
+
+      .card:has(.card__link:hover),
+      .card:has(.card__link:focus-visible) {
+        border-color: var(--accent);
+        transform: translateY(-1px);
+      }
+
+      .card:has(.card__link:focus-visible) {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      .card__eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+      }
+
+      .card__title {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.25;
+        letter-spacing: -0.01em;
+      }
+
+      /* The whole card is the target, but only the title carries the link so
+         screen readers announce one sensible thing. */
+      .card__link {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .card__link::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+      }
+
+      .card__blurb {
+        margin: 0;
+        color: var(--ink-soft);
+        flex: 1;
+      }
+
+      .card__foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 4px;
+        font-size: 13px;
+        color: var(--ink-faint);
+      }
+
+      .card__cta {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      .card__cta::after {
+        content: ' \2192';
+      }
+
+      /* Status marks. "Live" is the only one you can click into. */
+      .status {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border-radius: 999px;
+        padding: 2px 9px;
+        border: 1px solid var(--border-strong);
+        color: var(--ink-soft);
+        background: var(--surface-sunk);
+        white-space: nowrap;
+      }
+
+      .status--live {
+        color: var(--accent);
+        border-color: var(--accent);
+        background: transparent;
+      }
+
+      .status--soon {
+        color: var(--live);
+        border-color: var(--live);
+        background: transparent;
+      }
+
+      /* A placeholder card for what has not been built yet. It looks like a
+         card so the shelf reads as a semester's worth, not a lone item. */
+      .card--soon {
+        background: transparent;
+        border-style: dashed;
+      }
+
+      .card--soon .card__title {
+        color: var(--ink-soft);
+      }
+
+      /* --- foot ------------------------------------------------------------- */
+
+      .foot {
+        margin-top: 56px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+        font-size: 13px;
+        color: var(--ink-faint);
+        max-width: 70ch;
+      }
+
+      .foot a {
+        color: inherit;
+      }
+
+      @media (max-width: 480px) {
+        .page {
+          padding: 28px 16px 60px;
+        }
+
+        .masthead h1 {
+          font-size: 26px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="masthead">
+        <h1>Algorithms, seen</h1>
+        <p class="lede">
+          One interactive page per algorithm, built over a semester. Each explains the real
+          procedure to someone with no maths background, without simplifying it into something
+          untrue. Press the buttons, break the results, read the proofs when you want them.
+        </p>
+        <p class="masthead__meta">
+          Source and notes live on
+          <a href="https://github.com/jennarbates/Algorithms">GitHub</a>.
+        </p>
+      </header>
+
+      <!--
+        Adding a visual: copy a live card, point href at the project's folder
+        name (it is served at ./<folder>/), and write the blurb in the same
+        voice as the others. That is the whole job; the deploy workflow finds
+        and builds the project on its own.
+      -->
+      <ul class="shelf">
+        <li class="card">
+          <div class="card__eyebrow">
+            <span>Stable matching</span>
+            <span class="status status--live">Live</span>
+          </div>
+          <h2 class="card__title">
+            <a class="card__link" href="./gale-shapley/">Who gets in, and why</a>
+          </h2>
+          <p class="card__blurb">
+            Three students, three schools, one seat each. Watch who asks whom, who gets held,
+            who gets bumped, and then try to find two people who would rather have each other.
+            The result depends on who does the asking.
+          </p>
+          <div class="card__foot">
+            <span>Gale-Shapley, 1962</span>
+            <span class="card__cta">Open</span>
+          </div>
+        </li>
+
+        <li class="card">
+          <div class="card__eyebrow">
+            <span>Growth of functions</span>
+            <span class="status status--live">Live</span>
+          </div>
+          <h2 class="card__title">
+            <a class="card__link" href="./big-o/">The Big-O Building</a>
+          </h2>
+          <p class="card__blurb">
+            A running time stands on a roof. Its small terms jump off, and what is left up top
+            is c times a simpler function. Then watch that function try to get back up without
+            c, and end up in the basement. Five scenes, with the real curves alongside.
+          </p>
+          <div class="card__foot">
+            <span>T(n) &le; c&middot;f(n) for n &gt; n&#8320;</span>
+            <span class="card__cta">Open</span>
+          </div>
+        </li>
+
+        <li class="card card--soon" aria-label="More visuals coming later in the semester">
+          <div class="card__eyebrow">
+            <span>Next up</span>
+            <span class="status status--soon">Soon</span>
+          </div>
+          <h2 class="card__title">More as the semester goes</h2>
+          <p class="card__blurb">
+            New visuals land here as each one is built. Each is its own small project with its
+            own tests, so a page never says something the code cannot back up.
+          </p>
+        </li>
+      </ul>
+
+      <footer class="foot">
+        Every page is a single self-contained file with no tracking and nothing loaded from
+        anywhere else. Names, schools and preferences inside the visuals are made up for the
+        example.
+      </footer>
+    </main>
+  </body>
+</html>
