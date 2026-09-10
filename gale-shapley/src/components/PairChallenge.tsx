@@ -23,6 +23,9 @@ import type { Instance } from '../core/types';
 interface PairChallengeProps {
   readonly instance: Instance;
   readonly state: EngineState;
+  /** The pair under test, owned by the page so the proof section can share it. */
+  readonly pair: { readonly student: string | null; readonly school: string | null };
+  readonly onPick: (kind: 'student' | 'school', id: string) => void;
 }
 
 function Detail({ segments }: { segments: readonly NarrationSegment[] }) {
@@ -41,9 +44,8 @@ function Detail({ segments }: { segments: readonly NarrationSegment[] }) {
   );
 }
 
-export function PairChallenge({ instance, state }: PairChallengeProps) {
-  const [student, setStudent] = useState<string | null>(null);
-  const [school, setSchool] = useState<string | null>(null);
+export function PairChallenge({ instance, state, pair, onPick }: PairChallengeProps) {
+  const { student, school } = pair;
   const [tested, setTested] = useState<ReadonlySet<string>>(new Set());
 
   const matching = useMemo(() => matchingOf(state), [state]);
@@ -66,8 +68,7 @@ export function PairChallenge({ instance, state }: PairChallengeProps) {
   function pick(kind: 'student' | 'school', id: string) {
     const nextStudent = kind === 'student' ? id : student;
     const nextSchool = kind === 'school' ? id : school;
-    if (kind === 'student') setStudent(id);
-    else setSchool(id);
+    onPick(kind, id);
 
     if (nextStudent && nextSchool && matching[nextStudent] !== nextSchool) {
       setTested(new Set([...tested, `${nextStudent}|${nextSchool}`]));

@@ -50,12 +50,20 @@ src/
     engine.ts      the process, as a pure state machine
     stability.ts   blocking pairs, and the explanation behind each one
     enumerate.ts   brute force over every arrangement, used to check the above
+    history.ts     a run with every moment kept, and which moment is being viewed
+    asks.ts        every ask in a run as a grid, the evidence that it finishes
+    holds.ts       when each receiver first held somebody, and that they never stop
+    replay.ts      the three moments that show why a pair cannot break the result
+  hooks/
+    useRun.ts      the page's one piece of state, over core/history
   content/
     cast.ts        who appears on the page and what they look like
     presets.ts     the six instances the page ships with
+    proofs.ts      the words of the "Why this works" section, plain and formal
   components/    React components
 tests/           the verifier suite
 exercises/       reimplement the engine from scratch, same suite
+docs/            plans for what is not built yet
 ```
 
 ## Two things worth knowing before changing anything
@@ -83,7 +91,10 @@ The default surface has a vocabulary it sticks to, and `tests/narration.test.ts`
 enforces it rather than trusting anyone to remember: it walks every event of
 every preset in both directions and fails if a banned term reaches the page.
 Jargon appears only inside expanders, and each expander introduces its term by
-naming the plain phrase it replaces.
+naming the plain phrase it replaces. `tests/proofs.test.ts` holds the "Why this
+works" section to the same rule, and checks the other direction too: every
+banned term the textbook wording uses has to come with the plain phrase it
+replaces.
 
 | Use                             | Not                         |
 | ------------------------------- | --------------------------- |

@@ -272,3 +272,19 @@ export function boardStatus(state: EngineState): string {
     ? 'Everyone is settled. These pairings are final.'
     : 'Every pairing below is only a maybe. Any of them can still come apart.';
 }
+
+/**
+ * The banner while the reader is looking at a past moment.
+ *
+ * It has to say two things at once: this is the past, and the present has not
+ * gone anywhere. The count is how far back they are.
+ */
+export function pastStatus(viewed: EngineState, current: EngineState): string {
+  const behind = current.stepCount - viewed.stepCount;
+  const where =
+    viewed.stepCount === 0
+      ? 'the start, before anything happened'
+      : `step ${viewed.stepCount} of ${current.stepCount}`;
+  const back = behind === 1 ? 'one click back' : `${behind} clicks back`;
+  return `You are looking at ${where}. That is ${back}. Nothing has changed since.`;
+}

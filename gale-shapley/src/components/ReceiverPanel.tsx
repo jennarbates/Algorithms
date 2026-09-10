@@ -50,6 +50,8 @@ export function ReceiverPanel({ instance, state }: ReceiverPanelProps) {
             key={party.id}
             className={isBeingAsked ? 'row row--active' : 'row'}
             aria-current={isBeingAsked ? 'step' : undefined}
+            data-role="receiver"
+            data-id={party.id}
           >
             <header className="row__head">
               <PartyToken id={party.id} party={mine} size={40} />

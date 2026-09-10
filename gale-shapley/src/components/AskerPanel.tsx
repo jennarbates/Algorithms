@@ -45,6 +45,8 @@ export function AskerPanel({ instance, state }: AskerPanelProps) {
             key={party.id}
             className={isAsking ? 'row row--active' : 'row'}
             aria-current={isAsking ? 'step' : undefined}
+            data-role="asker"
+            data-id={party.id}
           >
             <header className="row__head">
               <PartyToken id={party.id} party={mine} size={40} />

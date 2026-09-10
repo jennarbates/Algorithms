@@ -218,6 +218,31 @@ body {
   border: 1px dashed var(--border-strong);
 }
 
+/* Looking at the past. Gold, like everything else on the page that is live and
+   not yet resolved, and with a way back that is impossible to miss. */
+.board-status--past {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--live);
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--live) 50%, transparent);
+  background: color-mix(in srgb, var(--live) 10%, transparent);
+}
+
+.button--small {
+  padding: 4px 12px;
+  font-size: 13px;
+  border-color: color-mix(in srgb, var(--live) 60%, transparent);
+  color: var(--ink);
+}
+
+.board--past .row {
+  border-color: color-mix(in srgb, var(--live) 30%, var(--border));
+}
+
 .board-status--final {
   color: var(--accent);
   border-style: solid;
@@ -225,16 +250,106 @@ body {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
+/* The columns sit further apart than they strictly need to, because the gap
+   between them is where the pairing lines are drawn, and a line needs some
+   room to be read as a line rather than a smudge. */
 .board {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 64px;
   margin-top: 22px;
 }
 
 @media (max-width: 760px) {
   .board {
     grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+
+/* --- pairing lines ------------------------------------------------------ */
+
+.matchlines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.matchline__path {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.matchline__end {
+  stroke: none;
+}
+
+/* Same rule as the entries: grey and dashed for the whole run, green and solid
+   only when everything is settled. */
+.matchline--hold .matchline__path {
+  stroke: var(--border-strong);
+  stroke-dasharray: 6 6;
+}
+
+.matchline--hold .matchline__end {
+  fill: var(--border-strong);
+}
+
+.matchline--hold.matchline--settled .matchline__path {
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-dasharray: none;
+}
+
+.matchline--hold.matchline--settled .matchline__end {
+  fill: var(--accent);
+}
+
+/* The question on the table, drawn in the same gold as the two cards it joins.
+   The dashes travel from the asker towards the receiver, which is the only
+   direction anything ever moves on this board. */
+.matchline--ask .matchline__path {
+  stroke: var(--live);
+  stroke-width: 3;
+  stroke-dasharray: 8 6;
+  animation: matchline-travel 900ms linear infinite;
+}
+
+.matchline--ask .matchline__end {
+  fill: var(--live);
+}
+
+@keyframes matchline-travel {
+  from {
+    stroke-dashoffset: 28;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.matchline {
+  animation: matchline-appear 180ms ease-out;
+}
+
+@keyframes matchline-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .matchline,
+  .matchline--ask .matchline__path {
+    animation: none;
   }
 }
 
@@ -429,6 +544,38 @@ body {
   font-weight: 600;
 }
 
+/* Each line is a button that shows the board at that moment. It is styled as
+   the line it was, not as a button, because the log should still read as a
+   log. The hover is the hint. */
+.log__item:has(.log__button) {
+  padding: 0;
+}
+
+.log__button {
+  display: block;
+  width: 100%;
+  padding: 11px 16px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.log__button:hover {
+  background: color-mix(in srgb, var(--live) 8%, transparent);
+}
+
+.log__item--viewed {
+  background: color-mix(in srgb, var(--live) 14%, transparent);
+  border-left-color: var(--live);
+}
+
+.log__item--ahead {
+  opacity: 0.45;
+}
+
 /* --- the challenge ------------------------------------------------------ */
 
 .challenge {
@@ -574,4 +721,438 @@ body {
 
 .token--muted {
   opacity: 0.5;
+}
+
+/* --- why this works ----------------------------------------------------- */
+
+.why {
+  margin-top: 34px;
+}
+
+.why__intro {
+  margin: 0 0 14px;
+  color: var(--ink-soft);
+  max-width: 66ch;
+}
+
+/* Until the run is over there is nothing to argue about, and the section
+   should look like it is waiting rather than broken. */
+.why__not-yet {
+  margin: 0 0 14px;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  color: var(--ink-faint);
+  background: var(--surface-sunk);
+  border: 1px dashed var(--border-strong);
+}
+
+.why__claims {
+  display: grid;
+  gap: 10px;
+}
+
+.claim {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.claim--off {
+  opacity: 0.55;
+}
+
+.claim__summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 650;
+  font-size: 15.5px;
+}
+
+.claim--off .claim__summary {
+  cursor: default;
+}
+
+.claim__summary::-webkit-details-marker {
+  display: none;
+}
+
+.claim__summary::after {
+  content: '';
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--ink-faint);
+  border-bottom: 2px solid var(--ink-faint);
+  transform: rotate(45deg);
+  transition: transform 120ms ease;
+}
+
+.claim--off .claim__summary::after {
+  display: none;
+}
+
+.claim[open] > .claim__summary::after {
+  transform: rotate(-135deg);
+}
+
+.claim__summary:hover {
+  color: var(--accent);
+}
+
+.claim__index {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--bg);
+  background: var(--accent);
+}
+
+.claim--off .claim__index {
+  background: var(--ink-faint);
+}
+
+.claim__inner {
+  padding: 2px 16px 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* The claim itself, set larger than the rest because it is the one sentence a
+   reader should carry away even if they read nothing else in the expander. */
+.claim__claim {
+  margin: 14px 0 0;
+  font-size: 17px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  max-width: 60ch;
+}
+
+.claim__body {
+  margin-top: 16px;
+}
+
+.claim__sketch {
+  margin: 16px 0 0;
+  color: var(--ink-soft);
+  max-width: 66ch;
+}
+
+.claim__terms {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--surface-sunk);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.claim__terms-heading {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.claim__terms-list {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.claim__term {
+  display: grid;
+  grid-template-columns: minmax(110px, max-content) 1fr;
+  gap: 12px;
+  font-size: 13.5px;
+}
+
+.claim__term dt {
+  font-weight: 650;
+}
+
+.claim__term dd {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 480px) {
+  .claim__term {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+.claim__toggle {
+  margin-top: 14px;
+  border-color: var(--border-strong);
+}
+
+/* --- claim one: the grid of questions ----------------------------------- */
+
+.asks__tally {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.asks__legend,
+.asks__toobig {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-faint);
+  max-width: 66ch;
+}
+
+.asks__grid {
+  margin-top: 14px;
+  border-collapse: separate;
+  border-spacing: 6px;
+  margin-left: -6px;
+}
+
+.asks__head {
+  padding: 0;
+  line-height: 0;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.asks__corner {
+  padding: 0;
+}
+
+.asks__cell {
+  padding: 0;
+  vertical-align: middle;
+}
+
+/* Every square is the same size whether it is a button or a blank, so the grid
+   reads as a grid and a filled square reads as a change, not a new element. */
+.asks__square {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  border: 1.5px dashed var(--border-strong);
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink-faint);
+  padding: 0;
+}
+
+.asks__square--button {
+  cursor: pointer;
+}
+
+.asks__square--button:hover {
+  border-color: var(--live);
+}
+
+/* Ahead of the moment being looked at: it will fill, but has not yet. */
+.asks__cell--ahead .asks__square {
+  color: var(--ink-faint);
+  opacity: 0.55;
+}
+
+/* Filled: this question has been asked by the moment being looked at. */
+.asks__cell--filled .asks__square {
+  border-style: solid;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--ink);
+}
+
+/* The square whose question is on the board right now. */
+.asks__cell--viewed .asks__square {
+  border-color: var(--live);
+  background: color-mix(in srgb, var(--live) 22%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 20%, transparent);
+}
+
+/* Never asked, and the run is over: the question was not needed. */
+.asks__cell--never .asks__square {
+  border-color: var(--border);
+}
+
+@media (max-width: 480px) {
+  .asks__square {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+}
+
+/* --- claim two: nobody is left out -------------------------------------- */
+
+.leftout__empty {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-faint);
+}
+
+.leftout__suppose {
+  margin: 16px 0 0;
+  max-width: 66ch;
+}
+
+.leftout__list {
+  margin-top: 12px;
+}
+
+.ranking--flat {
+  margin: 6px 0 0;
+  padding: 0;
+}
+
+/* One beat per person on the other side: their token, two lines, and a way to
+   look at the moment they stopped having nobody. */
+.beats {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.beat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface-sunk);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.beat--viewed {
+  border-color: var(--live);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 20%, transparent);
+}
+
+.beat__text {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+.beat__line--picked {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.beat__look {
+  flex: none;
+  border-color: var(--border-strong);
+}
+
+.leftout__conclusion {
+  margin: 16px 0 0;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 650;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  max-width: 66ch;
+}
+
+/* On a phone the button goes under the text, lined up with it, rather than
+   squeezing the text into a column two words wide. */
+@media (max-width: 480px) {
+  .beat {
+    flex-wrap: wrap;
+  }
+
+  .beat__text {
+    flex-basis: calc(100% - 46px);
+  }
+
+  .beat__look {
+    margin-left: 46px;
+  }
+}
+
+/* --- claim three: the replay --------------------------------------------- */
+
+/* The would-be pairing, drawn wide and translucent under the real lines so it
+   reads as a shadow of something that never formed. */
+.matchline--ghost .matchline__path {
+  stroke: var(--bad);
+  stroke-width: 9;
+  stroke-dasharray: none;
+  opacity: 0.4;
+}
+
+.matchline--ghost .matchline__end {
+  fill: var(--bad);
+  opacity: 0.35;
+}
+
+.holds__pick {
+  margin: 0 0 12px;
+  font-size: 13.5px;
+  color: var(--ink-faint);
+  max-width: 66ch;
+}
+
+.holds .challenge__pickers {
+  margin-bottom: 4px;
+}
+
+.holds .verdict__outcome {
+  margin-top: 14px;
+}
+
+.beat__num {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--bg);
+  background: var(--ink-faint);
+}
+
+.beat--viewed .beat__num {
+  background: var(--live);
+}
+
+.holds__list {
+  margin-top: 8px;
+}
+
+/* This list is always the end of the run, whatever moment the board is
+   showing, so its hold is drawn settled even while the board is not. */
+.holds__list .entry--held {
+  border-style: solid;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+/* The asker, in the receiver's list, marked as the one it does not want back. */
+.entry--spurned {
+  border-style: solid;
+  border-color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 14%, transparent);
 }
