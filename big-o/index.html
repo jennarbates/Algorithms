@@ -76,6 +76,7 @@ code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .legend .sw-c{border-color:var(--roof);background:var(--roof-soft)}
 .legend .sw-f{border-color:var(--brass);background:var(--brass-soft)}
 .legend .sw-low{border-color:var(--fall);background:var(--fall-soft)}
+.legend .sw-cube{border-color:var(--ink2);background:transparent}
 
 /* side column */
 .side{display:flex;flex-direction:column;min-height:0;gap:10px}
@@ -151,7 +152,10 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .tlabel.strong{fill:var(--ink);font-weight:600;font-size:12px}
 /* for labels that have to sit on top of gridlines, curves or a filled band */
 .tlabel.halo{paint-order:stroke;stroke:var(--paper2);stroke-width:3.5px;stroke-linejoin:round}
-@media (prefers-reduced-motion:reduce){.chip,.car,.marker,.curve,.blood,.blood .pool,.blood .spatter{transition:none}}
+@media (prefers-reduced-motion:reduce){
+  .chip,.car,.marker,.brk,.curve,.blood,.blood .pool,.blood .spatter{transition:none}
+  .anno{animation:none}
+}
 
 /* narrower or shorter screens: unlock the height, keep the controls reachable */
 @media (max-width:1180px),(max-height:600px){
@@ -195,7 +199,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         <span class="t-T">T(n)</span><span class="op">=</span><span class="t-c">14</span><span class="t-f">n&sup2;</span><span class="op op-low">+</span><span class="t-low">4n</span><span class="op op-low">+</span><span class="t-low">6</span><span id="eqtail"></span>
       </div>
       <div class="legend">
-        <span class="lg"><i></i>T(n), measured</span>
+        <span class="lg"><i></i>T(n), the step count</span>
         <span class="lg"><i class="sw-c"></i>c, the constant</span>
         <span class="lg"><i class="sw-f"></i>f(n), the shape</span>
         <span class="lg"><i class="sw-low"></i>4n + 6, lower order</span>
@@ -248,8 +252,54 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         <!-- n0 marker on the street -->
         <g id="n0mark" class="marker">
           <line x1="6" y1="380" x2="130" y2="380" stroke="var(--roof)" stroke-width="3"/>
-          <text x="6" y="356" class="label big" fill="var(--roof)">n &gt; n&#8320; = 5</text>
-          <text x="6" y="372" class="label">15n&sup2; clears T(n)</text>
+          <text x="6" y="340" class="label big" fill="var(--roof)">n &gt; n&#8320; = 5</text>
+          <text x="6" y="356" class="label">15n&sup2; clears T(n),</text>
+          <text x="6" y="372" class="label">n&sup2; clears 4n + 6</text>
+        </g>
+
+        <!-- the street line again, where f(n) passes the terms it outgrew.
+             same height as n0mark, because it is the same crossing -->
+        <g id="crossMark" class="marker">
+          <line x1="140" y1="380" x2="360" y2="380" stroke="var(--roof)" stroke-width="3"/>
+          <circle cx="163" cy="380" r="5" fill="var(--roof)"/>
+          <line x1="112" y1="420" x2="152" y2="386" stroke="var(--roof)" stroke-width="1"/>
+          <text x="6" y="432" class="label big" fill="var(--roof)">n&sup2; passes 4n + 6</text>
+          <text x="6" y="448" class="label">here, at n = 5.16,</text>
+          <text x="6" y="463" class="label">which is n&#8320;</text>
+        </g>
+
+        <!-- the definition, spelled out beside the building in the opening scene -->
+        <g id="defNote" class="marker">
+          <text x="384" y="150" class="label big" fill="var(--roof)">Big-O is a ceiling.</text>
+          <text x="384" y="174" class="label">T(n) = O(f(n)) means:</text>
+          <text x="384" y="190" class="label">there is a constant c</text>
+          <text x="384" y="206" class="label">and a starting point n&#8320;</text>
+          <text x="384" y="222" class="label">such that c&middot;f(n) never</text>
+          <text x="384" y="238" class="label">drops below T(n) once</text>
+          <text x="384" y="254" class="label">n is past n&#8320;.</text>
+          <text x="384" y="284" class="label">It is an upper bound,</text>
+          <text x="384" y="300" class="label">not a measurement of</text>
+          <text x="384" y="316" class="label">how long anything took.</text>
+        </g>
+
+        <!-- higher ceilings, shown last: valid bounds that are not tight -->
+        <g id="higher" class="marker">
+          <rect x="128" y="30" width="250" height="6" fill="none" stroke="var(--ink2)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="386" y="38" class="label" fill="var(--ink2)">n&sup3;, from n = 15 on</text>
+          <rect x="128" y="62" width="250" height="6" fill="none" stroke="var(--ink2)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="386" y="70" class="label" fill="var(--ink2)">100n&sup2;, from n = 1 on</text>
+          <text x="386" y="110" class="label big" fill="var(--roof)">15n&sup2;, from n = 6 on</text>
+          <g stroke="var(--ink2)" stroke-width="1.5">
+            <line x1="120" y1="100" x2="120" y2="40"/>
+            <path d="M 120 33 l -5 10 l 10 0 z" fill="var(--ink2)" stroke="none"/>
+          </g>
+          <text x="384" y="150" class="label">all three are ceilings.</text>
+          <text x="384" y="166" class="label">Big-O never asks for the</text>
+          <text x="384" y="182" class="label">lowest one, only that</text>
+          <text x="384" y="198" class="label">one exists. n&sup2; is the</text>
+          <text x="384" y="214" class="label">tightest, and that</text>
+          <text x="384" y="230" class="label">stronger claim has its</text>
+          <text x="384" y="246" class="label">own name: &#920;.</text>
         </g>
 
         <!-- brackets naming what is on the roof -->
@@ -302,9 +352,9 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 
         <!-- note next to the bodies -->
         <g id="deadNote" class="marker">
-          <text x="396" y="416" class="label" fill="var(--fall)">4n and 6: dropped.</text>
-          <text x="396" y="431" class="label" fill="var(--fall)">lower order terms</text>
-          <text x="396" y="446" class="label" fill="var(--fall)">do not survive large n</text>
+          <text x="380" y="416" class="label" fill="var(--fall)">4n and 6: outgrown.</text>
+          <text x="380" y="431" class="label" fill="var(--fall)">not gone, still &gt; 0,</text>
+          <text x="380" y="446" class="label" fill="var(--fall)">which is why c &gt; 14</text>
         </g>
 
         <!-- the running commentary on why c moves off 14, filled in by the scene -->
@@ -360,6 +410,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         <span class="lg" id="lg-cf"><i class="sw-c"></i>c&middot;f(n) = 15n&sup2;</span>
         <span class="lg" id="lg-f"><i class="sw-f"></i>f(n) = n&sup2;</span>
         <span class="lg" id="lg-low"><i class="sw-low"></i>4n + 6</span>
+        <span class="lg" id="lg-cube"><i class="sw-cube"></i>n&sup3;, a looser bound</span>
       </div>
       <div class="svgwrap">
         <svg id="chart" viewBox="0 0 400 560" role="img" aria-label="Plot of T(n), 15 n squared, n squared and 4n plus 6"></svg>
@@ -650,32 +701,53 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   let fDown = false;
 
   const scenes = [
+    { tag:'Ceiling', title:'Big-O is a ceiling',
+      body:'Big-O answers one question: as the input gets bigger, how fast does the amount of work grow? The answer comes as a ceiling. Writing T(n) = O(f(n)) means you can pick a fixed number c, called the constant, and a starting point n₀, so that c·f(n) never drops below T(n) once n is past n₀. That is the whole promise: from there on, T(n) stays under the ceiling forever. Because it is only a ceiling, it says nothing about how many seconds the code takes, and nothing about T(n) being anywhere near the ceiling.',
+      sym:'T(n) = O(f(n)) means: some c and some n₀ exist with T(n) ≤ c·f(n) for every n past n₀',
+      num:'the rest of this page finds one c and one n₀ for T(n) = 14n² + 4n + 6',
+      run(){
+        restRoof('a'); restRoof('b'); resetPlus();
+        place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
+        setC('14'); ops(1, 1, 0); tail('', ''); $('eqbar').classList.remove('drop');
+        bracket($('brkTop'), 36, 180, 376, 'T(n) = 14n² + 4n + 6', INK);
+        bracket($('brkA'), 64, 0, 0, '', INK2);
+        bracket($('brkB'), 64, 0, 0, '', RED);
+        cnote('', '', '', INK);
+        car.style.transform = 'translateY(0)'; fDown = false;
+        mark('n0mark', 0); mark('deadNote', 0); mark('baseNote', 0);
+        mark('defNote', 1); mark('higher', 0); mark('crossMark', 0);
+      } },
+
     { tag:'Roof', title:'T(n) stands on the roof',
-      body:'T(n) is the running time we actually measured: 14n² + 4n + 6. Every term of it is up on the roof. The Big-O question is which single, simpler function f(n) we can put up there instead and still promise it stays above T(n).',
+      body:'First, what the letters mean. n is the size of the input, say how many items are in a list, so it is a whole number: 1 item, 2 items, and so on. T(n) is the number of steps the code takes on an input that size. Ours is T(n) = 14n² + 4n + 6, and the three pieces added together are its terms. All three are up on the roof, side by side, because up here the roof just means "part of T(n)". The biggest is 14n², the leading term. The smaller two, 4n and 6, are the lower order terms. Watch which of them still matters once n gets large.',
       sym:'T(n) = leading term + lower order terms', num:'T(n) = 14n² + 4n + 6',
       run(){
-        restRoof('a'); restRoof('b');
+        restRoof('a'); restRoof('b'); resetPlus();
         place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
         setC('14'); ops(1, 1, 0); tail('', ''); $('eqbar').classList.remove('drop');
         bracket($('brkTop'), 36, 180, 376, 'T(n) = 14n² + 4n + 6', INK);
         bracket($('brkA'), 64, 180, 260, 'leading term', INK2);
         bracket($('brkB'), 64, 282, 376, 'lower order', RED);
+        cnote('', '', '', INK);
         car.style.transform = 'translateY(0)'; fDown = false;
         mark('n0mark', 0); mark('deadNote', 0); mark('baseNote', 0);
+        mark('defNote', 0); mark('higher', 0); mark('crossMark', 0);
       } },
 
     { tag:'Street', title:'The big term crowds them off',
-      body:'Now let n grow. 14n² swells far faster than 4n or 6 ever can, and the roof is only so wide. The leading term takes the whole slab for itself and shoulders the small terms along it, first 6 and then 4n, until there is nothing under them and they go over the edge. Nobody jumps. They are pushed.',
-      sym:'lower order terms → crowded out', num:'4n + 6 is gone, 14n² remains',
+      body:'Now let n grow. 14n² swells far faster than 4n or 6 ever can, and the roof is only wide enough to name one of them. The leading term takes the whole slab and shoulders the small terms along it, first 6 and then 4n, until there is nothing under them and they go over the edge. They are not gone, they are outgrown. Look down: they are still on the street, still positive, and you are about to pay for them. Nobody jumps. They are pushed.',
+      sym:'lower order terms → outgrown, not gone', num:'14n² on the roof, 4n + 6 on the street',
       run(from){
         setC('14'); ops(0, 0, 0); tail('', ''); $('eqbar').classList.add('drop');
         bracket($('brkTop'), 36, 0, 0, '', INK);
         bracket($('brkB'), 64, 0, 0, '', RED);
         car.style.transform = 'translateY(0)'; fDown = false;
         mark('n0mark', 0); mark('baseNote', 0);
+        mark('defNote', 0); mark('higher', 0); mark('crossMark', 0);
         const g = bigAt(GROW), label = () =>
           bracket($('brkA'), BRK_Y, BLOCK_L, Math.round(g.right), '14n², the survivor', INK);
-        if(from === 0 && !reduce){
+        // the squeeze only plays when arriving from the roof scene just before it
+        if(from === 1 && !reduce){
           bracket($('brkA'), BRK_Y, 0, 0, '', INK);
           mark('deadNote', 0);
           place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
@@ -692,9 +764,9 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         }
       } },
 
-    { tag:'Street', title:'The gap is tiny, but it is not zero',
-      body:'Dropping 4n + 6 was allowed because it is a rounding error. At n = 11.4 the whole of it is 51.6 against a T(n) of 1871, under 3 percent, and the plot has to magnify that one spot eight times before you can see it at all. But it is not nothing. It was positive, so what is left on the roof is now under T(n), and the survivors sink below the roof line.',
-      sym:'T(n) − 14n² = 4n + 6, which is positive', num:'at n = 11.4: 1871.0 − 1819.4 = 51.6',
+    { tag:'Street', title:'The gap looks like nothing, but it is not zero',
+      body:'Leaving 4n + 6 out of the answer is not the same as it being zero. As a share of the whole it really does fade: at n = 11 all of 4n + 6 comes to 50, against a T(n) of 1744, under 3 percent, and the plot has to magnify that one spot eight times before you can see it at all. But a share fading is not a quantity vanishing. 4n + 6 keeps growing, and it is positive at every n, so 14n² on its own always falls short of T(n), by exactly 4n + 6, and the survivors sink below the roof line.',
+      sym:'T(n) − 14n² = 4n + 6, always above 0', num:'at n = 11: 1744 − 1694 = 50, under 3% of T(n)',
       run(){
         snapDead('a'); snapDead('b');
         cls(chips.F, ['f'], []);
@@ -706,6 +778,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         cnote('14n² is not a bound', 'it is under T(n) by exactly', 'the 4n + 6 we dropped', RED);
         car.style.transform = 'translateY(0)'; fDown = false;
         mark('n0mark', 0); mark('deadNote', 1); mark('baseNote', 0);
+        mark('defNote', 0); mark('higher', 0); mark('crossMark', 0);
         // the bracket is still up at the grown height from the scene before, so it fades
         // out and comes back at the sunk one rather than jumping down through the chips
         bracket($('brkA'), 64, 0, 0, '', INK);
@@ -726,13 +799,14 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         cnote('so raise c by one', 'that adds a whole n²:', '15n² − 14n² = n²', GREEN);
         car.style.transform = 'translateY(0)'; fDown = false;
         mark('n0mark', 0); mark('deadNote', 1); mark('baseNote', 0);
+        mark('defNote', 0); mark('higher', 0); mark('crossMark', 0);
         if(reduce){ plusSnap(PLUS_X, SUNK, 1); place(chips.F, F_WIDE, SUNK); return; }
         place(chips.F, 242, SUNK);
         later(() => { slide(chips.F, F_WIDE, SUNK, 480); plusTo(PLUS_X, SUNK, 1, 420); }, 700);
       } },
 
     { tag:'Roof', title:'c = 15 works, from n = 6 on',
-      body:'The spare n² covers 4n + 6 as soon as n² ≥ 4n + 6, which happens from n = 6 on. So the +1 folds into the constant, 14 becomes 15, and 15n² rises back above the roof line and stays there. That is n₀ = 5: every n past it is covered. The plot checks the same claim by taking T(n) off both curves and asking whether what is left is above zero.',
+      body:'The spare n² covers 4n + 6 as soon as n² is at least 4n + 6. Check the two n either side: at n = 5 the spare is 25 against a 4n + 6 of 26, still short by one, and at n = 6 it is 36 against 30, clear. So from n = 6 on the +1 folds into the constant, 14 becomes 15, and 15n² rises back above the roof line and stays there. The rule is written for every n greater than n₀, so n₀ is the last value that still fails: n₀ = 5. Note that c = 14 can never work, at any n, and anything above 14 works eventually, so 15 is simply the first whole number that does. The plot checks the same claim by subtracting T(n) from both curves and asking whether what is left stays above zero.',
       sym:'T(n) ≤ c·f(n) for all n > n₀', num:'14n² + 4n + 6 ≤ 15n² for all n > 5, so n₀ = 5',
       run(){
         snapDead('a'); snapDead('b');
@@ -743,6 +817,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         cnote('c = 15 works', 'that spare n² covers', '4n + 6 once n ≥ 6', GREEN);
         car.style.transform = 'translateY(0)'; fDown = false;
         mark('deadNote', 1); mark('baseNote', 0);
+        mark('defNote', 0); mark('higher', 0); mark('crossMark', 0);
         const land = () => {
           ops(0, 0, 1);
           bracket($('brkA'), 64, 180, 260, 'c·f(n) = 15n²', GREEN);
@@ -763,7 +838,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       } },
 
     { tag:'Basement', title:'f(n) alone rides the elevator down',
-      body:'Send f(n) up without c and it cannot hold the roof. n² by itself is smaller than 14n² + 4n + 6 for every single n, so it rides the elevator all the way to the basement, below even the terms that were pushed off. Right shape, wrong size.',
+      body:'Send the shape up on its own, with no constant, and it cannot hold the roof. n² by itself is below T(n) at every n, so it rides the elevator down. Watch where it passes the street. n² starts out under 4n + 6 and only climbs past it between n = 5 and n = 6, at 5.16 exactly. That is the same place n₀ came from: the moment the shape outgrows the terms you left out is the moment c = 15 starts working. Right shape, wrong size.',
       sym:'f(n) on its own is not ≥ T(n)', num:'n² < 14n² + 4n + 6 for every n',
       run(){
         snapDead('a'); snapDead('b');
@@ -773,18 +848,21 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         bracket($('brkA'), 64, 180, 216, 'c, nothing to multiply', GREEN);
         bracket($('brkB'), 64, 0, 0, '', RED);
         mark('n0mark', 0); mark('deadNote', 1);
+        mark('defNote', 0); mark('higher', 0); mark('crossMark', 0);
         place(chips.F, SHAFT_X, 86);
         later(() => {
           car.style.transform = `translateY(${CAR_DOWN}px)`;
           place(chips.F, SHAFT_X, BASE_Y);
           fDown = true;
         }, reduce ? 0 : 460);
+        // the crossing lights up as the car goes past it, not before
+        later(() => mark('crossMark', 1), reduce ? 0 : 900);
         later(() => mark('baseNote', 1), reduce ? 0 : 1300);
       } },
 
     { tag:'Roof', title:'With c, f(n) is back on top',
-      body:'Multiply by the constant and the same shape rises straight back to the roof. That is the whole definition: f(n) is an asymptotic upper bound on T(n) exactly because some fixed c and some n₀ exist that keep c·f(n) above T(n) forever after. The constant is the elevator ticket.',
-      sym:'T(n) = O(f(n))  ⇔  ∃ c, n₀ : T(n) ≤ c·f(n) for all n > n₀',
+      body:'Multiply by the constant and the same shape rises straight back to the roof. That is the whole definition: n² is an upper bound on T(n) exactly because some fixed c and some n₀ exist that keep c·f(n) above T(n) from n₀ onward. The usual word for that "from some point onward" part is asymptotic: what the code does on tiny inputs is allowed to be messy, and only the long run counts. The constant is the elevator ticket.',
+      sym:'T(n) = O(f(n)) means: some c and some n₀ exist with T(n) ≤ c·f(n) for every n past n₀',
       num:'14n² + 4n + 6 = O(n²)  with c = 15, n₀ = 5',
       run(){
         snapDead('a'); snapDead('b');
@@ -794,6 +872,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         bracket($('brkA'), 64, 180, 260, 'c·f(n) = 15n²', GREEN);
         bracket($('brkB'), 64, 0, 0, '', RED);
         mark('n0mark', 1); mark('deadNote', 1); mark('baseNote', 0);
+        mark('defNote', 0); mark('higher', 0); mark('crossMark', 0);
         car.style.transform = 'translateY(0)';
         if(fDown && !reduce){
           place(chips.F, SHAFT_X, 86);
@@ -802,6 +881,24 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
           place(chips.F, ...ROOF.F);
         }
         fDown = false;
+      } },
+
+    { tag:'Ceilings', title:'The ceiling does not have to be low',
+      body:'The definition asks for a ceiling. It never asks for the lowest one. 15n² holds from n = 6, but 100n² holds from n = 1 and n³ holds from n = 15, so all three are correct: T(n) is O(n²), and O(n³), and O(n⁴). Each is a true statement, just a weaker one than the last. n² is the one worth saying because it is the lowest ceiling that fits. That stronger claim is not Big-O at all: it is Θ, said "theta", which pins T(n) from both sides at once, a ceiling and a floor of the same shape. Big-O on its own only ever promises you the ceiling.',
+      sym:'T(n) = O(f(n)) does not mean f(n) is the smallest such bound',
+      num:'14n² + 4n + 6 is O(n²), and also O(n³), and also O(n⁴)',
+      run(){
+        snapDead('a'); snapDead('b'); resetPlus();
+        place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
+        setC('15'); ops(0, 0, 1); tail('= O(n²), and O(n³)', 'g');
+        $('eqbar').classList.add('drop');
+        bracket($('brkTop'), 36, 0, 0, '', INK);
+        bracket($('brkA'), 64, 0, 0, '', GREEN);
+        bracket($('brkB'), 64, 0, 0, '', RED);
+        cnote('', '', '', INK);
+        car.style.transform = 'translateY(0)'; fDown = false;
+        mark('n0mark', 0); mark('deadNote', 0); mark('baseNote', 0); mark('crossMark', 0);
+        mark('defNote', 0); mark('higher', 1);
       } }
   ];
 
@@ -811,13 +908,15 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   const PW = 400, PH = 560, PL = 54, PR = 18, PT = 26, PB = 48;
   const X0 = PL, X1 = PW - PR, YT = PT, YB = PH - PB;
   const fT = n => 14*n*n + 4*n + 6, fcf = n => 15*n*n, ff = n => n*n,
-        flow = n => 4*n + 6, f14 = n => 14*n*n;
+        flow = n => 4*n + 6, f14 = n => 14*n*n, fcube = n => n*n*n;
   const fgap = n => 15*n*n - (14*n*n + 4*n + 6), zero = () => 0;   // n² - 4n - 6
   const NCROSS = 2 + Math.sqrt(10);          // 15n² meets T(n) at n = 5.162
   const VIEW = {
     wide: {n0:0, n1:12, y0:0,   y1:2300, ys:500, xs:2, name:'n 0 to 12'},
     gap:  {n0:0, n1:12, y0:-20, y1:100,  ys:20,  xs:2, name:'the gap, zoomed 19x'},
-    low:  {n0:0, n1:12, y0:0,   y1:620,  ys:100, xs:2, name:'n 0 to 12, y zoomed 4x'}
+    low:  {n0:0, n1:12, y0:0,   y1:620,  ys:100, xs:2, name:'n 0 to 12, y zoomed 4x'},
+    // far enough out that n³ has visibly left both of the others behind
+    loose:{n0:0, n1:30, y0:0,   y1:28000, ys:4000, xs:5, name:'n 0 to 30'}
   };
 
   const chartEl = $('chart');
@@ -844,11 +943,11 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     return `<path class="curve" d="${dOf(fn, v)}" stroke="${color}"` +
       (dash ? ` stroke-dasharray="${dash}"` : '') + (extra || '') + '/>';
   }
-  function band(fa, fb, na, nb, v, color){
+  function band(fa, fb, na, nb, v, color, op){
     const sx = sxOf(v), sy = syOf(v); let d = '';
     for(let i = 0; i <= 48; i++){ const n = na + (nb - na)*i/48; d += (i?'L':'M') + sx(n).toFixed(1) + ' ' + clampY(sy(fa(n))).toFixed(1) + ' '; }
     for(let i = 48; i >= 0; i--){ const n = na + (nb - na)*i/48; d += 'L' + sx(n).toFixed(1) + ' ' + clampY(sy(fb(n))).toFixed(1) + ' '; }
-    return `<path d="${d}Z" fill="${color}" fill-opacity=".45" stroke="none"/>`;
+    return `<path d="${d}Z" fill="${color}" fill-opacity="${op == null ? .45 : op}" stroke="none"/>`;
   }
   // inline style, not a fill attribute: the .tlabel rules would win over an attribute
   function lab(x, y, text, color, anchor, small){
@@ -899,7 +998,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     const spec = CHARTS[k], target = VIEW[spec.view];
     $('chart-range').textContent = target.name;
     $('chart-eq').innerHTML = spec.eq || '<span class="t-T">T(n) = 14n&sup2; + 4n + 6</span>';
-    ['T','cf','f','low'].forEach(id => $('lg-' + id).classList.toggle('off', !spec.legend.includes(id)));
+    ['T','cf','f','low','cube'].forEach(id => $('lg-' + id).classList.toggle('off', !spec.legend.includes(id)));
     // a chart that needs its own derivation takes over the transition entirely
     if(spec.intro && !reduce){ spec.intro(); return; }
     const from = Object.assign({}, view);
@@ -962,11 +1061,11 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   }
 
   // ---- the magnifier on 4n + 6 ----
-  // At n = 11.4 the whole of 4n + 6 is 51.6 units, against a T(n) of 1871. On a plot 486
+  // At n = 11 the whole of 4n + 6 is 50 units, against a T(n) of 1744. On a plot 486
   // pixels tall that is about ten pixels, so naming the gap is not the same as seeing it.
   // A detail panel takes that one spot, blows it up eight times, and grows out of the
   // dashed box it was cut from so the reader can see where it came from.
-  const MAG_N = 11.4, MAG_BOX = 18, MAG_P = {x0:64, x1:208, y0:46, y1:190};
+  const MAG_N = 11, MAG_BOX = 18, MAG_P = {x0:64, x1:208, y0:46, y1:190};
   const MAG_X = MAG_P.x1 - MAG_P.x0;
 
   // the dashed source box on the main plot, in screen coordinates
@@ -999,9 +1098,11 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         `</g>` +
       `</g>` +
       hlab(P.x0, P.y0 - 9, 'the same spot, 8 times bigger', 'var(--ink2)', 'start', true) +
-      hlab(P.x0, P.y1 + 24, 'that whole red band is ' + gap.toFixed(1) + ',', 'var(--fall)') +
-      hlab(P.x0, P.y1 + 40, 'against T(11.4) = ' + fT(MAG_N).toFixed(0) + '.', 'var(--ink2)', 'start', true) +
-      hlab(P.x0, P.y1 + 54, 'it is ' + pct + '% of the height', 'var(--ink2)', 'start', true);
+      hlab(P.x0, P.y1 + 24, 'that whole red band is ' + (gap % 1 ? gap.toFixed(1) : gap.toFixed(0)) + ',', 'var(--fall)') +
+      hlab(P.x0, P.y1 + 40, 'against T(11) = ' + fT(MAG_N).toFixed(0) + '.', 'var(--ink2)', 'start', true) +
+      hlab(P.x0, P.y1 + 54, 'it is ' + pct + '% of the height:', 'var(--ink2)', 'start', true) +
+      // the panel is where a reader concludes "so it is nothing", so say it here
+      hlab(P.x0, P.y1 + 68, 'a small share, not a small number', 'var(--fall)', 'start', true);
   }
   // the panel grows out of the box, so the zoom is watched rather than asserted
   function runMagnify(){
@@ -1024,7 +1125,17 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   }
 
   const CHARTS = [
-    // 1. T(n) on its own
+    // 1. the definition: T(n), and the whole region a bound is allowed to live in
+    { view:'wide', legend:['T'],
+      eq:'<span class="t-T">T(n)</span> <span class="op">and every ceiling over it</span>',
+      body:(v) => band(() => v.y1, fT, v.n0, v.n1, v, 'var(--roof)', .14) + curve(fT, v, 'var(--ink)'),
+      notes:(v, sx, sy) =>
+        lab(sx(1.2), sy(1800), 'stay in the green from', 'var(--roof)', 'start') +
+        lab(sx(1.2), sy(1800) + 17, 'some n₀ onward and you', 'var(--roof)', 'start') +
+        lab(sx(1.2), sy(1800) + 34, 'are an upper bound on T(n)', 'var(--roof)', 'start') +
+        lab(sx(9.9), sy(fT(9.9)) + 28, 'T(n) = 14n² + 4n + 6', 'var(--ink)', 'end') },
+
+    // 2. T(n) on its own
     { view:'wide', legend:['T'],
       body:(v) => curve(fT, v, 'var(--ink)'),
       notes:(v, sx, sy) => lab(sx(9.9), sy(fT(9.9)) + 28, 'T(n) = 14n² + 4n + 6', 'var(--ink)', 'end') },
@@ -1034,16 +1145,16 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       eq:'<span class="t-T">T(n) = 14n&sup2;</span> <span class="op">+</span> <span class="t-low">4n + 6</span>',
       body:(v) => curve(flow, v, 'var(--fall)', '3 3') + curve(f14, v, 'var(--ink2)', '6 4') + curve(fT, v, 'var(--ink)'),
       notes:(v, sx, sy) =>
-        vgap(sx(11.4), sy(fT(11.4)), sy(f14(11.4)), 'var(--fall)') +
-        lab(sx(11.1), sy(f14(11.4)) + 4, '4n + 6 is only this gap', 'var(--fall)', 'end') +
+        vgap(sx(11), sy(fT(11)), sy(f14(11)), 'var(--fall)') +
+        lab(sx(10.7), sy(f14(11)) + 4, '4n + 6 is only this gap', 'var(--fall)', 'end') +
         lab(sx(9.6), sy(fT(9.6)) - 12, 'T(n)', 'var(--ink)', 'end') +
         lab(sx(9.4), sy(f14(9.4)) + 48, '14n², T(n) without them', 'var(--ink2)', 'end') +
         lab(sx(12), sy(flow(12)) + 16, '4n + 6', 'var(--fall)', 'end') },
 
     // 3. the same picture, with the sliver blown up eight times so the claim that
-    //    4n + 6 is a rounding error can be checked rather than taken on trust
+    //    4n + 6 disappears next to T(n) can be checked rather than taken on trust
     { view:'wide', legend:['T','low'],
-      eq:'<span class="t-low">4n + 6</span> <span class="op">at</span> n = 11.4, <span class="op">magnified</span>',
+      eq:'<span class="t-low">4n + 6</span> <span class="op">at</span> n = 11, <span class="op">magnified</span>',
       body:(v) => curve(flow, v, 'var(--fall)', '3 3') + curve(f14, v, 'var(--ink2)', '6 4') + curve(fT, v, 'var(--ink)'),
       notes:(v) => magnifier(v),
       after: runMagnify },
@@ -1071,21 +1182,30 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         probe(sx, sy, P_HI, 'var(--roof)', '39') +
         hlab(X0 + 6, YT + 44, 'the dots are the 9 and the 39', 'var(--ink2)', 'start', true) +
         hlab(X0 + 6, YT + 58, 'measured before subtracting', 'var(--ink2)', 'start', true) +
+        // n² − 4n − 6 is also n² − (4n + 6), so this one curve answers both questions
+        hlab(X0 + 6, YT + 78, 'this same curve is n² − (4n + 6):', 'var(--brass)', 'start', true) +
+        hlab(X0 + 6, YT + 92, 'how far n² has outgrown the street', 'var(--brass)', 'start', true) +
         hlab(X0 + 4, sy(0) - 8, 'zero: T(n) sits on this line now', 'var(--ink2)', 'start', true) +
         lab(X0 + 6, sy(fgap(2)) + 30, '15n² is short here', 'var(--fall)') +
         hlab(sx(10.8), sy(fgap(10.8)) + 18, 'how far 15n²', 'var(--roof)', 'end', true) +
         hlab(sx(10.8), sy(fgap(10.8)) + 32, 'clears T(n) by', 'var(--roof)', 'end', true) +
         hlab(sx(5.35), sy(0) + 24, 'crosses zero at n = 5.16,', 'var(--ink2)', 'start', true) +
-        hlab(sx(5.35), sy(0) + 38, 'so n₀ = 5 works', 'var(--ink2)', 'start', true) },
+        hlab(sx(5.35), sy(0) + 38, 'so n₀ = 5 works', 'var(--ink2)', 'start', true) +
+        hlab(sx(5.35), sy(0) + 52, '(n is a whole number,', 'var(--ink2)', 'start', true) +
+        hlab(sx(5.35), sy(0) + 66, 'so n = 6 is the first)', 'var(--ink2)', 'start', true) },
 
     // 6. the shape on its own, with the y axis zoomed until n² is actually visible
-    { view:'low', legend:['T','f'],
+    { view:'low', legend:['T','f','low'],
       eq:'<span class="t-f">f(n) = n&sup2;</span> <span class="op">against</span> <span class="t-T">T(n)</span>',
-      body:(v) => curve(ff, v, 'var(--brass)') + curve(fT, v, 'var(--ink)'),
+      body:(v) => curve(flow, v, 'var(--fall)', '3 3') + curve(ff, v, 'var(--brass)') + curve(fT, v, 'var(--ink)'),
       notes:(v, sx, sy) =>
+        // the same crossing the building shows on the street, down in the bottom strip
+        `<circle cx="${sx(NCROSS).toFixed(1)}" cy="${sy(ff(NCROSS)).toFixed(1)}" r="4" fill="var(--roof)"/>` +
+        hlab(sx(5.35), sy(ff(NCROSS)) - 34, 'n² passes 4n + 6 here:', 'var(--roof)', 'start', true) +
+        hlab(sx(5.35), sy(ff(NCROSS)) - 20, 'n = 5.16, which is n₀', 'var(--roof)', 'start', true) +
         vgap(sx(6), sy(fT(6)), sy(ff(6)), 'var(--ink2)') +
         lab(sx(6) + 8, sy(fT(6)) + 4, 'T(6) = 534', 'var(--ink)') +
-        lab(sx(6) + 8, sy(ff(6)) - 6, 'n²(6) = 36', 'var(--brass)') +
+        lab(sx(6) + 8, sy(ff(6)) + 18, 'n²(6) = 36', 'var(--brass)') +
         lab(sx(6) + 8, (sy(fT(6)) + sy(ff(6)))/2, '14.8 times short', 'var(--ink2)') +
         lab(sx(6.6), YT + 14, 'T(n) exits at n ≈ 6.5', 'var(--ink)', 'start') +
         lab(sx(11.9), sy(ff(11.9)) - 12, 'f(n) = n², same shape', 'var(--brass)', 'end') },
@@ -1101,7 +1221,23 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         lab(sx(7.6) + 8, sy(fT(7.6)) + 24, 'T(n)', 'var(--ink)') +
         lab(sx(12), sy(fcf(12)) + 16, 'c·f(n) = 15n²', 'var(--roof)', 'end') +
         lab(X0 + 6, YT + 34, 'n² stretched, never bent', 'var(--ink2)', 'start', true),
-      after: runStretch }
+      after: runStretch },
+
+    // 9. far enough out to show that a much higher ceiling is still a ceiling
+    { view:'loose', legend:['T','cf','cube'],
+      eq:'<span class="t-T">T(n)</span> <span class="op">is under</span> <span class="t-c">15n&sup2;</span> <span class="op">and under</span> n&sup3;',
+      body:(v) => curve(fcube, v, 'var(--ink2)', '6 4') +
+        curve(fcf, v, 'var(--roof)', '5 5') + curve(fT, v, 'var(--ink)'),
+      notes:(v, sx, sy) =>
+        hlab(X0 + 6, YT + 18, 'T(n) is O(n²) and O(n³).', 'var(--ink)', 'start') +
+        hlab(X0 + 6, YT + 36, 'Both are true. Big-O is an', 'var(--ink2)', 'start', true) +
+        hlab(X0 + 6, YT + 50, 'upper bound, so a higher', 'var(--ink2)', 'start', true) +
+        hlab(X0 + 6, YT + 64, 'ceiling is still a correct one.', 'var(--ink2)', 'start', true) +
+        hlab(X0 + 6, YT + 84, 'n² is the tightest, which is', 'var(--ink2)', 'start', true) +
+        hlab(X0 + 6, YT + 98, 'the stronger claim: Θ(n²).', 'var(--ink2)', 'start', true) +
+        lab(sx(28.2), sy(fcube(30)) + 26, 'n³, from n = 15 on', 'var(--ink2)', 'end') +
+        lab(sx(29.4), sy(fcf(30)) - 12, 'c·f(n) = 15n²', 'var(--roof)', 'end') +
+        lab(sx(28.4), sy(fT(30)) + 36, 'T(n)', 'var(--ink)', 'end') }
   ];
 
   // ---- where 15n² − T(n) comes from ----
@@ -1160,7 +1296,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   const niceYs = span => STEPS.find(s => span/s >= 4) || 5;
 
   function introGap(){
-    const A = VIEW.wide, B = VIEW.gap, spec = CHARTS[4];
+    const A = VIEW.wide, B = VIEW.gap, spec = CHARTS[5];
     const HOLD = 500, MORPH = 2000, HOLDCAM = 0.45;
     const ease = t => t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2)/2;
     $('chart-range').textContent = 'subtracting T(n)';
