@@ -15,9 +15,11 @@ to what that does and does not promise.
 In between it is told as a building. `T(n)` starts on the roof, every term of it
 standing side by side. Then `n` grows: the leading term swells until it owns the
 whole slab and shoulders the lower order terms off the edge, and they land on
-the street. What is left up top is `c * f(n)`. Then `f(n)` tries to go up on its
-own and can only ride the elevator down to the basement, because without `c` it
-is smaller than `T(n)`. Bring `c` along and it goes straight back to the roof.
+the street. Left alone up there it goes straight through the slab, which is the
+picture of `14n^2` being smaller than `T(n)`, and only `c` can lift it back out.
+Then `f(n)` tries to go up on its own and can only ride the elevator down to the
+basement, because without `c` it is smaller than `T(n)`. Bring `c` along and it
+goes straight back to the roof.
 
 The worked example throughout is `T(n) = 14n^2 + 4n + 6`, with `f(n) = n^2`,
 `c = 15` and `n0 = 5`. Note that `c = 14` never works, for any `n`, since
@@ -25,6 +27,10 @@ The worked example throughout is `T(n) = 14n^2 + 4n + 6`, with `f(n) = n^2`,
 `15n^2 >= 14n^2 + 4n + 6` holds from `n = 6` on. A plot of the real curves sits
 beside the building so the metaphor never says something the numbers cannot
 back up.
+
+Step numbers in this file are the ones the page itself shows in its counter,
+`1 of 9` through `9 of 9`. In the source they are the indices of the `scenes`
+and `CHARTS` arrays, which start at zero, so step 3 is `scenes[2]`.
 
 ## What the building means, and where it stops meaning it
 
@@ -127,7 +133,7 @@ not only in the prose. The equation strip above the drawing colours `c` green,
 the plot use, and brackets over the roof name whatever is standing on it in
 that step.
 
-Step 2 animates the squeeze, and the mechanism is the point: nothing jumps. The
+Step 3 animates the squeeze, and the mechanism is the point: nothing jumps. The
 `14` and `n^2` chips grow in two pumps, from full size to 2.4x, pinned at their
 left edge so all of that growth travels rightward. The two lower order terms are
 carried along in front of them, the gap between the pair and the small terms
@@ -135,6 +141,15 @@ closing from 22px to 13px as the pressure builds, until each one runs out of roo
 and topples over the edge: `6` on the first pump, `4n` on the second. The fall
 has no upward hop, because a chip that is shoved does not leap; it just tips,
 tumbles, bounces once and lands in a spreading pool on the street.
+
+Then the slab goes too. With `4n` still in the air the pair leans on it, a red
+zigzag opens across the concrete, and 400ms later it fails: the roof is clipped
+away between `x = 174` and `x = 300`, the torn ends and the loose chunks show,
+fragments tumble to the street, dust lifts off the break and the whole drawing
+takes a 2px knock. The pair falls on `t^2` with no bounce at the bottom, only an
+overshoot and a settle, because heavy things do not spring back. It sheds its
+2.4x on the way down, which reads as falling into the building rather than
+past it, and comes to rest at `y = 122` wedged in its own hole.
 
 One number drives all of it. `scaleAt(t)` gives the scale of the surviving pair
 at any moment, `bigAt(s)` turns that into their positions and `pushAt(s)` into
@@ -155,15 +170,24 @@ three clicks, rather than three captions on timers inside one step.
 ### Sinking below the roof line
 
 `14n^2` on its own is not a bound: dropping `4n + 6` took something positive
-away, so what is left is under `T(n)`. From step 4 to step 6 the two survivors
-say so by position. They drop from the roof to `y = 122`, which is below the
-slab, and the roof is drawn a second time on top of the chips (`#roofOver`, a
-fill plus its two edge lines so it leaves no seam on the original and never
-reaches the elevator shaft) so that a chip down there is cut by the roof instead
-of floating in front of it. The drop has to clear the slab completely, because
-the number a chip carries is printed at its centre: sink it halfway and the
-label is the part the roof hides. At the end of step 6 the pair rises back
-through the slab, which is the payoff for `c = 15`.
+away, so what is left is under `T(n)`. From the end of step 3 through step 6 the
+two survivors say so by position. They sit at `y = 122`, below the slab, and the roof
+is drawn a second time on top of the chips (`#roofOver`, a fill plus its two
+edge lines so it leaves no seam on the original and never reaches the elevator
+shaft) so that a chip down there is cut by the roof instead of floating in front
+of it. The drop has to clear the slab completely, because the number a chip
+carries is printed at its centre: sink it halfway and the label is the part the
+roof hides.
+
+They get down there by breaking through, at the end of step 3, rather than by
+gliding down when the step changes. One `clipPath` (`#slabGap`) is applied to
+both copies of the roof at once, so the hole is a hole in one slab and not two
+slabs disagreeing, and `roofBreak(on)` is the only thing that opens or closes
+it. The gap runs to `x = 300` rather than stopping at the chips, because step 5
+slides `n^2` right to `x = 278` to make room for the `+1`, and a narrower hole
+would leave the top of that chip tucked under the surviving slab. At the end of
+step 6 the pair rises back through, `roofBreak(false)` closes the slab behind
+it, and that is the payoff for `c = 15`.
 
 ### Where the 15 comes from
 
@@ -171,14 +195,15 @@ Swapping the `14` chip for a `15` in one frame reads as a number changing for no
 reason, so it is spread over three steps, and the `15` is never asserted. It is
 arrived at as `14 + 1`, and the `1` has a visible reason to exist.
 
-- **Step 3** leaves the pair sunk, reading `14`, with the strip saying
-  `so 14n^2 < T(n)` in red and the note saying `14n^2 is not a bound`.
-- **Step 4** slides `n^2` right and stands a dashed green `+1` chip in the gap.
+- **Step 4** opens with the pair already through the slab, reading `14`, with the
+  strip saying `so 14n^2 < T(n)` in red and the note saying `14n^2 is not a bound`.
+- **Step 5** slides `n^2` right and stands a dashed green `+1` chip in the gap.
   The bracket becomes `14n^2 + 1n^2` and the note gives the arithmetic: raising
   `c` by one adds a whole `n^2`, because `15n^2 - 14n^2 = n^2`. The chip is
   dashed because it is not a term of `T(n)`, it is what the constant buys.
-- **Step 5** folds the `+1` into the constant, rolls `14` to `15`, lifts the pair
-  back above the roof line, and brings up the `n0` marker on the street.
+- **Step 6** folds the `+1` into the constant, rolls `14` to `15`, lifts the pair
+  back above the roof line, closes the slab behind it, and brings up the `n0`
+  marker on the street.
 
 ## The plot
 
@@ -241,12 +266,12 @@ the two curves, and opening on the finished picture makes it look like a new
 curve out of nowhere. So it is derived across two steps, each with one equation
 strip that does not change while it is being read.
 
-**Step 4, `is T(n) <= 15n^2 ?`** Both curves at full height, on top of each
+**Step 5, `is T(n) <= 15n^2 ?`** Both curves at full height, on top of each
 other. The distance is measured twice: at `n = 3`, where `15n^2` is 9 below
 `T(n)`, and at `n = 9`, where it is 39 above. Nine and thirty-nine against
 heights of 144 and 1176, which is why the crossing cannot be seen here.
 
-**Step 5, `15n^2 - (14n^2 + 4n + 6) = n^2 - 4n - 6`** `T(n)` sinks onto the axis
+**Step 6, `15n^2 - (14n^2 + 4n + 6) = n^2 - 4n - 6`** `T(n)` sinks onto the axis
 and `15n^2` is carried down with it, because subtracting `T(n)` from both is
 exactly that. The y window deliberately holds still for the first 45% of the
 move, so what you see is the curves coming down rather than the camera closing
@@ -263,6 +288,7 @@ the finished plot.
 ```
 index.html   the whole page: markup, styles and script, nothing external
 build.mjs    copies index.html to dist/index.html so site/build.sh can publish it
+package.json the build and preview scripts the site build looks for
 ```
 
 ## Running it

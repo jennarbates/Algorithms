@@ -128,6 +128,12 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .brk text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;font-weight:600;text-anchor:middle;
   paint-order:stroke;stroke:var(--sky);stroke-width:3.5px;stroke-linejoin:round}
 
+/* the slab giving way under the leading term */
+.dmg{opacity:0;transition:opacity .3s}
+.dmg.on{opacity:1}
+#rubble path{fill:var(--roof-soft);stroke:var(--roof);stroke-width:1;opacity:0}
+#dust circle{fill:var(--ink2);opacity:0}
+
 /* gore */
 .blood{opacity:0;transition:opacity .35s}
 .blood.on{opacity:1}
@@ -205,7 +211,17 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         <span class="lg"><i class="sw-low"></i>4n + 6, lower order</span>
       </div>
       <div class="svgwrap">
-      <svg viewBox="0 0 560 560" role="img" aria-label="A building with a roof, street and basement. The terms of T(n) move between them. The leading term grows until it pushes the lower order terms off the roof and they fall to the street.">
+      <svg id="scene" viewBox="0 0 560 560" role="img" aria-label="A building with a roof, street and basement. The terms of T(n) move between them. The leading term grows until it pushes the lower order terms off the roof and they fall to the street, and then it drops through the slab it is left standing on.">
+        <defs>
+          <!-- the slab with a hole punched in it, applied to both copies of the roof once
+               the leading term has gone through. Everything between x 174 and x 300 is
+               gone: wide enough to clear every position the survivors take while they are
+               down there, including n² sliding right to make room for the +1 chip. -->
+          <clipPath id="slabGap" clipPathUnits="userSpaceOnUse">
+            <rect x="0" y="0" width="174" height="560"/>
+            <rect x="300" y="0" width="260" height="560"/>
+          </clipPath>
+        </defs>
         <!-- sky -->
         <rect x="0" y="0" width="560" height="380" fill="var(--sky)"/>
         <!-- ground -->
@@ -227,7 +243,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
           <rect x="196" y="340" width="26" height="26"/><rect x="238" y="340" width="26" height="26"/><rect x="280" y="340" width="26" height="26"/>
         </g>
         <!-- roof slab -->
-        <rect x="128" y="104" width="250" height="8" class="roofline" stroke-width="1.5"/>
+        <rect id="slabBase" x="128" y="104" width="250" height="8" class="roofline" stroke-width="1.5"/>
         <text x="8" y="126" class="label">the roof:</text>
         <text x="8" y="141" class="label">where the</text>
         <text x="8" y="156" class="label">bound lives</text>
@@ -397,6 +413,42 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
           <line x1="179" y1="104" x2="378" y2="104" stroke="var(--roof)" stroke-width="1.5"/>
           <line x1="179" y1="112" x2="378" y2="112" stroke="var(--roof)" stroke-width="1.5"/>
         </g>
+
+        <!-- the slab failing. First a hairline zigzag while the leading term leans on it,
+             then the torn ends and the loose chunks left once it has gone through. Both
+             sit on top of #roofOver so the break is never hidden by the roof it is in. -->
+        <g id="preCrack" class="dmg">
+          <path d="M174 112 l7 -8 l7 8 l7 -8 l7 8 l7 -8 l7 8 l7 -8 l7 8 l7 -8 l7 8 l7 -8 l7 8 l7 -8 l7 8 l7 -8 l7 8 l7 -8 l7 8"
+                fill="none" stroke="var(--fall)" stroke-width="1.2"/>
+        </g>
+        <g id="roofDmg" class="dmg">
+          <!-- the two torn ends of the slab -->
+          <path d="M174 104 l-5 2 l5 2 l-4 2 l4 2" fill="none" stroke="var(--roof)" stroke-width="1.5"/>
+          <path d="M300 104 l5 2 l-5 2 l4 2 l-4 2" fill="none" stroke="var(--roof)" stroke-width="1.5"/>
+          <!-- chunks still clinging to each side -->
+          <path d="M165 112 l7 0 l-2 6 z" fill="var(--roof-soft)" stroke="var(--roof)" stroke-width="1"/>
+          <path d="M304 112 l8 0 l-3 7 z" fill="var(--roof-soft)" stroke="var(--roof)" stroke-width="1"/>
+          <!-- hairline cracks inside what is left of the slab, kept between its two edge
+               lines so they read as damage to the roof and not as marks floating over it -->
+          <path d="M172 106 l-7 4 l-8 -3 l-9 3" fill="none" stroke="var(--roof)" stroke-width="1" opacity=".7"/>
+          <path d="M302 110 l8 -4 l9 3 l10 -3" fill="none" stroke="var(--roof)" stroke-width="1" opacity=".7"/>
+        </g>
+        <!-- slab fragments, thrown clear on impact and left to fall to the street -->
+        <g id="rubble">
+          <path d="M0 0 l9 2 l-3 8 l-7 -3 z"/>
+          <path d="M0 0 l7 -2 l4 6 l-6 4 z"/>
+          <path d="M0 0 l10 3 l-2 6 l-8 -1 z"/>
+          <path d="M0 0 l6 3 l-3 7 l-5 -4 z"/>
+          <path d="M0 0 l8 -1 l1 7 l-7 1 z"/>
+        </g>
+        <!-- concrete dust at the break -->
+        <g id="dust">
+          <g transform="translate(182,110)"><circle r="3"/></g>
+          <g transform="translate(210,111)"><circle r="3.6"/></g>
+          <g transform="translate(238,109)"><circle r="3.2"/></g>
+          <g transform="translate(264,111)"><circle r="4"/></g>
+          <g transform="translate(290,110)"><circle r="3.2"/></g>
+        </g>
       </svg>
       </div>
     </div>
@@ -448,6 +500,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   const chips = {C:$('chipC'), F:$('chipF'), a:$('chip4n'), b:$('chip6'), P:$('chipP')};
   const bloods = {a:$('blood-a'), b:$('blood-b')};
   const car = $('car');
+  const stage = $('scene'), slabBase = $('slabBase'), roofOver = $('roofOver'),
+        preCrack = $('preCrack'), roofDmg = $('roofDmg'), rubble = $('rubble'), dust = $('dust');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // geometry. Chip centres; the roof slab top is y = 104, so a standing chip sits at y = 89.
@@ -589,6 +643,118 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     return anim;
   }
 
+  // ---- the slab gives way ----
+  // Once 4n and 6 are off the roof, the leading term is the only thing left standing on a
+  // slab that was never built for it at this size. It leans, the slab cracks, and it goes
+  // straight through: the same drop to y = SUNK the later steps rely on, but read as a
+  // collapse rather than a glide, because what makes it drop is weight, not a scene change.
+  const STRAIN_AT = 2050, STRAIN_MS = 420;    // starts while 4n is still in the air
+  const CRASH_AT = 2470, CRASH_MS = 880;
+  const SAG = 3.4;                            // how far the pair settles before the break
+  let debrisAnims = [];
+
+  // Clip both copies of the roof to the same gap, so the hole is a hole in one slab and
+  // not two slabs disagreeing. Repairing it puts the clip back and clears the wreckage.
+  function roofBreak(on){
+    if(on){
+      slabBase.setAttribute('clip-path', 'url(#slabGap)');
+      roofOver.setAttribute('clip-path', 'url(#slabGap)');
+    } else {
+      slabBase.removeAttribute('clip-path');
+      roofOver.removeAttribute('clip-path');
+    }
+    roofDmg.classList.toggle('on', !!on);
+    preCrack.classList.remove('on');
+    if(!on){ debrisAnims.forEach(a => a.cancel()); debrisAnims = []; }
+  }
+
+  // A shudder, growing, with the pair pressing a little further down each time.
+  function strain(){
+    preCrack.classList.add('on');
+    const g = bigAt(GROW);
+    [['C', 1], ['F', -1]].forEach(([key, dir]) => {
+      const [x, y, , s] = g[key];
+      const dy = [0, .5, .2, 1.4, .7, 2.3, 1.5, SAG];
+      drive(chips[key], dy.map((d, i) => ({
+        transform: tf(x + (i % 2 ? dir * .7 : 0), y + d, 0, s),
+        offset: +(i / (dy.length - 1)).toFixed(4)
+      })), STRAIN_MS, tf(x, y + SAG, 0, s));
+    });
+  }
+
+  // Gravity down, the width shed on the way (it is falling into the building, not away
+  // sideways), and no bounce at the bottom: heavy things overshoot and settle, they do
+  // not spring back up.
+  function crashFrames(x0, y0, s0, x1, y1){
+    const frames = [], N = 20, land = .78;
+    for(let i = 0; i <= N; i++){
+      const t = i / N, yn = t*t, e = 1 - Math.pow(1 - t, 2.4);
+      frames.push({
+        transform: tf(x0 + (x1 - x0)*e, y0 + (y1 - y0)*yn, 0, s0 + (1 - s0)*e),
+        offset: +(t*land).toFixed(4)
+      });
+    }
+    frames.push({transform: tf(x1, y1 + 6, 0, 1), offset:.87});
+    frames.push({transform: tf(x1, y1 - 1.2, 0, 1), offset:.95});
+    frames.push({transform: tf(x1, y1, 0, 1), offset:1});
+    return frames;
+  }
+
+  function shake(){
+    if(reduce) return;
+    stage.animate([
+      {transform:'translate(0,0)'}, {transform:'translate(1.5px,2.5px)'},
+      {transform:'translate(-2px,1px)'}, {transform:'translate(1px,-1.5px)'},
+      {transform:'translate(-.8px,.5px)'}, {transform:'translate(0,0)'}
+    ], {duration:420, easing:'ease-out'});
+  }
+
+  // Where each fragment starts on the broken edge, how far sideways it is thrown, and how
+  // far it turns on the way down to the street.
+  const RUBBLE = [
+    {x:178, dx:-40, r:-190, d:1180}, {x:206, dx:-16, r:135,  d:1320},
+    {x:234, dx:14,  r:-155, d:1100}, {x:262, dx:36,  r:210,  d:1260},
+    {x:290, dx:56,  r:-105, d:1380}
+  ];
+  function debris(){
+    if(reduce) return;
+    debrisAnims.forEach(a => a.cancel());
+    debrisAnims = [];
+    rubble.querySelectorAll('path').forEach((p, i) => {
+      const c = RUBBLE[i]; if(!c) return;
+      const y0 = 112, fall = 380 - y0, frames = [], N = 14;
+      for(let k = 0; k <= N; k++){
+        const t = k / N;
+        frames.push({
+          transform:`translate(${(c.x + c.dx*t).toFixed(1)}px,${(y0 + fall*t*t).toFixed(1)}px) rotate(${(c.r*t).toFixed(0)}deg)`,
+          opacity: t > .8 ? Math.max(0, (1 - t)*5) : 1,
+          offset:+t.toFixed(4)
+        });
+      }
+      debrisAnims.push(p.animate(frames, {duration:c.d, easing:'linear', fill:'forwards'}));
+    });
+  }
+
+  function dustPuff(){
+    if(reduce) return;
+    dust.querySelectorAll('circle').forEach((c, i) => {
+      const dir = i % 2 ? 1 : -1;
+      c.animate([
+        {opacity:.3,  transform:'translate(0,0) scale(.3)'},
+        {opacity:.16, transform:`translate(${dir*(9 + i*4)}px,${-7 - i*2}px) scale(1.6)`, offset:.5},
+        {opacity:0,   transform:`translate(${dir*(16 + i*6)}px,${-3 - i*3}px) scale(2.4)`}
+      ], {duration:880 + i*90, easing:'cubic-bezier(.2,.7,.3,1)'});
+    });
+  }
+
+  function crashThrough(){
+    roofBreak(true);
+    shake(); debris(); dustPuff();
+    const g = bigAt(GROW);
+    drive(chips.C, crashFrames(g.C[0], g.C[1] + SAG, GROW, 198, SUNK), CRASH_MS, tf(198, SUNK));
+    drive(chips.F, crashFrames(g.F[0], g.F[1] + SAG, GROW, 242, SUNK), CRASH_MS, tf(242, SUNK));
+  }
+
   // The two survivors swell, and the small chip riding ahead of them gets walked to the edge.
   function squeeze(){
     drive(chips.C, squeezeFrames(s => tf(...bigAt(s).C), GROW_MS), GROW_MS, tf(...bigAt(GROW).C));
@@ -706,7 +872,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       sym:'T(n) = O(f(n)) means: some c and some n₀ exist with T(n) ≤ c·f(n) for every n past n₀',
       num:'the rest of this page finds one c and one n₀ for T(n) = 14n² + 4n + 6',
       run(){
-        restRoof('a'); restRoof('b'); resetPlus();
+        restRoof('a'); restRoof('b'); resetPlus(); roofBreak(false);
         place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
         setC('14'); ops(1, 1, 0); tail('', ''); $('eqbar').classList.remove('drop');
         bracket($('brkTop'), 36, 180, 376, 'T(n) = 14n² + 4n + 6', INK);
@@ -722,7 +888,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       body:'First, what the letters mean. n is the size of the input, say how many items are in a list, so it is a whole number: 1 item, 2 items, and so on. T(n) is the number of steps the code takes on an input that size. Ours is T(n) = 14n² + 4n + 6, and the three pieces added together are its terms. All three are up on the roof, side by side, because up here the roof just means "part of T(n)". The biggest is 14n², the leading term. The smaller two, 4n and 6, are the lower order terms. Watch which of them still matters once n gets large.',
       sym:'T(n) = leading term + lower order terms', num:'T(n) = 14n² + 4n + 6',
       run(){
-        restRoof('a'); restRoof('b'); resetPlus();
+        restRoof('a'); restRoof('b'); resetPlus(); roofBreak(false);
         place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
         setC('14'); ops(1, 1, 0); tail('', ''); $('eqbar').classList.remove('drop');
         bracket($('brkTop'), 36, 180, 376, 'T(n) = 14n² + 4n + 6', INK);
@@ -735,8 +901,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       } },
 
     { tag:'Street', title:'The big term crowds them off',
-      body:'Now let n grow. 14n² swells far faster than 4n or 6 ever can, and the roof is only wide enough to name one of them. The leading term takes the whole slab and shoulders the small terms along it, first 6 and then 4n, until there is nothing under them and they go over the edge. They are not gone, they are outgrown. Look down: they are still on the street, still positive, and you are about to pay for them. Nobody jumps. They are pushed.',
-      sym:'lower order terms → outgrown, not gone', num:'14n² on the roof, 4n + 6 on the street',
+      body:'Now let n grow. 14n² swells far faster than 4n or 6 ever can, and the roof is only wide enough to name one of them. The leading term takes the whole slab and shoulders the small terms along it, first 6 and then 4n, until there is nothing under them and they go over the edge. They are not gone, they are outgrown. Look down: they are still on the street, still positive, and you are about to pay for them. Nobody jumps. They are pushed. Then watch the slab itself. All that is left standing on it is 14n², swollen and alone, and the roof will not hold it: it leans, the concrete cracks, and the whole term drops straight through. What that drop means is the next step.',
+      sym:'lower order terms → outgrown, not gone', num:'14n² through the slab, 4n + 6 on the street',
       run(from){
         setC('14'); ops(0, 0, 0); tail('', ''); $('eqbar').classList.add('drop');
         bracket($('brkTop'), 36, 0, 0, '', INK);
@@ -744,21 +910,27 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         car.style.transform = 'translateY(0)'; fDown = false;
         mark('n0mark', 0); mark('baseNote', 0);
         mark('defNote', 0); mark('higher', 0); mark('crossMark', 0);
-        const g = bigAt(GROW), label = () =>
-          bracket($('brkA'), BRK_Y, BLOCK_L, Math.round(g.right), '14n², the survivor', INK);
+        // the bracket only lands once the pair has stopped moving, and it names what is
+        // left where it ends up: under the line, not on it
+        const label = () =>
+          bracket($('brkA'), SUNK_BRK, 180, 260, '14n², the survivor', INK);
         // the squeeze only plays when arriving from the roof scene just before it
         if(from === 1 && !reduce){
           bracket($('brkA'), BRK_Y, 0, 0, '', INK);
           mark('deadNote', 0);
+          roofBreak(false);
           place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
           restRoof('a'); restRoof('b');
           squeeze();
           shove('b', DROP_B, pushAt(scaleAt(DROP_B)).b);
           shove('a', DROP_A, pushAt(GROW).a);
-          later(label, 2150);
           later(() => mark('deadNote', 1), 2350);
+          later(strain, STRAIN_AT);
+          later(crashThrough, CRASH_AT);
+          later(label, CRASH_AT + CRASH_MS + 140);
         } else {
-          place(chips.C, ...g.C); place(chips.F, ...g.F);
+          roofBreak(true);
+          place(chips.C, 198, SUNK); place(chips.F, 242, SUNK);
           snapDead('a'); snapDead('b');
           label(); mark('deadNote', 1);
         }
@@ -770,6 +942,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       run(){
         snapDead('a'); snapDead('b');
         cls(chips.F, ['f'], []);
+        roofBreak(true);
         place(chips.C, 198, SUNK); place(chips.F, 242, SUNK);
         setC('14'); ops(0, 0, 0); tail('so 14n² < T(n)', 'r');
         $('eqbar').classList.add('drop');
@@ -779,10 +952,9 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         car.style.transform = 'translateY(0)'; fDown = false;
         mark('n0mark', 0); mark('deadNote', 1); mark('baseNote', 0);
         mark('defNote', 0); mark('higher', 0); mark('crossMark', 0);
-        // the bracket is still up at the grown height from the scene before, so it fades
-        // out and comes back at the sunk one rather than jumping down through the chips
-        bracket($('brkA'), 64, 0, 0, '', INK);
-        later(() => bracket($('brkA'), SUNK_BRK, 180, 260, '14n², now under the line', RED), reduce ? 0 : 900);
+        // the pair went through the slab in the step before, so the bracket is already at
+        // the sunk height: only the wording changes, from naming it to judging it
+        bracket($('brkA'), SUNK_BRK, 180, 260, '14n², now under the line', RED);
       } },
 
     { tag:'Roof', title:'Raise c from 14 to 15',
@@ -791,6 +963,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       run(){
         snapDead('a'); snapDead('b');
         cls(chips.F, ['f'], []);
+        roofBreak(true);
         place(chips.C, 198, SUNK); setC('14'); ops(0, 0, 0);
         tail('but 14n² < T(n)', 'r'); $('eqbar').classList.add('drop');
         bracket($('brkTop'), 36, 0, 0, '', INK);
@@ -824,16 +997,21 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
           mark('n0mark', 1);
         };
         if(reduce){
+          roofBreak(false);
           place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F); setC('15'); land();
           return;
         }
         // pick up exactly where the step before left off, then close the argument
+        roofBreak(true);
         snapTo(chips.C, 198, SUNK); snapTo(chips.F, F_WIDE, SUNK);
         plusSnap(PLUS_X, SUNK, 1); setC('14');
         bracket($('brkA'), 64, 0, 0, '', GREEN); mark('n0mark', 0);
         later(() => { plusTo(198, SUNK, 0, 430); slide(chips.F, 242, SUNK, 470); }, 550);
         later(() => setC('15'), 980);
         later(() => { place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F); }, 1300);
+        // the pair rises through the hole it made, and the slab closes behind it: c is
+        // what puts 15n² back above the line, so the roof is whole again once it is up
+        later(() => roofBreak(false), 1620);
         later(land, 2250);
       } },
 
@@ -841,7 +1019,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       body:'Send the shape up on its own, with no constant, and it cannot hold the roof. n² by itself is below T(n) at every n, so it rides the elevator down. Watch where it passes the street. n² starts out under 4n + 6 and only climbs past it between n = 5 and n = 6, at 5.16 exactly. That is the same place n₀ came from: the moment the shape outgrows the terms you left out is the moment c = 15 starts working. Right shape, wrong size.',
       sym:'f(n) on its own is not ≥ T(n)', num:'n² < 14n² + 4n + 6 for every n',
       run(){
-        snapDead('a'); snapDead('b');
+        snapDead('a'); snapDead('b'); roofBreak(false);
         place(chips.C, ...ROOF.C); setC('15'); ops(0, 0, 0);
         tail('but n² alone < T(n)', 'b'); $('eqbar').classList.add('drop');
         bracket($('brkTop'), 36, 0, 0, '', INK);
@@ -865,7 +1043,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       sym:'T(n) = O(f(n)) means: some c and some n₀ exist with T(n) ≤ c·f(n) for every n past n₀',
       num:'14n² + 4n + 6 = O(n²)  with c = 15, n₀ = 5',
       run(){
-        snapDead('a'); snapDead('b');
+        snapDead('a'); snapDead('b'); roofBreak(false);
         place(chips.C, ...ROOF.C); setC('15'); ops(0, 0, 1);
         tail('= O(n²)', 'g'); $('eqbar').classList.add('drop');
         bracket($('brkTop'), 36, 0, 0, '', INK);
@@ -888,7 +1066,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       sym:'T(n) = O(f(n)) does not mean f(n) is the smallest such bound',
       num:'14n² + 4n + 6 is O(n²), and also O(n³), and also O(n⁴)',
       run(){
-        snapDead('a'); snapDead('b'); resetPlus();
+        snapDead('a'); snapDead('b'); resetPlus(); roofBreak(false);
         place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
         setC('15'); ops(0, 0, 1); tail('= O(n²), and O(n³)', 'g');
         $('eqbar').classList.add('drop');
