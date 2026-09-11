@@ -124,7 +124,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .marker.on{opacity:1}
 .brk{opacity:0;transition:opacity .35s}
 .brk path{fill:none;stroke-width:1.5}
-.brk text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;font-weight:600;text-anchor:middle}
+.brk text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;font-weight:600;text-anchor:middle;
+  paint-order:stroke;stroke:var(--sky);stroke-width:3.5px;stroke-linejoin:round}
 
 /* gore */
 .blood{opacity:0;transition:opacity .35s}
@@ -339,6 +340,13 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
           <rect x="-18" y="-15" width="36" height="30" rx="4"/><text>6</text>
           <g class="eyes"><path d="M-13 -9 l5 5 m0 -5 l-5 5"/><path d="M8 -9 l5 5 m0 -5 l-5 5"/></g>
         </g>
+        <!-- the roof, drawn a second time on top of the chips: what has sunk below the
+             line is hidden by it, which is the whole point of sinking -->
+        <g id="roofOver">
+          <rect x="179" y="104" width="199" height="8" fill="var(--roof-soft)"/>
+          <line x1="179" y1="104" x2="378" y2="104" stroke="var(--roof)" stroke-width="1.5"/>
+          <line x1="179" y1="112" x2="378" y2="112" stroke="var(--roof)" stroke-width="1.5"/>
+        </g>
       </svg>
       </div>
     </div>
@@ -361,7 +369,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     <!-- caption and controls -->
     <aside class="side">
       <div class="capwrap">
-        <div class="stepline"><span class="stepnum" id="stepnum">1</span><span class="of">of 5</span></div>
+        <div class="stepline"><span class="stepnum" id="stepnum">1</span><span class="of" id="stepof">of 5</span></div>
         <h2 id="title"></h2>
         <p id="body"></p>
         <div class="pair">
@@ -602,6 +610,11 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   // is read, the roof does the arithmetic: a dashed +1 chip is made room for, stands next
   // to 14n² as its own term, and then merges into the constant.
   const PLUS_X = 238, F_WIDE = 278;   // where the +1 stands, and where n² waits for it
+  // How far the survivors drop once 4n + 6 is gone. The roof slab spans y 104 to 112 and is
+  // drawn again on top of the chips, so a chip that drops to here hangs below the line with
+  // its top tucked under the slab. It has to clear the slab entirely, otherwise the number
+  // printed at the chip's centre is the part the roof hides.
+  const SUNK = 122, SUNK_BRK = 86;   // and the bracket rests on the roof above them
 
   // a transform move with a duration of its own, for the small moves inside a scene
   function slide(chip, x, y, ms){
@@ -610,21 +623,22 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     chip.style.transform = tf(x, y);
     later(() => { chip.style.transition = ''; }, ms + 40);
   }
-  function plusTo(x, opacity, ms){
+  function plusTo(x, y, opacity, ms){
     const p = chips.P;
     p.style.transition = `transform ${ms}ms cubic-bezier(.45,0,.2,1),opacity ${Math.round(ms*.85)}ms`;
-    p.style.transform = tf(x, 89);
+    p.style.transform = tf(x, y);
     p.style.opacity = opacity;
   }
-  function resetPlus(){
+  function plusSnap(x, y, opacity){
     const p = chips.P;
     stopAnim(p);
     p.style.transition = 'none';
-    p.style.transform = tf(PLUS_X, 89);
-    p.style.opacity = 0;
+    p.style.transform = tf(x, y);
+    p.style.opacity = opacity;
     p.getBoundingClientRect();
     p.style.transition = '';
   }
+  const resetPlus = () => plusSnap(PLUS_X, SUNK, 0);
   // three lines in the sky beside the roof, saying what the constant is doing right now
   function cnote(l1, l2, l3, color){
     $('cn1').textContent = l1 || ''; $('cn1').setAttribute('fill', color || INK);
@@ -678,49 +692,74 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         }
       } },
 
-    { tag:'Roof', title:'Why c has to be 15, not 14',
-      body:'14n² on its own is not a bound at all. Dropping 4n + 6 took something positive off the roof, so what is left sits just under T(n). The only lever still available is the constant, and raising it by one is worth exactly one whole n², since 15n² − 14n² = n². That spare n² covers 4n + 6 as soon as n² ≥ 4n + 6, which happens from n = 6 on, and that is where n₀ = 5 comes from.',
-      sym:'T(n) ≤ c·f(n) for all n > n₀', num:'15n² = 14n² + n², and n² ≥ 4n + 6 from n = 6',
+    { tag:'Street', title:'The gap is tiny, but it is not zero',
+      body:'Dropping 4n + 6 was allowed because it is a rounding error. At n = 11.4 the whole of it is 51.6 against a T(n) of 1871, under 3 percent, and the plot has to magnify that one spot eight times before you can see it at all. But it is not nothing. It was positive, so what is left on the roof is now under T(n), and the survivors sink below the roof line.',
+      sym:'T(n) − 14n² = 4n + 6, which is positive', num:'at n = 11.4: 1871.0 − 1819.4 = 51.6',
       run(){
         snapDead('a'); snapDead('b');
         cls(chips.F, ['f'], []);
+        place(chips.C, 198, SUNK); place(chips.F, 242, SUNK);
+        setC('14'); ops(0, 0, 0); tail('so 14n² < T(n)', 'r');
         $('eqbar').classList.add('drop');
         bracket($('brkTop'), 36, 0, 0, '', INK);
         bracket($('brkB'), 64, 0, 0, '', RED);
+        cnote('14n² is not a bound', 'it is under T(n) by exactly', 'the 4n + 6 we dropped', RED);
+        car.style.transform = 'translateY(0)'; fDown = false;
+        mark('n0mark', 0); mark('deadNote', 1); mark('baseNote', 0);
+        // the bracket is still up at the grown height from the scene before, so it fades
+        // out and comes back at the sunk one rather than jumping down through the chips
+        bracket($('brkA'), 64, 0, 0, '', INK);
+        later(() => bracket($('brkA'), SUNK_BRK, 180, 260, '14n², now under the line', RED), reduce ? 0 : 900);
+      } },
+
+    { tag:'Roof', title:'Raise c from 14 to 15',
+      body:'The only lever still available is the constant. Raising it by one is worth exactly one whole n², because 15n² − 14n² = n². So a spare n² joins the two terms on the roof, drawn dashed because it is not a term of T(n): it is what the constant buys. The question is now whether that one spare n² is enough to cover the 4n + 6 that was thrown away.',
+      sym:'c·f(n) = 15n² = 14n² + n²', num:'the spare n² has to cover 4n + 6',
+      run(){
+        snapDead('a'); snapDead('b');
+        cls(chips.F, ['f'], []);
+        place(chips.C, 198, SUNK); setC('14'); ops(0, 0, 0);
+        tail('but 14n² < T(n)', 'r'); $('eqbar').classList.add('drop');
+        bracket($('brkTop'), 36, 0, 0, '', INK);
+        bracket($('brkB'), 64, 0, 0, '', RED);
+        bracket($('brkA'), SUNK_BRK, 180, 296, '14n² + 1n²', GREEN);
+        cnote('so raise c by one', 'that adds a whole n²:', '15n² − 14n² = n²', GREEN);
+        car.style.transform = 'translateY(0)'; fDown = false;
+        mark('n0mark', 0); mark('deadNote', 1); mark('baseNote', 0);
+        if(reduce){ plusSnap(PLUS_X, SUNK, 1); place(chips.F, F_WIDE, SUNK); return; }
+        place(chips.F, 242, SUNK);
+        later(() => { slide(chips.F, F_WIDE, SUNK, 480); plusTo(PLUS_X, SUNK, 1, 420); }, 700);
+      } },
+
+    { tag:'Roof', title:'c = 15 works, from n = 6 on',
+      body:'The spare n² covers 4n + 6 as soon as n² ≥ 4n + 6, which happens from n = 6 on. So the +1 folds into the constant, 14 becomes 15, and 15n² rises back above the roof line and stays there. That is n₀ = 5: every n past it is covered. The plot checks the same claim by taking T(n) off both curves and asking whether what is left is above zero.',
+      sym:'T(n) ≤ c·f(n) for all n > n₀', num:'14n² + 4n + 6 ≤ 15n² for all n > 5, so n₀ = 5',
+      run(){
+        snapDead('a'); snapDead('b');
+        cls(chips.F, ['f'], []);
+        tail('≤ 15·n²', 'g'); $('eqbar').classList.add('drop');
+        bracket($('brkTop'), 36, 0, 0, '', INK);
+        bracket($('brkB'), 64, 0, 0, '', RED);
+        cnote('c = 15 works', 'that spare n² covers', '4n + 6 once n ≥ 6', GREEN);
         car.style.transform = 'translateY(0)'; fDown = false;
         mark('deadNote', 1); mark('baseNote', 0);
-
-        // the finished state, which the sequence below walks up to one step at a time
         const land = () => {
-          ops(0, 0, 1); tail('≤ 15·n²', 'g');
+          ops(0, 0, 1);
           bracket($('brkA'), 64, 180, 260, 'c·f(n) = 15n²', GREEN);
-          cnote('c = 15 works', 'that spare n² covers', '4n + 6 once n ≥ 6', GREEN);
           mark('n0mark', 1);
         };
         if(reduce){
-          place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
-          setC('15'); land();
+          place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F); setC('15'); land();
           return;
         }
-        // 1. what scene 2 left behind, back at normal size, and short of T(n)
-        place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
-        setC('14'); ops(0, 0, 0); tail('but 14n² < T(n)', 'r');
-        cnote('14n² is not a bound', '4n + 6 was positive, so', 'dropping it left a hole', RED);
-        mark('n0mark', 0);
-        // the bracket is still up at the grown height from scene 2, so it fades out and
-        // comes back at the normal one rather than jumping down through the chips
-        bracket($('brkA'), 64, 0, 0, '', INK);
-        later(() => bracket($('brkA'), 64, 180, 260, '14n², the survivor', INK), 800);
-        // 2. room is made and the extra n² the constant buys stands up in it
-        later(() => { slide(chips.F, F_WIDE, 89, 480); plusTo(PLUS_X, 1, 420); }, 1700);
-        later(() => {
-          bracket($('brkA'), 64, 180, 296, '14n² + 1n²', GREEN);
-          cnote('so raise c by one', 'that adds a whole n²:', '15n² − 14n² = n²', GREEN);
-        }, 1970);
-        // 3. the extra folds into the constant, and 14 becomes 15
-        later(() => { plusTo(198, 0, 430); slide(chips.F, 242, 89, 470); }, 3050);
-        later(() => setC('15'), 3450);
-        later(land, 3700);
+        // pick up exactly where the step before left off, then close the argument
+        snapTo(chips.C, 198, SUNK); snapTo(chips.F, F_WIDE, SUNK);
+        plusSnap(PLUS_X, SUNK, 1); setC('14');
+        bracket($('brkA'), 64, 0, 0, '', GREEN); mark('n0mark', 0);
+        later(() => { plusTo(198, SUNK, 0, 430); slide(chips.F, 242, SUNK, 470); }, 550);
+        later(() => setC('15'), 980);
+        later(() => { place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F); }, 1300);
+        later(land, 2250);
       } },
 
     { tag:'Basement', title:'f(n) alone rides the elevator down',
@@ -782,10 +821,15 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   };
 
   const chartEl = $('chart');
-  let view = Object.assign({}, VIEW.wide), zoomReq = null, creadReq = null, stretchAnim = null;
+  let view = Object.assign({}, VIEW.wide), zoomReq = null, creadReq = null,
+      stretchAnim = null, magAnim = null;
 
-  const sxOf = v => n => X0 + (X1 - X0)*(n - v.n0)/(v.n1 - v.n0);
-  const syOf = v => y => YB - (YB - YT)*(y - v.y0)/(v.y1 - v.y0);
+  // A view may carry its own box (bx0..bx1, by0..by1) instead of the main plot's, which is
+  // what lets the magnifier panel draw with the same curve, band and gap helpers.
+  const sxOf = v => n => (v.bx0 ?? X0) + ((v.bx1 ?? X1) - (v.bx0 ?? X0))*(n - v.n0)/(v.n1 - v.n0);
+  const syOf = v => y => (v.by1 ?? YB) - ((v.by1 ?? YB) - (v.by0 ?? YT))*(y - v.y0)/(v.y1 - v.y0);
+  const nAt = (v, px) => v.n0 + (v.n1 - v.n0)*(px - X0)/(X1 - X0);
+  const yAt = (v, py) => v.y0 + (v.y1 - v.y0)*(YB - py)/(YB - YT);
   const clampY = y => Math.max(-9000, Math.min(9000, y));
 
   function dOf(fn, v){
@@ -847,6 +891,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     if(zoomReq) cancelAnimationFrame(zoomReq); zoomReq = null;
     if(creadReq) cancelAnimationFrame(creadReq); creadReq = null;
     if(stretchAnim){ stretchAnim.cancel(); stretchAnim = null; }
+    if(magAnim){ magAnim.cancel(); magAnim = null; }
   }
 
   function setChart(k){
@@ -916,6 +961,68 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     })();
   }
 
+  // ---- the magnifier on 4n + 6 ----
+  // At n = 11.4 the whole of 4n + 6 is 51.6 units, against a T(n) of 1871. On a plot 486
+  // pixels tall that is about ten pixels, so naming the gap is not the same as seeing it.
+  // A detail panel takes that one spot, blows it up eight times, and grows out of the
+  // dashed box it was cut from so the reader can see where it came from.
+  const MAG_N = 11.4, MAG_BOX = 18, MAG_P = {x0:64, x1:208, y0:46, y1:190};
+  const MAG_X = MAG_P.x1 - MAG_P.x0;
+
+  // the dashed source box on the main plot, in screen coordinates
+  function magBox(v){
+    const sx = sxOf(v), sy = syOf(v), h = MAG_BOX/2;
+    const cx = sx(MAG_N), cy = (sy(fT(MAG_N)) + sy(f14(MAG_N)))/2;
+    return {cx, cy, x0:cx - h, y0:cy - h, x1:cx + h, y1:cy + h};
+  }
+  function magnifier(v){
+    const b = magBox(v), P = MAG_P;
+    // the same slice of the world, drawn into the panel's box instead of the plot's
+    const pv = {n0:nAt(v, b.x0), n1:nAt(v, b.x1), y0:yAt(v, b.y1), y1:yAt(v, b.y0),
+                bx0:P.x0, bx1:P.x1, by0:P.y0, by1:P.y1};
+    const psx = sxOf(pv), psy = syOf(pv);
+    const gap = fT(MAG_N) - f14(MAG_N), pct = (100*gap/fT(MAG_N)).toFixed(1);
+    const mid = (psy(fT(MAG_N)) + psy(f14(MAG_N)))/2;
+    return `<g id="magline" opacity="0">` +
+        leader(b.x0, b.y0, P.x0, P.y0) + leader(b.x1, b.y0, P.x1, P.y0) +
+        leader(b.x0, b.y1, P.x0, P.y1) + leader(b.x1, b.y1, P.x1, P.y1) + `</g>` +
+      `<rect x="${b.x0.toFixed(1)}" y="${b.y0.toFixed(1)}" width="${MAG_BOX}" height="${MAG_BOX}" ` +
+        `fill="none" stroke="var(--ink)" stroke-width="1.2" stroke-dasharray="2 2"/>` +
+      `<g id="mag">` +
+        `<clipPath id="magclip"><rect x="${P.x0}" y="${P.y0}" width="${MAG_X}" height="${P.y1-P.y0}"/></clipPath>` +
+        `<rect x="${P.x0}" y="${P.y0}" width="${MAG_X}" height="${P.y1-P.y0}" ` +
+          `fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>` +
+        `<g clip-path="url(#magclip)">` +
+          band(fT, f14, pv.n0, pv.n1, pv, 'var(--fall)') +
+          curve(f14, pv, 'var(--ink2)', '6 4') + curve(fT, pv, 'var(--ink)') +
+          vgap(psx(MAG_N), psy(fT(MAG_N)), psy(f14(MAG_N)), 'var(--fall)') +
+        `</g>` +
+      `</g>` +
+      hlab(P.x0, P.y0 - 9, 'the same spot, 8 times bigger', 'var(--ink2)', 'start', true) +
+      hlab(P.x0, P.y1 + 24, 'that whole red band is ' + gap.toFixed(1) + ',', 'var(--fall)') +
+      hlab(P.x0, P.y1 + 40, 'against T(11.4) = ' + fT(MAG_N).toFixed(0) + '.', 'var(--ink2)', 'start', true) +
+      hlab(P.x0, P.y1 + 54, 'it is ' + pct + '% of the height', 'var(--ink2)', 'start', true);
+  }
+  // the panel grows out of the box, so the zoom is watched rather than asserted
+  function runMagnify(){
+    const g = $('mag'), l = $('magline');
+    if(!g) return;
+    const b = magBox(view), P = MAG_P;
+    const px = (P.x0 + P.x1)/2, py = (P.y0 + P.y1)/2;
+    const s0 = MAG_BOX / MAG_X, tx = b.cx - px, ty = b.cy - py;
+    const show = () => { if(l) l.setAttribute('opacity', 1); };
+    if(reduce){ show(); return; }
+    const kf = [];
+    for(let i = 0; i <= 26; i++){
+      const t = i/26, e = 1 - Math.pow(1 - t, 3), s = s0 + (1 - s0)*e;
+      kf.push({transform:`translate(${(px + tx*(1-e)).toFixed(2)}px,${(py + ty*(1-e)).toFixed(2)}px) ` +
+        `scale(${s.toFixed(4)}) translate(${(-px).toFixed(2)}px,${(-py).toFixed(2)}px)`, offset:+t.toFixed(4)});
+    }
+    magAnim = g.animate(kf, {duration:950, easing:'linear', fill:'both'});
+    magAnim.onfinish = () => { g.style.transform = 'none'; magAnim = null; };
+    later(show, 900);
+  }
+
   const CHARTS = [
     // 1. T(n) on its own
     { view:'wide', legend:['T'],
@@ -933,9 +1040,24 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         lab(sx(9.4), sy(f14(9.4)) + 48, '14n², T(n) without them', 'var(--ink2)', 'end') +
         lab(sx(12), sy(flow(12)) + 16, '4n + 6', 'var(--fall)', 'end') },
 
-    // 3. the two curves are so close that the honest way to see the crossing is to plot
+    // 3. the same picture, with the sliver blown up eight times so the claim that
+    //    4n + 6 is a rounding error can be checked rather than taken on trust
+    { view:'wide', legend:['T','low'],
+      eq:'<span class="t-low">4n + 6</span> <span class="op">at</span> n = 11.4, <span class="op">magnified</span>',
+      body:(v) => curve(flow, v, 'var(--fall)', '3 3') + curve(f14, v, 'var(--ink2)', '6 4') + curve(fT, v, 'var(--ink)'),
+      notes:(v) => magnifier(v),
+      after: runMagnify },
+
+    // 4. both curves at full height, and the distance between them measured twice: the
+    //    numbers the next step's subtraction has to reproduce
+    { view:'wide', legend:['T','cf'],
+      eq:'is <span class="t-T">T(n)</span> &le; <span class="t-c">15n&sup2;</span> ?',
+      body:(v) => curve(fT, v, 'var(--ink)') + curve(fcf, v, 'var(--roof)', '5 4'),
+      notes:(v, sx, sy) => PRE.notes(v, sx, sy) },
+
+    // 5. the two curves are so close that the honest way to see the crossing is to plot
     //    the distance between them: 15n² - T(n), which is n² - 4n - 6. Where that curve
-    //    comes from is the confusing part, so `intro` below derives it on screen instead
+    //    comes from is the confusing part, so `intro` below subtracts on screen instead
     //    of opening on the finished picture.
     { view:'gap', legend:['T','cf'], intro:() => introGap(),
       eq:'<span class="t-c">15n²</span> &minus; (<span class="t-T">14n² + 4n + 6</span>) = <span class="t-c">n&sup2; &minus; 4n &minus; 6</span>',
@@ -956,7 +1078,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         hlab(sx(5.35), sy(0) + 24, 'crosses zero at n = 5.16,', 'var(--ink2)', 'start', true) +
         hlab(sx(5.35), sy(0) + 38, 'so n₀ = 5 works', 'var(--ink2)', 'start', true) },
 
-    // 4. the shape on its own, with the y axis zoomed until n² is actually visible
+    // 6. the shape on its own, with the y axis zoomed until n² is actually visible
     { view:'low', legend:['T','f'],
       eq:'<span class="t-f">f(n) = n&sup2;</span> <span class="op">against</span> <span class="t-T">T(n)</span>',
       body:(v) => curve(ff, v, 'var(--brass)') + curve(fT, v, 'var(--ink)'),
@@ -968,7 +1090,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         lab(sx(6.6), YT + 14, 'T(n) exits at n ≈ 6.5', 'var(--ink)', 'start') +
         lab(sx(11.9), sy(ff(11.9)) - 12, 'f(n) = n², same shape', 'var(--brass)', 'end') },
 
-    // 5. multiply the shape by c and watch the whole curve stretch upward
+    // 7. multiply the shape by c and watch the whole curve stretch upward
     { view:'wide', legend:['T','f','cf'],
       eq:'<span class="t-f">n&sup2;</span> <span class="op">&times;</span> <span class="t-c">c</span> <span class="op">&rarr;</span> <span class="t-c">15n&sup2;</span>',
       body:(v) => curve(fcf, v, 'var(--roof)', '5 5', ' opacity=".35"') + curve(fT, v, 'var(--ink)') +
@@ -1037,20 +1159,14 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   const STEPS = [1000, 500, 200, 100, 50, 20, 10, 5];
   const niceYs = span => STEPS.find(s => span/s >= 4) || 5;
 
-  const EQ_ASK  = 'is <span class="t-T">T(n)</span> &le; <span class="t-c">15n&sup2;</span> ?';
-  const EQ_MOVE = 'same question: is <span class="t-c">15n&sup2;</span> &minus; <span class="t-T">T(n)</span> &ge; 0 ?';
-
   function introGap(){
-    const A = VIEW.wide, B = VIEW.gap, spec = CHARTS[2], eq = $('chart-eq');
-    const HOLD = 1400, MORPH = 2000, HOLDCAM = 0.45;
+    const A = VIEW.wide, B = VIEW.gap, spec = CHARTS[4];
+    const HOLD = 500, MORPH = 2000, HOLDCAM = 0.45;
     const ease = t => t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2)/2;
-    eq.innerHTML = EQ_ASK;
-    $('chart-range').textContent = 'both curves, full height';
+    $('chart-range').textContent = 'subtracting T(n)';
     view = Object.assign({}, A);
-    drawChart(view, PRE, true);
+    drawChart(view, morphSpec(0), false);
     later(() => {
-      eq.innerHTML = EQ_MOVE;
-      $('chart-range').textContent = 'subtracting T(n)';
       const t0 = performance.now();
       (function frame(now){
         const t = Math.min(1, (now - t0)/MORPH), u = ease(t);
@@ -1064,7 +1180,6 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         if(t < 1){ zoomReq = requestAnimationFrame(frame); return; }
         zoomReq = null;
         view = Object.assign({}, B);
-        eq.innerHTML = spec.eq;
         $('chart-range').textContent = B.name;
         drawChart(view, spec, true);
       })(performance.now());
@@ -1086,6 +1201,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     s.run(from);
     setChart(i);
     $('stepnum').textContent = i + 1;
+    $('stepof').textContent = 'of ' + scenes.length;
     $('title').textContent = s.title;
     $('body').textContent = s.body;
     $('sym').textContent = s.sym;
