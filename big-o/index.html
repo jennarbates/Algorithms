@@ -69,6 +69,7 @@ code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .eqbar #eqtail.g{color:var(--roof)}
 .eqbar #eqtail.b{color:var(--brass)}
 .eqbar #eqtail.k{color:var(--ink)}
+.eqbar #eqtail.r{color:var(--fall)}
 .legend{display:flex;flex-wrap:wrap;gap:4px 14px;padding:2px 12px 4px;font-size:10.5px;color:var(--ink2);flex:0 0 auto}
 .legend .lg{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .legend i{width:9px;height:9px;border-radius:3px;border:2px solid var(--ink);display:inline-block}
@@ -108,6 +109,9 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .chip.fall rect{stroke:var(--fall)} .chip.fall text{fill:var(--fall)}
 .chip.c rect{stroke:var(--roof);fill:var(--roof-soft)} .chip.c text{fill:var(--roof)}
 .chip.f rect{stroke:var(--brass);fill:var(--brass-soft)} .chip.f text{fill:var(--brass)}
+/* dashed, because it is not a term of T(n): it is what the constant buys */
+.chip.plus rect{stroke:var(--roof);fill:var(--roof-soft);stroke-dasharray:4 3}
+.chip.plus text{fill:var(--roof);font-size:14px}
 .chip.dead rect{stroke:var(--fall);fill:var(--fall-soft)}
 .chip.dead text{fill:var(--fall)}
 .chip.dead .eyes{opacity:1}
@@ -144,6 +148,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 @keyframes annoIn{from{opacity:0}to{opacity:1}}
 .tlabel{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;fill:var(--ink2)}
 .tlabel.strong{fill:var(--ink);font-weight:600;font-size:12px}
+/* for labels that have to sit on top of gridlines, curves or a filled band */
+.tlabel.halo{paint-order:stroke;stroke:var(--paper2);stroke-width:3.5px;stroke-linejoin:round}
 @media (prefers-reduced-motion:reduce){.chip,.car,.marker,.curve,.blood,.blood .pool,.blood .spatter{transition:none}}
 
 /* narrower or shorter screens: unlock the height, keep the controls reachable */
@@ -300,6 +306,13 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
           <text x="396" y="446" class="label" fill="var(--fall)">do not survive large n</text>
         </g>
 
+        <!-- the running commentary on why c moves off 14, filled in by the scene -->
+        <g id="cNote" class="marker">
+          <text id="cn1" x="552" y="64" class="label big" text-anchor="end"></text>
+          <text id="cn2" x="552" y="82" class="label" text-anchor="end"></text>
+          <text id="cn3" x="552" y="97" class="label" text-anchor="end"></text>
+        </g>
+
         <!-- note next to the basement -->
         <g id="baseNote" class="marker">
           <text x="196" y="452" class="label big" fill="var(--brass)">f(n) = n&sup2;, alone</text>
@@ -313,6 +326,10 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         </g>
         <g id="chipF" class="chip f">
           <rect x="-18" y="-15" width="36" height="30" rx="4"/><text>n&sup2;</text>
+        </g>
+        <!-- the one extra n² that raising c from 14 to 15 buys -->
+        <g id="chipP" class="chip plus" opacity="0">
+          <rect x="-17" y="-15" width="34" height="30" rx="4"/><text>+1</text>
         </g>
         <g id="chip4n" class="chip">
           <rect x="-18" y="-15" width="36" height="30" rx="4"/><text>4n</text>
@@ -369,7 +386,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 <script>
 (function(){
   const $ = id => document.getElementById(id);
-  const chips = {C:$('chipC'), F:$('chipF'), a:$('chip4n'), b:$('chip6')};
+  const chips = {C:$('chipC'), F:$('chipF'), a:$('chip4n'), b:$('chip6'), P:$('chipP')};
   const bloods = {a:$('blood-a'), b:$('blood-b')};
   const car = $('car');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -578,6 +595,43 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   function tail(text, tone){ const el = $('eqtail'); el.textContent = text || ''; el.className = tone || ''; }
   function mark(id, on){ $(id).classList.toggle('on', !!on); }
 
+  // ---- why c is 15 and not 14 ----
+  // Dropping 4n + 6 took something positive off the roof, so 14n² on its own is under
+  // T(n) and is not a bound at all. The only lever left is the constant, and the jump from
+  // 14 to 15 is worth exactly one n². Rather than swapping the digit and hoping the caption
+  // is read, the roof does the arithmetic: a dashed +1 chip is made room for, stands next
+  // to 14n² as its own term, and then merges into the constant.
+  const PLUS_X = 238, F_WIDE = 278;   // where the +1 stands, and where n² waits for it
+
+  // a transform move with a duration of its own, for the small moves inside a scene
+  function slide(chip, x, y, ms){
+    stopAnim(chip);
+    chip.style.transition = `transform ${ms}ms cubic-bezier(.45,0,.2,1)`;
+    chip.style.transform = tf(x, y);
+    later(() => { chip.style.transition = ''; }, ms + 40);
+  }
+  function plusTo(x, opacity, ms){
+    const p = chips.P;
+    p.style.transition = `transform ${ms}ms cubic-bezier(.45,0,.2,1),opacity ${Math.round(ms*.85)}ms`;
+    p.style.transform = tf(x, 89);
+    p.style.opacity = opacity;
+  }
+  function resetPlus(){
+    const p = chips.P;
+    stopAnim(p);
+    p.style.transition = 'none';
+    p.style.transform = tf(PLUS_X, 89);
+    p.style.opacity = 0;
+    p.getBoundingClientRect();
+    p.style.transition = '';
+  }
+  // three lines in the sky beside the roof, saying what the constant is doing right now
+  function cnote(l1, l2, l3, color){
+    $('cn1').textContent = l1 || ''; $('cn1').setAttribute('fill', color || INK);
+    $('cn2').textContent = l2 || ''; $('cn3').textContent = l3 || '';
+    mark('cNote', !!l1);
+  }
+
   // ---- scenes ----
   let fDown = false;
 
@@ -624,19 +678,49 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         }
       } },
 
-    { tag:'Roof', title:'What stays up is c·f(n)',
-      body:'The survivor splits into a constant c and a shape f(n) = n². But 14n² alone sits just under T(n), because 4n + 6 was positive. So c has to grow enough to cover for the dead terms: c = 15 works once n² ≥ 4n + 6, which holds from n = 6 on. That gives n₀ = 5.',
-      sym:'T(n) ≤ c·f(n) for all n > n₀', num:'14n² + 4n + 6 ≤ 15·n² for all n > 5',
+    { tag:'Roof', title:'Why c has to be 15, not 14',
+      body:'14n² on its own is not a bound at all. Dropping 4n + 6 took something positive off the roof, so what is left sits just under T(n). The only lever still available is the constant, and raising it by one is worth exactly one whole n², since 15n² − 14n² = n². That spare n² covers 4n + 6 as soon as n² ≥ 4n + 6, which happens from n = 6 on, and that is where n₀ = 5 comes from.',
+      sym:'T(n) ≤ c·f(n) for all n > n₀', num:'15n² = 14n² + n², and n² ≥ 4n + 6 from n = 6',
       run(){
         snapDead('a'); snapDead('b');
-        place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
-        cls(chips.F, ['f'], []); setC('15'); ops(0, 0, 1);
-        tail('≤ 15·n²', 'g'); $('eqbar').classList.add('drop');
+        cls(chips.F, ['f'], []);
+        $('eqbar').classList.add('drop');
         bracket($('brkTop'), 36, 0, 0, '', INK);
-        bracket($('brkA'), 64, 180, 260, 'c·f(n) = 15n²', GREEN);
         bracket($('brkB'), 64, 0, 0, '', RED);
         car.style.transform = 'translateY(0)'; fDown = false;
-        mark('n0mark', 1); mark('deadNote', 1); mark('baseNote', 0);
+        mark('deadNote', 1); mark('baseNote', 0);
+
+        // the finished state, which the sequence below walks up to one step at a time
+        const land = () => {
+          ops(0, 0, 1); tail('≤ 15·n²', 'g');
+          bracket($('brkA'), 64, 180, 260, 'c·f(n) = 15n²', GREEN);
+          cnote('c = 15 works', 'that spare n² covers', '4n + 6 once n ≥ 6', GREEN);
+          mark('n0mark', 1);
+        };
+        if(reduce){
+          place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
+          setC('15'); land();
+          return;
+        }
+        // 1. what scene 2 left behind, back at normal size, and short of T(n)
+        place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
+        setC('14'); ops(0, 0, 0); tail('but 14n² < T(n)', 'r');
+        cnote('14n² is not a bound', '4n + 6 was positive, so', 'dropping it left a hole', RED);
+        mark('n0mark', 0);
+        // the bracket is still up at the grown height from scene 2, so it fades out and
+        // comes back at the normal one rather than jumping down through the chips
+        bracket($('brkA'), 64, 0, 0, '', INK);
+        later(() => bracket($('brkA'), 64, 180, 260, '14n², the survivor', INK), 800);
+        // 2. room is made and the extra n² the constant buys stands up in it
+        later(() => { slide(chips.F, F_WIDE, 89, 480); plusTo(PLUS_X, 1, 420); }, 1700);
+        later(() => {
+          bracket($('brkA'), 64, 180, 296, '14n² + 1n²', GREEN);
+          cnote('so raise c by one', 'that adds a whole n²:', '15n² − 14n² = n²', GREEN);
+        }, 1970);
+        // 3. the extra folds into the constant, and 14 becomes 15
+        later(() => { plusTo(198, 0, 430); slide(chips.F, 242, 89, 470); }, 3050);
+        later(() => setC('15'), 3450);
+        later(land, 3700);
       } },
 
     { tag:'Basement', title:'f(n) alone rides the elevator down',
@@ -771,6 +855,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     $('chart-range').textContent = target.name;
     $('chart-eq').innerHTML = spec.eq || '<span class="t-T">T(n) = 14n&sup2; + 4n + 6</span>';
     ['T','cf','f','low'].forEach(id => $('lg-' + id).classList.toggle('off', !spec.legend.includes(id)));
+    // a chart that needs its own derivation takes over the transition entirely
+    if(spec.intro && !reduce){ spec.intro(); return; }
     const from = Object.assign({}, view);
     const same = from.n0 === target.n0 && from.n1 === target.n1 && from.y0 === target.y0 && from.y1 === target.y1;
     if(same || reduce){
@@ -848,21 +934,27 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         lab(sx(12), sy(flow(12)) + 16, '4n + 6', 'var(--fall)', 'end') },
 
     // 3. the two curves are so close that the honest way to see the crossing is to plot
-    //    the distance between them: 15n² - T(n), which is n² - 4n - 6
-    { view:'gap', legend:['T','cf'],
-      eq:'<span class="t-c">15n²</span> &minus; <span class="t-T">T(n)</span> = n&sup2; &minus; 4n &minus; 6',
+    //    the distance between them: 15n² - T(n), which is n² - 4n - 6. Where that curve
+    //    comes from is the confusing part, so `intro` below derives it on screen instead
+    //    of opening on the finished picture.
+    { view:'gap', legend:['T','cf'], intro:() => introGap(),
+      eq:'<span class="t-c">15n²</span> &minus; (<span class="t-T">14n² + 4n + 6</span>) = <span class="t-c">n&sup2; &minus; 4n &minus; 6</span>',
       body:(v, sx, sy) => band(fgap, zero, v.n0, NCROSS, v, 'var(--fall)') +
         band(fgap, zero, NCROSS, v.n1, v, 'var(--roof)') +
         `<line x1="${X0}" y1="${sy(0).toFixed(1)}" x2="${X1}" y2="${sy(0).toFixed(1)}" stroke="var(--ink)" stroke-width="1.5"/>` +
         curve(fgap, v, 'var(--roof)'),
       notes:(v, sx, sy) => n0line(v) +
         `<circle cx="${sx(NCROSS).toFixed(1)}" cy="${sy(0).toFixed(1)}" r="4.5" fill="var(--roof)"/>` +
-        lab(X0 + 4, sy(0) - 8, 'zero: 15n² and T(n) are equal', 'var(--ink2)', 'start', true) +
-        lab(X0 + 6, sy(fgap(2)) + 26, '15n² is short here', 'var(--fall)') +
-        lab(sx(9.2), sy(fgap(9.2)) - 14, 'and ahead for good here', 'var(--roof)', 'end') +
-        lab(sx(10.9), sy(fgap(10.9)) + 22, '15n² − T(n)', 'var(--roof)', 'end', true) +
-        lab(sx(5.35), sy(0) + 24, 'crosses zero at n = 5.16,', 'var(--ink2)', 'start', true) +
-        lab(sx(5.35), sy(0) + 38, 'so n₀ = 5 works', 'var(--ink2)', 'start', true) },
+        probe(sx, sy, P_LO, 'var(--fall)', '&minus;9') +
+        probe(sx, sy, P_HI, 'var(--roof)', '39') +
+        hlab(X0 + 6, YT + 44, 'the dots are the 9 and the 39', 'var(--ink2)', 'start', true) +
+        hlab(X0 + 6, YT + 58, 'measured before subtracting', 'var(--ink2)', 'start', true) +
+        hlab(X0 + 4, sy(0) - 8, 'zero: T(n) sits on this line now', 'var(--ink2)', 'start', true) +
+        lab(X0 + 6, sy(fgap(2)) + 30, '15n² is short here', 'var(--fall)') +
+        hlab(sx(10.8), sy(fgap(10.8)) + 18, 'how far 15n²', 'var(--roof)', 'end', true) +
+        hlab(sx(10.8), sy(fgap(10.8)) + 32, 'clears T(n) by', 'var(--roof)', 'end', true) +
+        hlab(sx(5.35), sy(0) + 24, 'crosses zero at n = 5.16,', 'var(--ink2)', 'start', true) +
+        hlab(sx(5.35), sy(0) + 38, 'so n₀ = 5 works', 'var(--ink2)', 'start', true) },
 
     // 4. the shape on its own, with the y axis zoomed until n² is actually visible
     { view:'low', legend:['T','f'],
@@ -890,6 +982,95 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       after: runStretch }
   ];
 
+  // ---- where 15n² − T(n) comes from ----
+  // Nobody hands you the curve 15n² − T(n). It is the distance between the two curves in
+  // the scene before, and at full height that distance is a couple of pixels, which is the
+  // whole reason for plotting it on its own. Opening on the finished picture makes it look
+  // like a new function that appeared from nowhere, so the chart derives it instead: draw
+  // both curves at full height, measure the distance at one n where 15n² is short and one
+  // where it is ahead, then flatten T(n) onto the axis and carry 15n² down with it.
+  // Flattening is the subtraction. Take T(n) off both and T(n) becomes zero while 15n²
+  // becomes 15n² − T(n), so "is T(n) ≤ 15n²" turns into "is this curve above zero".
+  const P_LO = 3, P_HI = 9;   // one n where 15n² falls short, one where it is ahead
+
+  // same label, but knocked out of whatever it happens to be lying on top of
+  const hlab = (...a) => lab(...a).replace('class="tlabel', 'class="tlabel halo');
+
+  function leader(x1, y1, x2, y2){
+    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="var(--line)"/>`;
+  }
+  // a dot on the gap curve at n, carrying the number that was measured in beat one
+  function probe(sx, sy, n, color, text){
+    return `<circle cx="${sx(n).toFixed(1)}" cy="${sy(fgap(n)).toFixed(1)}" r="3.5" fill="${color}"/>` +
+      hlab(sx(n) + 7, sy(fgap(n)) + 4, text, color, 'start', true);
+  }
+
+  // beat one: both curves at full height, with the distance between them measured twice
+  const PRE = {
+    body:(v) => curve(fT, v, 'var(--ink)') + curve(fcf, v, 'var(--roof)', '5 4'),
+    notes:(v, sx, sy) =>
+      vgap(sx(P_LO), sy(fT(P_LO)), sy(fcf(P_LO)), 'var(--fall)') +
+      leader(sx(P_LO) + 5, sy(fT(P_LO)) - 4, sx(P_LO) + 17, sy(fT(P_LO)) - 44) +
+      hlab(sx(P_LO) + 19, sy(fT(P_LO)) - 50, 'n = 3: 15n² is 9 short', 'var(--fall)', 'start', true) +
+      hlab(sx(P_LO) + 19, sy(fT(P_LO)) - 36, 'of T(3) = 144', 'var(--fall)', 'start', true) +
+      vgap(sx(P_HI), sy(fT(P_HI)), sy(fcf(P_HI)), 'var(--roof)') +
+      leader(sx(P_HI) - 5, sy(fcf(P_HI)) - 4, sx(P_HI) - 17, sy(fcf(P_HI)) - 44) +
+      hlab(sx(P_HI) - 19, sy(fcf(P_HI)) - 50, 'n = 9: 15n² is 39 ahead', 'var(--roof)', 'end', true) +
+      hlab(sx(P_HI) - 19, sy(fcf(P_HI)) - 36, 'of T(9) = 1176', 'var(--roof)', 'end', true) +
+      hlab(X0 + 6, YT + 16, 'two curves here, not one', 'var(--ink)') +
+      hlab(X0 + 6, YT + 32, '15n² starts below T(n) and ends', 'var(--ink2)', 'start', true) +
+      hlab(X0 + 6, YT + 46, 'above it. Where it crosses over', 'var(--ink2)', 'start', true) +
+      hlab(X0 + 6, YT + 60, 'is invisible at this scale', 'var(--ink2)', 'start', true)
+  };
+
+  // beat two: one frame of the subtraction, u running 0 to 1
+  const morphSpec = u => ({
+    body:(v) =>
+      curve(n => fcf(n) - u*fT(n), v, 'var(--roof)', '5 4') +
+      curve(n => (1 - u)*fT(n), v, 'var(--ink)') +
+      hlab(X0 + 6, YT + 16, 'subtract T(n) from both', 'var(--ink)') +
+      hlab(X0 + 6, YT + 32, 'T(n) flattens onto zero and', 'var(--ink2)', 'start', true) +
+      hlab(X0 + 6, YT + 46, '15n² drops to the distance', 'var(--ink2)', 'start', true)
+  });
+
+  // keep 4 to 8 gridlines on screen while the window shrinks from 2300 tall to 120
+  const STEPS = [1000, 500, 200, 100, 50, 20, 10, 5];
+  const niceYs = span => STEPS.find(s => span/s >= 4) || 5;
+
+  const EQ_ASK  = 'is <span class="t-T">T(n)</span> &le; <span class="t-c">15n&sup2;</span> ?';
+  const EQ_MOVE = 'same question: is <span class="t-c">15n&sup2;</span> &minus; <span class="t-T">T(n)</span> &ge; 0 ?';
+
+  function introGap(){
+    const A = VIEW.wide, B = VIEW.gap, spec = CHARTS[2], eq = $('chart-eq');
+    const HOLD = 1400, MORPH = 2000, HOLDCAM = 0.45;
+    const ease = t => t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2)/2;
+    eq.innerHTML = EQ_ASK;
+    $('chart-range').textContent = 'both curves, full height';
+    view = Object.assign({}, A);
+    drawChart(view, PRE, true);
+    later(() => {
+      eq.innerHTML = EQ_MOVE;
+      $('chart-range').textContent = 'subtracting T(n)';
+      const t0 = performance.now();
+      (function frame(now){
+        const t = Math.min(1, (now - t0)/MORPH), u = ease(t);
+        // The camera holds still while the curves come down, so what you see first is
+        // T(n) sinking onto the axis rather than the window closing in around it. Only
+        // once the numbers are small does the y window follow them down.
+        const c = ease(Math.max(0, (t - HOLDCAM) / (1 - HOLDCAM)));
+        const y0 = A.y0 + (B.y0 - A.y0)*c, y1 = A.y1 + (B.y1 - A.y1)*c;
+        view = {n0:A.n0, n1:A.n1, xs:A.xs, ys:niceYs(y1 - y0), y0, y1};
+        drawChart(view, morphSpec(u), false);
+        if(t < 1){ zoomReq = requestAnimationFrame(frame); return; }
+        zoomReq = null;
+        view = Object.assign({}, B);
+        eq.innerHTML = spec.eq;
+        $('chart-range').textContent = B.name;
+        drawChart(view, spec, true);
+      })(performance.now());
+    }, HOLD);
+  }
+
   // ---- stepping ----
   let i = 0;
   const dots = $('dots');
@@ -899,6 +1080,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     const from = i;
     i = Math.max(0, Math.min(scenes.length - 1, k));
     clearTimers();
+    // props that only one scene uses, cleared here so no scene has to remember to
+    resetPlus(); cnote('');
     const s = scenes[i];
     s.run(from);
     setChart(i);
