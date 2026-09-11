@@ -13,200 +13,356 @@
   --paper:#EDF0F3; --paper2:#E2E7EC; --ink:#1B2A41; --ink2:#4E5D70; --line:#B9C3CE;
   --roof:#2E7D5B; --roof-soft:#D7EBE1; --fall:#C8432B; --fall-soft:#F5DCD6;
   --brass:#B8862B; --brass-soft:#F1E6CB; --sky:#DCE5EE; --dirt:#CFC6B8; --dirt2:#B9AE9C;
-  --chip-bg:#FFFFFF;
+  --chip-bg:#FFFFFF; --blood:#8E1B12; --blood2:#6E120C;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --paper:#0F161E; --paper2:#182230; --ink:#DCE3EA; --ink2:#95A3B3; --line:#33424F;
     --roof:#5CBF93; --roof-soft:#173A2C; --fall:#E8705A; --fall-soft:#4A211A;
     --brass:#D9AA4E; --brass-soft:#3E3116; --sky:#1A2635; --dirt:#2B2621; --dirt2:#3A332B;
-    --chip-bg:#1E2A38;
+    --chip-bg:#1E2A38; --blood:#B4271A; --blood2:#7E1610;
   }
 }
 :root[data-theme="dark"]{
   --paper:#0F161E; --paper2:#182230; --ink:#DCE3EA; --ink2:#95A3B3; --line:#33424F;
   --roof:#5CBF93; --roof-soft:#173A2C; --fall:#E8705A; --fall-soft:#4A211A;
   --brass:#D9AA4E; --brass-soft:#3E3116; --sky:#1A2635; --dirt:#2B2621; --dirt2:#3A332B;
-  --chip-bg:#1E2A38;
+  --chip-bg:#1E2A38; --blood:#B4271A; --blood2:#7E1610;
 }
 *{box-sizing:border-box}
-body{margin:0;-webkit-font-smoothing:antialiased;background:var(--paper);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5;padding-inline:20px;padding-block:28px 56px}
-.wrap{max-width:1080px;margin:0 auto}
-h1{font-weight:700;font-size:clamp(28px,4vw,42px);line-height:1.05;margin:0 0 6px;text-wrap:balance;letter-spacing:-.01em}
-.lede{color:var(--ink2);margin:0 0 22px;max-width:62ch}
+html{height:100%}
+body{margin:0;-webkit-font-smoothing:antialiased;background:var(--paper);color:var(--ink);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5;
+  padding-inline:18px;padding-block:10px;height:100dvh;overflow:hidden}
+.app{max-width:1520px;margin:0 auto;height:100%;display:flex;flex-direction:column;gap:10px}
 code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.rule{display:flex;flex-wrap:wrap;gap:10px 28px;align-items:baseline;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 0;margin-bottom:22px}
-.rule .mono{font-size:18px;font-weight:600}
-.rule .eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
-.stage{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:stretch}
-@media (max-width:760px){.stage{grid-template-columns:1fr}}
-.panel{background:var(--paper2);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.panel svg{display:block;width:100%;height:auto}
-.panel-head{display:flex;justify-content:space-between;align-items:baseline;padding:10px 14px 0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
-.caption{margin-top:20px;display:grid;grid-template-columns:auto 1fr;gap:6px 18px;align-items:start}
-@media (max-width:560px){.caption{grid-template-columns:1fr}}
-.stepnum{font-weight:700;font-size:44px;line-height:1;color:var(--ink2);font-variant-numeric:tabular-nums}
-.caption h2{font-weight:700;font-size:24px;margin:2px 0 6px;line-height:1.15;text-wrap:balance}
-.caption p{margin:0 0 8px;max-width:66ch}
-.pair{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin-top:8px;padding:10px 14px;border-left:3px solid var(--line);font-size:15px}
-.pair .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);padding-top:3px}
-.pair .mono{font-size:15px}
-.controls{display:flex;gap:10px;align-items:center;margin-top:22px;flex-wrap:wrap}
-button{font:inherit;font-weight:600;background:var(--ink);color:var(--paper);border:0;border-radius:10px;padding:9px 16px;cursor:pointer}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;gap:6px 24px;align-items:baseline;justify-content:space-between;
+  border-bottom:1px solid var(--line);padding-bottom:8px;flex:0 0 auto}
+.top h1{font-weight:700;font-size:clamp(19px,2.1vw,26px);line-height:1.1;margin:0;letter-spacing:-.01em}
+.top .back{font-size:12px;color:var(--ink2);text-decoration:none;margin-right:12px}
+.top .back:hover{color:var(--ink);text-decoration:underline}
+.rule{display:flex;gap:10px;align-items:baseline}
+.rule .mono{font-size:15px;font-weight:600}
+.eyebrow{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+
+/* stage */
+.stage{flex:1 1 auto;min-height:0;display:grid;gap:12px;
+  grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr) minmax(290px,330px)}
+.panel{background:var(--paper2);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  display:flex;flex-direction:column;min-height:0}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;padding:8px 12px 0;
+  font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);flex:0 0 auto}
+.svgwrap{flex:1 1 auto;min-height:0;padding:2px 6px 6px}
+.svgwrap svg{display:block;width:100%;height:100%}
+
+/* equation bar inside the visual */
+.eqbar{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 5px;padding:6px 12px 2px;font-size:15px;font-weight:600;flex:0 0 auto}
+.eqbar .op{color:var(--ink2);font-weight:600}
+.eqbar .t-T{color:var(--ink)}
+.eqbar .t-c{color:var(--roof)}
+.eqbar .t-f{color:var(--brass)}
+.eqbar .t-low{color:var(--fall);transition:opacity .4s}
+.eqbar.drop .t-low,.eqbar.drop .op-low{opacity:.4;text-decoration:line-through}
+.eqbar #eqtail{margin-left:6px;font-weight:700}
+.eqbar #eqtail.g{color:var(--roof)}
+.eqbar #eqtail.b{color:var(--brass)}
+.eqbar #eqtail.k{color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;padding:2px 12px 4px;font-size:10.5px;color:var(--ink2);flex:0 0 auto}
+.legend .lg{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.legend i{width:9px;height:9px;border-radius:3px;border:2px solid var(--ink);display:inline-block}
+.legend .sw-c{border-color:var(--roof);background:var(--roof-soft)}
+.legend .sw-f{border-color:var(--brass);background:var(--brass-soft)}
+.legend .sw-low{border-color:var(--fall);background:var(--fall-soft)}
+
+/* side column */
+.side{display:flex;flex-direction:column;min-height:0;gap:10px}
+.capwrap{flex:1 1 auto;min-height:0;overflow:auto;padding-right:2px}
+.stepline{display:flex;align-items:baseline;gap:8px}
+.stepnum{font-weight:700;font-size:30px;line-height:1;color:var(--ink2);font-variant-numeric:tabular-nums}
+.stepline .of{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+.capwrap h2{font-weight:700;font-size:19px;margin:4px 0 6px;line-height:1.18;text-wrap:balance}
+.capwrap p{margin:0;font-size:13.5px;color:var(--ink)}
+.pair{display:grid;grid-template-columns:1fr;gap:2px;margin-top:10px;padding:8px 10px;
+  border-left:3px solid var(--line);font-size:12.5px}
+.pair .k{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+.pair .mono{font-size:12.5px;word-break:break-word}
+.pair .mono + .k{margin-top:6px}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:0 0 auto}
+button{font:inherit;font-size:14px;font-weight:600;background:var(--ink);color:var(--paper);border:0;border-radius:9px;padding:8px 14px;cursor:pointer}
 button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.small{font-size:12.5px;padding:6px 10px}
 button:disabled{opacity:.35;cursor:default}
 button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
-.dots{display:flex;gap:6px;margin-left:auto}
-.dots span{width:9px;height:9px;border-radius:50%;background:var(--line);transition:background .3s}
+.dots{display:flex;gap:5px;margin-left:auto}
+.dots span{width:8px;height:8px;border-radius:50%;background:var(--line);transition:background .3s;cursor:pointer}
 .dots span.on{background:var(--ink)}
-.hint{font-size:13px;color:var(--ink2);margin-top:8px}
+.foot{flex:0 0 auto;font-size:11.5px;color:var(--ink2);border-top:1px solid var(--line);padding-top:6px}
+.foot a{color:inherit}
+
 /* SVG pieces */
 .chip{transition:transform 1.1s cubic-bezier(.4,0,.2,1),opacity .6s}
 .chip rect{fill:var(--chip-bg);stroke:var(--ink);stroke-width:1.5}
 .chip text{fill:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;font-weight:600;text-anchor:middle;dominant-baseline:central}
 .chip.fall rect{stroke:var(--fall)} .chip.fall text{fill:var(--fall)}
-.chip.roof rect{stroke:var(--roof);fill:var(--roof-soft)} .chip.roof text{fill:var(--roof)}
+.chip.c rect{stroke:var(--roof);fill:var(--roof-soft)} .chip.c text{fill:var(--roof)}
+.chip.f rect{stroke:var(--brass);fill:var(--brass-soft)} .chip.f text{fill:var(--brass)}
 .chip.dead rect{stroke:var(--fall);fill:var(--fall-soft)}
 .chip.dead text{fill:var(--fall)}
 .chip.dead .eyes{opacity:1}
-.eyes{opacity:0;fill:none;stroke:var(--fall);stroke-width:1.5;transition:opacity .3s 1s}
-.car{transition:transform 1.4s cubic-bezier(.45,0,.2,1)}
+.eyes{opacity:0;fill:none;stroke:var(--fall);stroke-width:1.5;transition:opacity .3s .15s}
+.car{transition:transform 1.1s cubic-bezier(.4,0,.2,1)}
 .label{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;fill:var(--ink2)}
-.label.big{font-size:14px;fill:var(--ink);font-weight:600}
+.label.big{font-size:13px;fill:var(--ink);font-weight:600}
 .roofline{fill:var(--roof-soft);stroke:var(--roof)}
-.marker{opacity:0;transition:opacity .5s}
+.marker{opacity:0;transition:opacity .45s}
 .marker.on{opacity:1}
+.brk{opacity:0;transition:opacity .35s}
+.brk path{fill:none;stroke-width:1.5}
+.brk text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;font-weight:600;text-anchor:middle}
+
+/* gore */
+.blood{opacity:0;transition:opacity .35s}
+.blood.on{opacity:1}
+.blood .pool{transform:scale(.05,.3);transition:transform 2.4s cubic-bezier(.16,1,.3,1)}
+.blood.on .pool{transform:scale(1,1)}
+.blood .spatter{opacity:0;transform:scale(.15);transition:opacity .2s,transform .4s cubic-bezier(.2,.9,.3,1)}
+.blood.on .spatter{opacity:1;transform:scale(1)}
+.blood:not(.on) .pool{transition:transform .35s}
+.blood .burst{opacity:0}
+.blood .pool path,.blood .spatter *{fill:var(--blood)}
+.blood .pool .dark{fill:var(--blood2)}
+.blood .burst line{stroke:var(--blood);stroke-width:3;stroke-linecap:round}
+
 /* chart */
 .ax{stroke:var(--line);stroke-width:1}
-.curve{fill:none;stroke-width:2.5;transition:opacity .5s,stroke-width .3s}
-.curve.dim{opacity:.22}
+.curve{fill:none;stroke-width:2.5;transition:stroke 1.6s linear}
+.legend .lg{transition:opacity .35s}
+.legend .lg.off{opacity:.28}
+.anno{animation:annoIn .45s ease-out both}
+@keyframes annoIn{from{opacity:0}to{opacity:1}}
 .tlabel{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;fill:var(--ink2)}
 .tlabel.strong{fill:var(--ink);font-weight:600;font-size:12px}
-@media (prefers-reduced-motion:reduce){.chip,.car,.marker,.curve{transition:none}}
+@media (prefers-reduced-motion:reduce){.chip,.car,.marker,.curve,.blood,.blood .pool,.blood .spatter{transition:none}}
 
-.back{display:inline-block;font-size:13px;color:var(--ink2);text-decoration:none;margin-bottom:18px}
-.back:hover{color:var(--ink);text-decoration:underline}
-.foot{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2);max-width:70ch}
-.foot a{color:inherit}
+/* narrower or shorter screens: unlock the height, keep the controls reachable */
+@media (max-width:1180px),(max-height:600px){
+  html{height:auto}
+  body{height:auto;overflow:visible;padding-block:10px 80px}
+  .app{height:auto}
+  .stage{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-auto-rows:min-content}
+  .side{grid-column:1 / -1;display:block}
+  .capwrap{overflow:visible}
+  .capwrap p{font-size:14.5px}
+  .pair{margin-bottom:12px}
+  .svgwrap{height:min(62vh,560px)}
+  .controls{position:fixed;left:0;right:0;bottom:0;background:var(--paper);padding:10px 18px;
+    border-top:1px solid var(--line);z-index:20;box-shadow:0 -6px 18px rgba(0,0,0,.08)}
+}
+@media (max-width:720px){
+  .stage{grid-template-columns:1fr}
+  .svgwrap{height:min(58vh,480px)}
+}
 </style>
   </head>
   <body>
 
-<div class="wrap">
-  <a class="back" href="../">&larr; All visuals</a>
-  <h1>The Big-O Building</h1>
-  <p class="lede">A five-scene story for the definition of Big-O: what gets thrown off the roof, what has to stay up there, and why f(n) is stuck in the basement unless it brings c with it.</p>
-
-  <div class="rule">
-    <span class="eyebrow">The rule</span>
-    <span class="mono">T(n) ≤ c·f(n) for all n &gt; n₀</span>
-    <span class="eyebrow">Our example</span>
-    <span class="mono">T(n) = 14n² + 4n + 6</span>
-  </div>
+<div class="app">
+  <header class="top">
+    <div>
+      <a class="back" href="../">&larr; All visuals</a>
+      <h1 style="display:inline-block">The Big-O Building</h1>
+    </div>
+    <div class="rule">
+      <span class="eyebrow">The rule</span>
+      <span class="mono">T(n) &le; c&middot;f(n) for all n &gt; n&#8320;</span>
+    </div>
+  </header>
 
   <div class="stage">
+    <!-- the building -->
     <div class="panel">
       <div class="panel-head"><span>Section view</span><span id="scene-tag">Roof</span></div>
-      <svg viewBox="0 0 560 560" role="img" aria-label="A building with a roof, street and basement; terms of T(n) move between them">
+      <div class="eqbar mono" id="eqbar">
+        <span class="t-T">T(n)</span><span class="op">=</span><span class="t-c">14</span><span class="t-f">n&sup2;</span><span class="op op-low">+</span><span class="t-low">4n</span><span class="op op-low">+</span><span class="t-low">6</span><span id="eqtail"></span>
+      </div>
+      <div class="legend">
+        <span class="lg"><i></i>T(n), measured</span>
+        <span class="lg"><i class="sw-c"></i>c, the constant</span>
+        <span class="lg"><i class="sw-f"></i>f(n), the shape</span>
+        <span class="lg"><i class="sw-low"></i>4n + 6, lower order</span>
+      </div>
+      <div class="svgwrap">
+      <svg viewBox="0 0 560 560" role="img" aria-label="A building with a roof, street and basement. The terms of T(n) move between them, and the lower order terms fall to the street.">
         <!-- sky -->
         <rect x="0" y="0" width="560" height="380" fill="var(--sky)"/>
-        <!-- ground / dirt -->
+        <!-- ground -->
         <rect x="0" y="380" width="560" height="180" fill="var(--dirt)"/>
         <line x1="0" y1="380" x2="560" y2="380" stroke="var(--ink)" stroke-width="2"/>
-        <text x="14" y="398" class="label">street level</text>
+        <text x="6" y="398" class="label">street level</text>
 
         <!-- building -->
-        <rect x="200" y="110" width="220" height="270" fill="var(--paper)" stroke="var(--ink)" stroke-width="2"/>
-        <!-- floors -->
+        <rect x="140" y="110" width="220" height="270" fill="var(--paper)" stroke="var(--ink)" stroke-width="2"/>
         <g stroke="var(--line)" stroke-width="1">
-          <line x1="200" y1="164" x2="420" y2="164"/><line x1="200" y1="218" x2="420" y2="218"/>
-          <line x1="200" y1="272" x2="420" y2="272"/><line x1="200" y1="326" x2="420" y2="326"/>
+          <line x1="140" y1="164" x2="360" y2="164"/><line x1="140" y1="218" x2="360" y2="218"/>
+          <line x1="140" y1="272" x2="360" y2="272"/><line x1="140" y1="326" x2="360" y2="326"/>
         </g>
-        <!-- windows -->
         <g fill="var(--sky)" stroke="var(--line)">
-          <rect x="216" y="124" width="26" height="26"/><rect x="258" y="124" width="26" height="26"/><rect x="300" y="124" width="26" height="26"/><rect x="342" y="124" width="26" height="26"/>
-          <rect x="216" y="178" width="26" height="26"/><rect x="258" y="178" width="26" height="26"/><rect x="300" y="178" width="26" height="26"/><rect x="342" y="178" width="26" height="26"/>
-          <rect x="216" y="232" width="26" height="26"/><rect x="258" y="232" width="26" height="26"/><rect x="300" y="232" width="26" height="26"/><rect x="342" y="232" width="26" height="26"/>
-          <rect x="216" y="286" width="26" height="26"/><rect x="258" y="286" width="26" height="26"/><rect x="300" y="286" width="26" height="26"/><rect x="342" y="286" width="26" height="26"/>
-          <rect x="216" y="340" width="26" height="26"/><rect x="258" y="340" width="26" height="26"/><rect x="300" y="340" width="26" height="26"/>
+          <rect x="196" y="124" width="26" height="26"/><rect x="238" y="124" width="26" height="26"/><rect x="280" y="124" width="26" height="26"/><rect x="322" y="124" width="26" height="26"/>
+          <rect x="196" y="178" width="26" height="26"/><rect x="238" y="178" width="26" height="26"/><rect x="280" y="178" width="26" height="26"/><rect x="322" y="178" width="26" height="26"/>
+          <rect x="196" y="232" width="26" height="26"/><rect x="238" y="232" width="26" height="26"/><rect x="280" y="232" width="26" height="26"/><rect x="322" y="232" width="26" height="26"/>
+          <rect x="196" y="286" width="26" height="26"/><rect x="238" y="286" width="26" height="26"/><rect x="280" y="286" width="26" height="26"/><rect x="322" y="286" width="26" height="26"/>
+          <rect x="196" y="340" width="26" height="26"/><rect x="238" y="340" width="26" height="26"/><rect x="280" y="340" width="26" height="26"/>
         </g>
         <!-- roof slab -->
-        <rect x="192" y="104" width="236" height="8" class="roofline" stroke-width="1.5"/>
-        <text x="14" y="60" class="label">roof: the upper</text><text x="14" y="76" class="label">bound lives here</text><line x1="120" y1="70" x2="190" y2="104" stroke="var(--line)"/>
+        <rect x="128" y="104" width="250" height="8" class="roofline" stroke-width="1.5"/>
+        <text x="8" y="126" class="label">the roof:</text>
+        <text x="8" y="141" class="label">where the</text>
+        <text x="8" y="156" class="label">bound lives</text>
+        <line x1="90" y1="130" x2="126" y2="113" stroke="var(--line)"/>
 
         <!-- basement -->
-        <rect x="200" y="380" width="220" height="150" fill="var(--dirt2)" stroke="var(--ink)" stroke-width="2" stroke-dasharray="5 4"/>
-        <text x="210" y="522" class="label">basement</text>
+        <rect x="140" y="380" width="220" height="150" fill="var(--dirt2)" stroke="var(--ink)" stroke-width="2" stroke-dasharray="5 4"/>
+        <text x="196" y="520" class="label">basement</text>
 
-        <!-- elevator shaft -->
-        <rect x="384" y="70" width="36" height="460" fill="var(--paper2)" stroke="var(--brass)" stroke-width="1.5"/>
-        <g stroke="var(--brass)" stroke-width="1" stroke-dasharray="2 4"><line x1="402" y1="70" x2="402" y2="530"/></g>
-        <text x="424" y="84" class="label">elevator</text>
-        <!-- elevator car (transforms in JS) -->
+        <!-- elevator -->
+        <rect x="148" y="70" width="30" height="460" fill="var(--paper2)" stroke="var(--brass)" stroke-width="1.5"/>
+        <g stroke="var(--brass)" stroke-width="1" stroke-dasharray="2 4"><line x1="163" y1="70" x2="163" y2="530"/></g>
+        <text x="8" y="212" class="label">elevator:</text>
+        <text x="8" y="227" class="label">c is the</text>
+        <text x="8" y="242" class="label">ticket up</text>
+        <line x1="72" y1="217" x2="146" y2="217" stroke="var(--line)"/>
         <g id="car" class="car">
-          <rect x="386" y="62" width="32" height="48" fill="var(--brass-soft)" stroke="var(--brass)" stroke-width="2"/>
-          <line x1="402" y1="62" x2="402" y2="110" stroke="var(--brass)" stroke-width="1"/>
+          <rect x="149" y="62" width="28" height="48" fill="var(--brass-soft)" stroke="var(--brass)" stroke-width="2"/>
+          <line x1="163" y1="62" x2="163" y2="110" stroke="var(--brass)" stroke-width="1"/>
         </g>
 
-        <!-- n0 marker at street -->
+        <!-- n0 marker on the street -->
         <g id="n0mark" class="marker">
-          <line x1="440" y1="380" x2="540" y2="380" stroke="var(--roof)" stroke-width="3"/>
-          <text x="440" y="368" class="label big">n &gt; n₀ = 5</text>
-          <text x="440" y="400" class="label">15n² clears T(n)</text>
+          <line x1="6" y1="380" x2="130" y2="380" stroke="var(--roof)" stroke-width="3"/>
+          <text x="6" y="356" class="label big" fill="var(--roof)">n &gt; n&#8320; = 5</text>
+          <text x="6" y="372" class="label">15n&sup2; clears T(n)</text>
         </g>
 
-        <!-- plus signs on the roof -->
-        <text id="plus1" x="297" y="88" class="label big" text-anchor="middle">+</text>
-        <text id="plus2" x="355" y="88" class="label big" text-anchor="middle">+</text>
-        <text id="dot" x="248" y="88" class="label big" text-anchor="middle" opacity="0">·</text>
+        <!-- brackets naming what is on the roof -->
+        <g id="brkTop" class="brk"><path/><text/></g>
+        <g id="brkA" class="brk"><path/><text/></g>
+        <g id="brkB" class="brk"><path/><text/></g>
+
+        <!-- operators between the chips -->
+        <text id="plus1" x="271" y="94" class="label big" text-anchor="middle">+</text>
+        <text id="plus2" x="329" y="94" class="label big" text-anchor="middle">+</text>
+        <text id="dot" x="220" y="94" class="label big" text-anchor="middle" opacity="0">&middot;</text>
+
+        <!-- blood, drawn under the bodies -->
+        <g id="blood-a" class="blood" transform="translate(424,380)">
+          <g class="pool">
+            <path d="M -46 1 C -50 -4 -38 -9 -27 -6 C -20 -12 -8 -12 -2 -8 C 6 -13 20 -11 27 -6 C 38 -10 50 -4 45 1 C 40 3.5 -40 3.5 -46 1 Z"/>
+            <path class="dark" d="M -18 1 C -14 -5 -2 -7 6 -4 C 14 -6 22 -3 24 1 Z"/>
+            <path d="M 44 1 C 52 0 60 1 62 2 C 58 4 48 4 44 2 Z"/>
+          </g>
+          <g class="spatter">
+            <circle cx="-62" cy="-2" r="3.2"/><circle cx="-54" cy="-11" r="2"/>
+            <circle cx="58" cy="-3" r="3.6"/><circle cx="68" cy="-8" r="2.2"/>
+            <circle cx="-34" cy="-20" r="2.4"/><circle cx="30" cy="-24" r="2"/>
+            <path d="M -70 0 l 8 -3 l 1 3 z"/><path d="M 74 0 l -9 -4 l -1 4 z"/>
+          </g>
+          <g class="burst">
+            <line x1="0" y1="0" x2="-26" y2="-20"/><line x1="0" y1="0" x2="-8" y2="-30"/>
+            <line x1="0" y1="0" x2="12" y2="-28"/><line x1="0" y1="0" x2="28" y2="-16"/>
+            <line x1="0" y1="0" x2="-34" y2="-6"/><line x1="0" y1="0" x2="34" y2="-4"/>
+          </g>
+        </g>
+        <g id="blood-b" class="blood" transform="translate(488,380)">
+          <g class="pool">
+            <path d="M -40 1 C -45 -3 -33 -8 -23 -5 C -16 -10 -6 -11 0 -7 C 8 -11 18 -9 24 -5 C 33 -8 43 -3 39 1 C 34 3.5 -35 3.5 -40 1 Z"/>
+            <path class="dark" d="M -14 1 C -10 -4 0 -6 7 -3 C 12 -5 18 -2 19 1 Z"/>
+            <path d="M -38 1 C -46 0 -54 2 -55 3 C -50 4.5 -42 4 -38 2 Z"/>
+          </g>
+          <g class="spatter">
+            <circle cx="52" cy="-2" r="2.8"/><circle cx="44" cy="-12" r="1.8"/>
+            <circle cx="-52" cy="-4" r="3.2"/><circle cx="-60" cy="-10" r="2"/>
+            <circle cx="20" cy="-22" r="2.2"/><circle cx="-26" cy="-19" r="1.8"/>
+            <path d="M 60 0 l -8 -4 l -1 4 z"/>
+          </g>
+          <g class="burst">
+            <line x1="0" y1="0" x2="-24" y2="-18"/><line x1="0" y1="0" x2="-6" y2="-28"/>
+            <line x1="0" y1="0" x2="14" y2="-24"/><line x1="0" y1="0" x2="26" y2="-14"/>
+            <line x1="0" y1="0" x2="-32" y2="-4"/>
+          </g>
+        </g>
+
+        <!-- note next to the bodies -->
+        <g id="deadNote" class="marker">
+          <text x="396" y="416" class="label" fill="var(--fall)">4n and 6: dropped.</text>
+          <text x="396" y="431" class="label" fill="var(--fall)">lower order terms</text>
+          <text x="396" y="446" class="label" fill="var(--fall)">do not survive large n</text>
+        </g>
+
+        <!-- note next to the basement -->
+        <g id="baseNote" class="marker">
+          <text x="196" y="452" class="label big" fill="var(--brass)">f(n) = n&sup2;, alone</text>
+          <text x="196" y="470" class="label">right shape,</text>
+          <text x="196" y="485" class="label">wrong size</text>
+        </g>
 
         <!-- chips, each drawn around its own origin -->
-        <g id="chipC" class="chip">
-          <rect x="-20" y="-15" width="40" height="30" rx="4"/><text>14</text>
+        <g id="chipC" class="chip c">
+          <rect x="-18" y="-15" width="36" height="30" rx="4"/><text>14</text>
         </g>
-        <g id="chipF" class="chip">
-          <rect x="-20" y="-15" width="40" height="30" rx="4"/><text>n²</text>
+        <g id="chipF" class="chip f">
+          <rect x="-18" y="-15" width="36" height="30" rx="4"/><text>n&sup2;</text>
         </g>
         <g id="chip4n" class="chip">
-          <rect x="-20" y="-15" width="40" height="30" rx="4"/><text>4n</text>
-          <g class="eyes"><path d="M-14 -9 l5 5 m0 -5 l-5 5"/><path d="M9 -9 l5 5 m0 -5 l-5 5"/></g>
+          <rect x="-18" y="-15" width="36" height="30" rx="4"/><text>4n</text>
+          <g class="eyes"><path d="M-13 -9 l5 5 m0 -5 l-5 5"/><path d="M8 -9 l5 5 m0 -5 l-5 5"/></g>
         </g>
         <g id="chip6" class="chip">
-          <rect x="-20" y="-15" width="40" height="30" rx="4"/><text>6</text>
-          <g class="eyes"><path d="M-14 -9 l5 5 m0 -5 l-5 5"/><path d="M9 -9 l5 5 m0 -5 l-5 5"/></g>
+          <rect x="-18" y="-15" width="36" height="30" rx="4"/><text>6</text>
+          <g class="eyes"><path d="M-13 -9 l5 5 m0 -5 l-5 5"/><path d="M8 -9 l5 5 m0 -5 l-5 5"/></g>
         </g>
       </svg>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head"><span>The real curves</span><span>n from 0 to 12</span></div>
-      <svg id="chart" viewBox="0 0 400 560" role="img" aria-label="Plot of T(n), 15 n squared, and n squared"></svg>
-    </div>
-  </div>
-
-  <div class="caption">
-    <div class="stepnum" id="stepnum">1</div>
-    <div>
-      <h2 id="title"></h2>
-      <p id="body"></p>
-      <div class="pair">
-        <span class="k">Symbols</span><span class="mono" id="sym"></span>
-        <span class="k">Numbers</span><span class="mono" id="num"></span>
       </div>
     </div>
-  </div>
 
-  <div class="controls">
-    <button class="ghost" id="prev">Back</button>
-    <button id="next">Next scene</button>
-    <div class="dots" id="dots"></div>
+    <!-- the chart -->
+    <div class="panel">
+      <div class="panel-head"><span>The real curves</span><span id="chart-range">n 0 to 12</span></div>
+      <div class="eqbar mono" id="chart-eq"><span class="t-T">T(n) = 14n&sup2; + 4n + 6</span></div>
+      <div class="legend">
+        <span class="lg" id="lg-T"><i></i>T(n)</span>
+        <span class="lg" id="lg-cf"><i class="sw-c"></i>c&middot;f(n) = 15n&sup2;</span>
+        <span class="lg" id="lg-f"><i class="sw-f"></i>f(n) = n&sup2;</span>
+        <span class="lg" id="lg-low"><i class="sw-low"></i>4n + 6</span>
+      </div>
+      <div class="svgwrap">
+        <svg id="chart" viewBox="0 0 400 560" role="img" aria-label="Plot of T(n), 15 n squared, n squared and 4n plus 6"></svg>
+      </div>
+    </div>
+
+    <!-- caption and controls -->
+    <aside class="side">
+      <div class="capwrap">
+        <div class="stepline"><span class="stepnum" id="stepnum">1</span><span class="of">of 5</span></div>
+        <h2 id="title"></h2>
+        <p id="body"></p>
+        <div class="pair">
+          <span class="k">Symbols</span><span class="mono" id="sym"></span>
+          <span class="k">Numbers</span><span class="mono" id="num"></span>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="ghost" id="prev">Back</button>
+        <button id="next">Next scene</button>
+        <div class="dots" id="dots"></div>
+      </div>
+    </aside>
   </div>
-  <p class="hint">Arrow keys also step through the scenes.</p>
 
   <footer class="foot">
-    The building is a metaphor; the plot on the right is the real thing. Every claim in the captions
-    can be checked against it: 15n² is above T(n) exactly from n = 6 onward, and n² alone never is.
-    Source on <a href="https://github.com/jennarbates/Algorithms">GitHub</a>.
+    The building is a metaphor, the plot is the real thing: 15n&sup2; is above T(n) from n = 6 onward, and n&sup2; alone never is.
+    Arrow keys step through the scenes. Source on <a href="https://github.com/jennarbates/Algorithms">GitHub</a>.
   </footer>
 </div>
 
@@ -214,98 +370,474 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 (function(){
   const $ = id => document.getElementById(id);
   const chips = {C:$('chipC'), F:$('chipF'), a:$('chip4n'), b:$('chip6')};
+  const bloods = {a:$('blood-a'), b:$('blood-b')};
   const car = $('car');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Positions (chip centers). Roof top is y=104, so a standing chip sits at y=89.
-  const ROOF = {C:[226,89], F:[268,89], a:[326,89], b:[384,89]};
-  const CAR = {roofY:0, basementY:420};       // car rect drawn at y 62..110; basement floor 530
-  const IN_CAR = {C:[402,86], F:[402,86]};    // chip inside car at roof height
-  const DEAD = {a:[92,360,-92], b:[150,361,80]};
-  const BASE = {F:[402,506], C:[402,506]};
+  // geometry. Chip centres; the roof slab top is y = 104, so a standing chip sits at y = 89.
+  const ROOF = {C:[198,89], F:[242,89], a:[300,89], b:[358,89]};
+  // resting rotation includes a full tumble, so 374 lands flat with one turn on the way
+  const DEAD = {a:[424,361,374], b:[488,362,-371]};
+  const SHAFT_X = 163, CAR_DOWN = 420, BASE_Y = 506;
 
-  function place(chip, x, y, r){ chip.style.transform = `translate(${x}px,${y}px) rotate(${r||0}deg)`; }
-  function cls(chip, add, remove){ (remove||[]).forEach(c=>chip.classList.remove(c)); (add||[]).forEach(c=>chip.classList.add(c)); }
+  // one place to cancel everything in flight, so scenes never fight each other
+  let timers = [];
+  const running = new Map();
+  function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
+  function later(fn, ms){ timers.push(setTimeout(fn, ms)); }
+  function stopAnim(el){ const a = running.get(el); if(a){ a.cancel(); running.delete(el); } }
+
+  // Cancelling a running fall reverts the chip to its inline transform, which is still the
+  // roof. Letting the CSS transition run from there would drop the number a second time, so
+  // anything interrupting a fall commits the new position with transitions off.
+  function setT(chip, x, y, r, snap){
+    const t = `translate(${x}px,${y}px) rotate(${r||0}deg)`;
+    if(snap){
+      chip.style.transition = 'none';
+      chip.style.transform = t;
+      chip.getBoundingClientRect();      // flush, so the next move starts from here
+      chip.style.transition = '';
+    } else {
+      chip.style.transition = '';
+      chip.style.transform = t;
+    }
+  }
+  function place(chip, x, y, r){
+    const interrupted = running.has(chip);
+    stopAnim(chip);
+    setT(chip, x, y, r, interrupted);
+  }
+  function snapTo(chip, x, y, r){ stopAnim(chip); setT(chip, x, y, r, true); }
+  function cls(chip, add, remove){
+    (remove||[]).forEach(c => chip.classList.remove(c));
+    (add||[]).forEach(c => chip.classList.add(c));
+  }
+
+  // ---- the jump ----
+  // x eases out hard so the chip clears the roof edge before it starts dropping,
+  // y is a small hop followed by a parabola, and the whole thing tumbles and bounces once.
+  function fallFrames(x0, y0, x1, y1, rot){
+    const frames = [], N = 26, land = 0.78, xImpact = x1 - 12;
+    for(let i = 0; i <= N; i++){
+      const t = i / N;
+      const yn = 1.5*t*t - 0.5*t;                 // negative early: the hop
+      const xn = 1 - Math.pow(1 - t, 2.4);        // fast out, then coasting
+      const rn = 1 - Math.pow(1 - t, 1.5);        // tumble, decelerating
+      frames.push({
+        transform: `translate(${(x0 + (xImpact - x0)*xn).toFixed(1)}px,${(y0 + (y1 - y0)*yn).toFixed(1)}px) rotate(${(rot*rn).toFixed(1)}deg)`,
+        offset: +(t*land).toFixed(4)
+      });
+    }
+    // one short settle, not a second hop: a big bounce reads as the number dropping twice
+    const spin = rot < 0 ? -1 : 1;
+    frames.push({transform:`translate(${x1-5}px,${y1-7}px) rotate(${rot + spin*7}deg)`, offset:0.86});
+    frames.push({transform:`translate(${x1}px,${y1}px) rotate(${rot + spin*2}deg)`, offset:0.93});
+    frames.push({transform:`translate(${x1}px,${y1}px) rotate(${rot}deg)`, offset:1});
+    return frames;
+  }
+
+  function splat(blood){
+    blood.classList.add('on');
+    const burst = blood.querySelector('.burst');
+    if(burst && !reduce){
+      burst.animate(
+        [{opacity:1, transform:'scale(.3)'}, {opacity:.9, transform:'scale(1.1)', offset:.35}, {opacity:0, transform:'scale(1.6)'}],
+        {duration:460, easing:'cubic-bezier(.2,.7,.3,1)'}
+      );
+    }
+  }
+
+  function jump(key, delay){
+    const chip = chips[key], blood = bloods[key];
+    const [x0, y0] = ROOF[key], [x1, y1, rot] = DEAD[key];
+    cls(chip, ['fall'], []);
+    if(reduce){ place(chip, x1, y1, rot); cls(chip, ['dead'], []); blood.classList.add('on'); return; }
+    stopAnim(chip);
+    chip.style.transition = 'none';
+    chip.style.transform = `translate(${x0}px,${y0}px)`;
+    blood.classList.remove('on');
+    const dur = 1500;
+    later(() => {
+      const anim = chip.animate(fallFrames(x0, y0, x1, y1, rot), {duration:dur, easing:'linear', fill:'both'});
+      running.set(chip, anim);
+      anim.onfinish = () => {
+        stopAnim(chip);
+        chip.style.transform = `translate(${x1}px,${y1}px) rotate(${rot}deg)`;
+        chip.style.transition = '';
+      };
+      later(() => { cls(chip, ['dead'], []); splat(blood); }, dur*0.78);
+    }, delay);
+  }
+
+  function restRoof(key){
+    const chip = chips[key];
+    cls(chip, [], ['dead','fall']);
+    place(chip, ...ROOF[key]);
+    bloods[key].classList.remove('on');
+  }
+  function snapDead(key){
+    snapTo(chips[key], ...DEAD[key]);
+    cls(chips[key], ['dead','fall'], []);
+    bloods[key].classList.add('on');
+  }
+
+  // ---- naming brackets ----
+  function bracket(el, y, x1, x2, label, color){
+    if(!label){ el.style.opacity = 0; return; }
+    el.style.opacity = 1;
+    const p = el.querySelector('path'), t = el.querySelector('text');
+    p.setAttribute('d', `M${x1} ${y+7} L${x1} ${y} L${x2} ${y} L${x2} ${y+7}`);
+    p.setAttribute('stroke', color);
+    t.textContent = label;
+    t.setAttribute('x', (x1 + x2) / 2);
+    t.setAttribute('y', y - 6);
+    t.setAttribute('fill', color);
+  }
+  const INK = 'var(--ink)', INK2 = 'var(--ink2)', GREEN = 'var(--roof)', RED = 'var(--fall)';
+
+  function setC(v){
+    const t = chips.C.querySelector('text');
+    if(t.textContent === v) return;
+    t.textContent = v;
+    if(!reduce) chips.C.querySelector('rect').animate(
+      [{strokeWidth:1.5},{strokeWidth:5},{strokeWidth:1.5}], {duration:700, easing:'ease-out'});
+  }
+  function ops(p1, p2, d){
+    $('plus1').setAttribute('opacity', p1 ? 1 : 0);
+    $('plus2').setAttribute('opacity', p2 ? 1 : 0);
+    $('dot').setAttribute('opacity', d ? 1 : 0);
+  }
+  function tail(text, tone){ const el = $('eqtail'); el.textContent = text || ''; el.className = tone || ''; }
+  function mark(id, on){ $(id).classList.toggle('on', !!on); }
+
+  // ---- scenes ----
+  let fDown = false;
 
   const scenes = [
     { tag:'Roof', title:'T(n) stands on the roof',
-      body:'T(n) is the running time we actually measured. Every term of it is up on the roof. The Big-O question is: which single, simpler function f(n) can we put up there instead, and still promise it stays above T(n)?',
-      sym:'T(n) = (leading term) + (lower order terms)', num:'T(n) = 14n² + 4n + 6',
-      chart:['T'],
-      run(){ place(chips.C,...ROOF.C); place(chips.F,...ROOF.F); place(chips.a,...ROOF.a); place(chips.b,...ROOF.b);
-        Object.values(chips).forEach(c=>cls(c,[],['fall','dead','roof'])); chips.C.querySelector('text').textContent='14';
-        $('plus1').setAttribute('opacity',1); $('plus2').setAttribute('opacity',1); $('dot').setAttribute('opacity',0);
-        car.style.transform='translateY(0)'; $('n0mark').classList.remove('on'); } },
+      body:'T(n) is the running time we actually measured: 14n² + 4n + 6. Every term of it is up on the roof. The Big-O question is which single, simpler function f(n) we can put up there instead and still promise it stays above T(n).',
+      sym:'T(n) = leading term + lower order terms', num:'T(n) = 14n² + 4n + 6',
+      run(){
+        restRoof('a'); restRoof('b');
+        place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
+        setC('14'); ops(1, 1, 0); tail('', ''); $('eqbar').classList.remove('drop');
+        bracket($('brkTop'), 36, 180, 376, 'T(n) = 14n² + 4n + 6', INK);
+        bracket($('brkA'), 64, 180, 260, 'leading term', INK2);
+        bracket($('brkB'), 64, 282, 376, 'lower order', RED);
+        car.style.transform = 'translateY(0)'; fDown = false;
+        mark('n0mark', 0); mark('deadNote', 0); mark('baseNote', 0);
+      } },
+
     { tag:'Street', title:'The lower order terms jump',
-      body:'As n grows, 4n and 6 become a rounding error next to 14n². Big-O only cares about the roof for large n, so those terms leave the building the fast way. They land on the street and stay there.',
-      sym:'lower order terms → dropped', num:'4n + 6 is gone; 14n² remains',
-      chart:['T','lower'],
-      run(){ place(chips.C,...ROOF.C); place(chips.F,...ROOF.F); place(chips.a,...DEAD.a); place(chips.b,...DEAD.b);
-        cls(chips.a,['fall','dead'],[]); cls(chips.b,['fall','dead'],[]); cls(chips.C,[],['roof']); cls(chips.F,[],['roof']);
-        chips.C.querySelector('text').textContent='14';
-        $('plus1').setAttribute('opacity',0); $('plus2').setAttribute('opacity',0); $('dot').setAttribute('opacity',0);
-        car.style.transform='translateY(0)'; $('n0mark').classList.remove('on'); } },
+      body:'As n grows, 4n and 6 become a rounding error next to 14n². Big-O only cares about the roof for large n, so those two terms leave the building the fast way. They land on the street and stay there.',
+      sym:'lower order terms → dropped', num:'4n + 6 is gone, 14n² remains',
+      run(from){
+        place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
+        setC('14'); ops(0, 0, 0); tail('', ''); $('eqbar').classList.add('drop');
+        bracket($('brkTop'), 36, 0, 0, '', INK);
+        bracket($('brkA'), 64, 180, 260, '14n², the survivor', INK);
+        bracket($('brkB'), 64, 0, 0, '', RED);
+        car.style.transform = 'translateY(0)'; fDown = false;
+        mark('n0mark', 0); mark('baseNote', 0);
+        if(from === 0){ jump('a', 40); jump('b', 170); later(() => mark('deadNote', 1), 1500); }
+        else { snapDead('a'); snapDead('b'); mark('deadNote', 1); }
+      } },
+
     { tag:'Roof', title:'What stays up is c·f(n)',
-      body:'The survivor splits into a constant c and a shape f(n) = n². But 14n² alone is always a little below T(n), since 4n + 6 is positive. So c has to grow just enough to cover for the dead terms: c = 15 works once n² ≥ 4n + 6, which is true from n = 6 on. That gives n₀ = 5.',
+      body:'The survivor splits into a constant c and a shape f(n) = n². But 14n² alone sits just under T(n), because 4n + 6 was positive. So c has to grow enough to cover for the dead terms: c = 15 works once n² ≥ 4n + 6, which holds from n = 6 on. That gives n₀ = 5.',
       sym:'T(n) ≤ c·f(n) for all n > n₀', num:'14n² + 4n + 6 ≤ 15·n² for all n > 5',
-      chart:['T','cf'],
-      run(){ place(chips.C,...ROOF.C); place(chips.F,...ROOF.F); place(chips.a,...DEAD.a); place(chips.b,...DEAD.b);
-        cls(chips.C,['roof'],[]); cls(chips.F,['roof'],[]); chips.C.querySelector('text').textContent='15';
-        $('plus1').setAttribute('opacity',0); $('plus2').setAttribute('opacity',0); $('dot').setAttribute('opacity',1);
-        car.style.transform='translateY(0)'; $('n0mark').classList.add('on'); } },
+      run(){
+        snapDead('a'); snapDead('b');
+        place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
+        cls(chips.F, ['f'], []); setC('15'); ops(0, 0, 1);
+        tail('≤ 15·n²', 'g'); $('eqbar').classList.add('drop');
+        bracket($('brkTop'), 36, 0, 0, '', INK);
+        bracket($('brkA'), 64, 180, 260, 'c·f(n) = 15n²', GREEN);
+        bracket($('brkB'), 64, 0, 0, '', RED);
+        car.style.transform = 'translateY(0)'; fDown = false;
+        mark('n0mark', 1); mark('deadNote', 1); mark('baseNote', 0);
+      } },
+
     { tag:'Basement', title:'f(n) alone rides the elevator down',
-      body:'Try to send f(n) up without c. n² by itself is smaller than 14n² + 4n + 6 for every single n, so it cannot sit above T(n). It takes the elevator all the way to the basement, lower than even the terms that jumped. f(n) has the right shape for the bound, but by itself it is the wrong size.',
-      sym:'f(n) is not ≥ T(n) on its own', num:'n² < 14n² + 4n + 6 for every n',
-      chart:['T','f'],
-      run(){ place(chips.C,...ROOF.C); place(chips.F,...BASE.F); place(chips.a,...DEAD.a); place(chips.b,...DEAD.b);
-        cls(chips.F,['fall'],['roof']); cls(chips.C,['roof'],[]); chips.C.querySelector('text').textContent='15';
-        $('dot').setAttribute('opacity',0);
-        car.style.transform=`translateY(${CAR.basementY}px)`; $('n0mark').classList.remove('on'); } },
+      body:'Send f(n) up without c and it cannot hold the roof. n² by itself is smaller than 14n² + 4n + 6 for every single n, so it rides the elevator all the way to the basement, below even the terms that jumped. Right shape, wrong size.',
+      sym:'f(n) on its own is not ≥ T(n)', num:'n² < 14n² + 4n + 6 for every n',
+      run(){
+        snapDead('a'); snapDead('b');
+        place(chips.C, ...ROOF.C); setC('15'); ops(0, 0, 0);
+        tail('but n² alone < T(n)', 'b'); $('eqbar').classList.add('drop');
+        bracket($('brkTop'), 36, 0, 0, '', INK);
+        bracket($('brkA'), 64, 180, 216, 'c, nothing to multiply', GREEN);
+        bracket($('brkB'), 64, 0, 0, '', RED);
+        mark('n0mark', 0); mark('deadNote', 1);
+        place(chips.F, SHAFT_X, 86);
+        later(() => {
+          car.style.transform = `translateY(${CAR_DOWN}px)`;
+          place(chips.F, SHAFT_X, BASE_Y);
+          fDown = true;
+        }, reduce ? 0 : 460);
+        later(() => mark('baseNote', 1), reduce ? 0 : 1300);
+      } },
+
     { tag:'Roof', title:'With c, f(n) is back on top',
-      body:'Multiply by the constant and the same shape rises straight back to the roof. That is the whole definition: f(n) is an asymptotic upper bound on T(n) precisely because some fixed c and some n₀ exist that put c·f(n) above T(n) forever after. The constant is the elevator ticket.',
-      sym:'T(n) = O(f(n))  ⇔  ∃ c, n₀ : T(n) ≤ c·f(n) for all n > n₀', num:'14n² + 4n + 6 = O(n²)  with c = 15, n₀ = 5',
-      chart:['T','cf','f'],
-      run(){ place(chips.C,...ROOF.C); place(chips.F,...ROOF.F); place(chips.a,...DEAD.a); place(chips.b,...DEAD.b);
-        cls(chips.F,['roof'],['fall']); cls(chips.C,['roof'],[]); chips.C.querySelector('text').textContent='15';
-        $('dot').setAttribute('opacity',1);
-        car.style.transform='translateY(0)'; $('n0mark').classList.add('on'); } }
+      body:'Multiply by the constant and the same shape rises straight back to the roof. That is the whole definition: f(n) is an asymptotic upper bound on T(n) exactly because some fixed c and some n₀ exist that keep c·f(n) above T(n) forever after. The constant is the elevator ticket.',
+      sym:'T(n) = O(f(n))  ⇔  ∃ c, n₀ : T(n) ≤ c·f(n) for all n > n₀',
+      num:'14n² + 4n + 6 = O(n²)  with c = 15, n₀ = 5',
+      run(){
+        snapDead('a'); snapDead('b');
+        place(chips.C, ...ROOF.C); setC('15'); ops(0, 0, 1);
+        tail('= O(n²)', 'g'); $('eqbar').classList.add('drop');
+        bracket($('brkTop'), 36, 0, 0, '', INK);
+        bracket($('brkA'), 64, 180, 260, 'c·f(n) = 15n²', GREEN);
+        bracket($('brkB'), 64, 0, 0, '', RED);
+        mark('n0mark', 1); mark('deadNote', 1); mark('baseNote', 0);
+        car.style.transform = 'translateY(0)';
+        if(fDown && !reduce){
+          place(chips.F, SHAFT_X, 86);
+          later(() => place(chips.F, ...ROOF.F), 1150);
+        } else {
+          place(chips.F, ...ROOF.F);
+        }
+        fDown = false;
+      } }
   ];
 
   // ---- chart ----
-  const W=400,H=560,L=46,R=16,T=28,B=44;
-  const N=12, YMAX=2300;
-  const sx=n=>L+(W-L-R)*n/N, sy=y=>H-B-(H-T-B)*y/YMAX;
-  const fT=n=>14*n*n+4*n+6, fcf=n=>15*n*n, ff=n=>n*n, flow=n=>4*n+6;
-  function path(fn){ let d=''; for(let i=0;i<=N*4;i++){const n=i/4; d+=(i?'L':'M')+sx(n).toFixed(1)+' '+sy(fn(n)).toFixed(1)+' ';} return d; }
-  const chart=$('chart');
-  let svg='';
-  for(let y=0;y<=2000;y+=500){ svg+=`<line class="ax" x1="${L}" y1="${sy(y)}" x2="${W-R}" y2="${sy(y)}"/><text class="tlabel" x="${L-6}" y="${sy(y)+4}" text-anchor="end">${y}</text>`; }
-  for(let n=0;n<=N;n+=2){ svg+=`<text class="tlabel" x="${sx(n)}" y="${H-B+16}" text-anchor="middle">${n}</text>`; }
-  svg+=`<line class="ax" x1="${L}" y1="${sy(0)}" x2="${W-R}" y2="${sy(0)}"/><line class="ax" x1="${L}" y1="${T}" x2="${L}" y2="${sy(0)}"/>`;
-  svg+=`<text class="tlabel" x="${W-R}" y="${H-B+32}" text-anchor="end">n</text>`;
-  svg+=`<g id="n0line"><line x1="${sx(5)}" y1="${T}" x2="${sx(5)}" y2="${sy(0)}" stroke="var(--roof)" stroke-dasharray="4 4"/><text class="tlabel strong" x="${sx(5)+5}" y="${T+12}" fill="var(--roof)">n₀ = 5</text></g>`;
-  svg+=`<path id="cv-lower" class="curve" stroke="var(--fall)" stroke-dasharray="3 3" d="${path(flow)}"/>`;
-  svg+=`<path id="cv-f" class="curve" stroke="var(--brass)" d="${path(ff)}"/>`;
-  svg+=`<path id="cv-cf" class="curve" stroke="var(--roof)" d="${path(fcf)}"/>`;
-  svg+=`<path id="cv-T" class="curve" stroke="var(--ink)" d="${path(fT)}"/>`;
-  svg+=`<text class="tlabel strong" x="${sx(9.6)}" y="${sy(fT(9.6))+30}" text-anchor="end">T(n) = 14n²+4n+6</text>`;
-  svg+=`<text class="tlabel strong" x="${sx(9.2)}" y="${sy(fcf(9.2))-14}" text-anchor="end" fill="var(--roof)">c·f(n) = 15n²</text>`;
-  svg+=`<text class="tlabel strong" x="${sx(12)}" y="${sy(ff(12))-6}" text-anchor="end" fill="var(--brass)">n² alone</text>`;
-  svg+=`<text class="tlabel" x="${sx(12)}" y="${sy(flow(12))+14}" text-anchor="end" fill="var(--fall)">4n+6</text>`;
-  chart.innerHTML=svg;
-  function showCurves(keys){ ['T','cf','f','lower'].forEach(k=>$('cv-'+k).classList.toggle('dim',!keys.includes(k))); $('n0line').style.opacity = keys.includes('cf')?1:.25; }
+  // Every scene gets its own window on the same functions, so whatever the caption is
+  // talking about is big enough to see. Moving between windows animates the zoom.
+  const PW = 400, PH = 560, PL = 54, PR = 18, PT = 26, PB = 48;
+  const X0 = PL, X1 = PW - PR, YT = PT, YB = PH - PB;
+  const fT = n => 14*n*n + 4*n + 6, fcf = n => 15*n*n, ff = n => n*n,
+        flow = n => 4*n + 6, f14 = n => 14*n*n;
+  const fgap = n => 15*n*n - (14*n*n + 4*n + 6), zero = () => 0;   // n² - 4n - 6
+  const NCROSS = 2 + Math.sqrt(10);          // 15n² meets T(n) at n = 5.162
+  const VIEW = {
+    wide: {n0:0, n1:12, y0:0,   y1:2300, ys:500, xs:2, name:'n 0 to 12'},
+    gap:  {n0:0, n1:12, y0:-20, y1:100,  ys:20,  xs:2, name:'the gap, zoomed 19x'},
+    low:  {n0:0, n1:12, y0:0,   y1:620,  ys:100, xs:2, name:'n 0 to 12, y zoomed 4x'}
+  };
+
+  const chartEl = $('chart');
+  let view = Object.assign({}, VIEW.wide), zoomReq = null, creadReq = null, stretchAnim = null;
+
+  const sxOf = v => n => X0 + (X1 - X0)*(n - v.n0)/(v.n1 - v.n0);
+  const syOf = v => y => YB - (YB - YT)*(y - v.y0)/(v.y1 - v.y0);
+  const clampY = y => Math.max(-9000, Math.min(9000, y));
+
+  function dOf(fn, v){
+    const sx = sxOf(v), sy = syOf(v); let d = '';
+    for(let i = 0; i <= 96; i++){
+      const n = v.n0 + (v.n1 - v.n0)*i/96;
+      d += (i?'L':'M') + sx(n).toFixed(1) + ' ' + clampY(sy(fn(n))).toFixed(1) + ' ';
+    }
+    return d;
+  }
+  function curve(fn, v, color, dash, extra){
+    return `<path class="curve" d="${dOf(fn, v)}" stroke="${color}"` +
+      (dash ? ` stroke-dasharray="${dash}"` : '') + (extra || '') + '/>';
+  }
+  function band(fa, fb, na, nb, v, color){
+    const sx = sxOf(v), sy = syOf(v); let d = '';
+    for(let i = 0; i <= 48; i++){ const n = na + (nb - na)*i/48; d += (i?'L':'M') + sx(n).toFixed(1) + ' ' + clampY(sy(fa(n))).toFixed(1) + ' '; }
+    for(let i = 48; i >= 0; i--){ const n = na + (nb - na)*i/48; d += 'L' + sx(n).toFixed(1) + ' ' + clampY(sy(fb(n))).toFixed(1) + ' '; }
+    return `<path d="${d}Z" fill="${color}" fill-opacity=".45" stroke="none"/>`;
+  }
+  // inline style, not a fill attribute: the .tlabel rules would win over an attribute
+  function lab(x, y, text, color, anchor, small){
+    return `<text class="tlabel${small ? '' : ' strong'}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor||'start'}" style="fill:${color}">${text}</text>`;
+  }
+  function vgap(x, ya, yb, color){
+    return `<g><line x1="${x.toFixed(1)}" y1="${ya.toFixed(1)}" x2="${x.toFixed(1)}" y2="${yb.toFixed(1)}" stroke="${color}" stroke-width="1.5" stroke-dasharray="3 3"/>` +
+      `<line x1="${(x-5).toFixed(1)}" y1="${ya.toFixed(1)}" x2="${(x+5).toFixed(1)}" y2="${ya.toFixed(1)}" stroke="${color}" stroke-width="2"/>` +
+      `<line x1="${(x-5).toFixed(1)}" y1="${yb.toFixed(1)}" x2="${(x+5).toFixed(1)}" y2="${yb.toFixed(1)}" stroke="${color}" stroke-width="2"/></g>`;
+  }
+  function n0line(v){
+    const sx = sxOf(v);
+    if(5 < v.n0 || 5 > v.n1) return '';
+    return `<g><line x1="${sx(5).toFixed(1)}" y1="${YT}" x2="${sx(5).toFixed(1)}" y2="${YB}" stroke="var(--roof)" stroke-dasharray="4 4"/>` +
+      lab(sx(5) + 5, YT + 12, 'n₀ = 5', 'var(--roof)') + '</g>';
+  }
+
+  function drawChart(v, spec, withNotes){
+    const sx = sxOf(v), sy = syOf(v);
+    let s = `<clipPath id="plotclip"><rect x="${X0}" y="${YT}" width="${X1-X0}" height="${YB-YT}"/></clipPath>`;
+    for(let y = Math.ceil(v.y0/v.ys)*v.ys; y <= v.y1 + 1e-6; y += v.ys){
+      const py = sy(y);
+      if(py < YT - 0.5 || py > YB + 0.5) continue;
+      s += `<line class="ax" x1="${X0}" y1="${py.toFixed(1)}" x2="${X1}" y2="${py.toFixed(1)}"/>` +
+           `<text class="tlabel" x="${X0-6}" y="${(py+4).toFixed(1)}" text-anchor="end">${Math.round(y)}</text>`;
+    }
+    for(let n = Math.ceil(v.n0/v.xs)*v.xs; n <= v.n1 + 1e-6; n += v.xs){
+      const px = sx(n);
+      if(px < X0 - 0.5 || px > X1 + 0.5) continue;
+      s += `<text class="tlabel" x="${px.toFixed(1)}" y="${YB+16}" text-anchor="middle">${+n.toFixed(2)}</text>`;
+    }
+    s += `<line class="ax" x1="${X0}" y1="${YB}" x2="${X1}" y2="${YB}"/><line class="ax" x1="${X0}" y1="${YT}" x2="${X0}" y2="${YB}"/>`;
+    s += `<text class="tlabel" x="${X1}" y="${YB+32}" text-anchor="end">n</text>`;
+    s += `<g clip-path="url(#plotclip)">${spec.body(v, sx, sy)}</g>`;
+    if(withNotes && spec.notes) s += `<g class="anno">${spec.notes(v, sx, sy)}</g>`;
+    chartEl.innerHTML = s;
+  }
+
+  function cancelChart(){
+    if(zoomReq) cancelAnimationFrame(zoomReq); zoomReq = null;
+    if(creadReq) cancelAnimationFrame(creadReq); creadReq = null;
+    if(stretchAnim){ stretchAnim.cancel(); stretchAnim = null; }
+  }
+
+  function setChart(k){
+    cancelChart();
+    const spec = CHARTS[k], target = VIEW[spec.view];
+    $('chart-range').textContent = target.name;
+    $('chart-eq').innerHTML = spec.eq || '<span class="t-T">T(n) = 14n&sup2; + 4n + 6</span>';
+    ['T','cf','f','low'].forEach(id => $('lg-' + id).classList.toggle('off', !spec.legend.includes(id)));
+    const from = Object.assign({}, view);
+    const same = from.n0 === target.n0 && from.n1 === target.n1 && from.y0 === target.y0 && from.y1 === target.y1;
+    if(same || reduce){
+      view = Object.assign({}, target);
+      drawChart(view, spec, true);
+      if(spec.after) spec.after();
+      return;
+    }
+    const t0 = performance.now(), D = 560;
+    const ease = t => t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2)/2;
+    (function frame(now){
+      const t = Math.min(1, (now - t0)/D), e = ease(t);
+      view = {
+        n0: from.n0 + (target.n0 - from.n0)*e, n1: from.n1 + (target.n1 - from.n1)*e,
+        y0: from.y0 + (target.y0 - from.y0)*e, y1: from.y1 + (target.y1 - from.y1)*e,
+        ys: target.ys, xs: target.xs
+      };
+      drawChart(view, spec, t === 1);
+      if(t < 1) zoomReq = requestAnimationFrame(frame);
+      else { zoomReq = null; if(spec.after) spec.after(); }
+    })(performance.now());
+  }
+
+  // the stretch in scene 5: the same gold curve scaled vertically about the n axis,
+  // which is the only thing multiplying by c ever does to a graph
+  function runStretch(){
+    const g = $('stretch'), p = $('spath'), out = $('cread');
+    if(!g || !p) return;
+    if(reduce){
+      g.style.transform = `translate(0px,${YB}px) scale(1,15) translate(0px,${-YB}px)`;
+      p.style.stroke = 'var(--roof)';
+      if(out) out.textContent = 'c = 15';
+      return;
+    }
+    const D = 1700, kf = [];
+    for(let i = 0; i <= 30; i++){
+      const t = i/30, s = 1 + 14*(1 - Math.pow(1 - t, 3));
+      kf.push({transform:`translate(0px,${YB}px) scale(1,${s.toFixed(3)}) translate(0px,${-YB}px)`, offset:t});
+    }
+    stretchAnim = g.animate(kf, {duration:D, easing:'linear', fill:'forwards'});
+    p.style.stroke = 'var(--roof)';        // .curve transitions stroke over the same beat
+    stretchAnim.onfinish = () => {
+      // now that it has landed, put a number on how far above T(n) it ended up
+      const sx = sxOf(view), sy = syOf(view);
+      const extra = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      extra.setAttribute('class', 'anno');
+      extra.innerHTML = vgap(sx(11), sy(fT(11)), sy(fcf(11)), 'var(--roof)') +
+        lab(sx(11) - 9, sy(fcf(11)) - 6, '15n² clears T(n) by 71 here', 'var(--roof)', 'end', true);
+      chartEl.appendChild(extra);
+    };
+    const t0 = performance.now();
+    (function tick(){
+      const t = Math.min(1, (performance.now() - t0)/D);
+      const c = 1 + 14*(1 - Math.pow(1 - t, 3));
+      out.textContent = 'c = ' + (t < 1 ? c.toFixed(1) : '15');
+      if(t < 1) creadReq = requestAnimationFrame(tick); else creadReq = null;
+    })();
+  }
+
+  const CHARTS = [
+    // 1. T(n) on its own
+    { view:'wide', legend:['T'],
+      body:(v) => curve(fT, v, 'var(--ink)'),
+      notes:(v, sx, sy) => lab(sx(9.9), sy(fT(9.9)) + 28, 'T(n) = 14n² + 4n + 6', 'var(--ink)', 'end') },
+
+    // 2. what the dropped terms are actually worth: the gap between T(n) and 14n²
+    { view:'wide', legend:['T','low'],
+      eq:'<span class="t-T">T(n) = 14n&sup2;</span> <span class="op">+</span> <span class="t-low">4n + 6</span>',
+      body:(v) => curve(flow, v, 'var(--fall)', '3 3') + curve(f14, v, 'var(--ink2)', '6 4') + curve(fT, v, 'var(--ink)'),
+      notes:(v, sx, sy) =>
+        vgap(sx(11.4), sy(fT(11.4)), sy(f14(11.4)), 'var(--fall)') +
+        lab(sx(11.1), sy(f14(11.4)) + 4, '4n + 6 is only this gap', 'var(--fall)', 'end') +
+        lab(sx(9.6), sy(fT(9.6)) - 12, 'T(n)', 'var(--ink)', 'end') +
+        lab(sx(9.4), sy(f14(9.4)) + 48, '14n², T(n) without them', 'var(--ink2)', 'end') +
+        lab(sx(12), sy(flow(12)) + 16, '4n + 6', 'var(--fall)', 'end') },
+
+    // 3. the two curves are so close that the honest way to see the crossing is to plot
+    //    the distance between them: 15n² - T(n), which is n² - 4n - 6
+    { view:'gap', legend:['T','cf'],
+      eq:'<span class="t-c">15n²</span> &minus; <span class="t-T">T(n)</span> = n&sup2; &minus; 4n &minus; 6',
+      body:(v, sx, sy) => band(fgap, zero, v.n0, NCROSS, v, 'var(--fall)') +
+        band(fgap, zero, NCROSS, v.n1, v, 'var(--roof)') +
+        `<line x1="${X0}" y1="${sy(0).toFixed(1)}" x2="${X1}" y2="${sy(0).toFixed(1)}" stroke="var(--ink)" stroke-width="1.5"/>` +
+        curve(fgap, v, 'var(--roof)'),
+      notes:(v, sx, sy) => n0line(v) +
+        `<circle cx="${sx(NCROSS).toFixed(1)}" cy="${sy(0).toFixed(1)}" r="4.5" fill="var(--roof)"/>` +
+        lab(X0 + 4, sy(0) - 8, 'zero: 15n² and T(n) are equal', 'var(--ink2)', 'start', true) +
+        lab(X0 + 6, sy(fgap(2)) + 26, '15n² is short here', 'var(--fall)') +
+        lab(sx(9.2), sy(fgap(9.2)) - 14, 'and ahead for good here', 'var(--roof)', 'end') +
+        lab(sx(10.9), sy(fgap(10.9)) + 22, '15n² − T(n)', 'var(--roof)', 'end', true) +
+        lab(sx(5.35), sy(0) + 24, 'crosses zero at n = 5.16,', 'var(--ink2)', 'start', true) +
+        lab(sx(5.35), sy(0) + 38, 'so n₀ = 5 works', 'var(--ink2)', 'start', true) },
+
+    // 4. the shape on its own, with the y axis zoomed until n² is actually visible
+    { view:'low', legend:['T','f'],
+      eq:'<span class="t-f">f(n) = n&sup2;</span> <span class="op">against</span> <span class="t-T">T(n)</span>',
+      body:(v) => curve(ff, v, 'var(--brass)') + curve(fT, v, 'var(--ink)'),
+      notes:(v, sx, sy) =>
+        vgap(sx(6), sy(fT(6)), sy(ff(6)), 'var(--ink2)') +
+        lab(sx(6) + 8, sy(fT(6)) + 4, 'T(6) = 534', 'var(--ink)') +
+        lab(sx(6) + 8, sy(ff(6)) - 6, 'n²(6) = 36', 'var(--brass)') +
+        lab(sx(6) + 8, (sy(fT(6)) + sy(ff(6)))/2, '14.8 times short', 'var(--ink2)') +
+        lab(sx(6.6), YT + 14, 'T(n) exits at n ≈ 6.5', 'var(--ink)', 'start') +
+        lab(sx(11.9), sy(ff(11.9)) - 12, 'f(n) = n², same shape', 'var(--brass)', 'end') },
+
+    // 5. multiply the shape by c and watch the whole curve stretch upward
+    { view:'wide', legend:['T','f','cf'],
+      eq:'<span class="t-f">n&sup2;</span> <span class="op">&times;</span> <span class="t-c">c</span> <span class="op">&rarr;</span> <span class="t-c">15n&sup2;</span>',
+      body:(v) => curve(fcf, v, 'var(--roof)', '5 5', ' opacity=".35"') + curve(fT, v, 'var(--ink)') +
+        `<g id="stretch" style="transform:translate(0px,${YB}px) scale(1,1) translate(0px,${-YB}px)">` +
+        `<path id="spath" class="curve" vector-effect="non-scaling-stroke" stroke="var(--brass)" d="${dOf(ff, v)}"/></g>`,
+      notes:(v, sx, sy) => n0line(v) +
+        `<text class="tlabel strong" id="cread" x="${X0+6}" y="${YT+16}" style="fill:var(--roof)" font-size="15">c = 1.0</text>` +
+        lab(sx(7.6) + 8, sy(fT(7.6)) + 24, 'T(n)', 'var(--ink)') +
+        lab(sx(12), sy(fcf(12)) + 16, 'c·f(n) = 15n²', 'var(--roof)', 'end') +
+        lab(X0 + 6, YT + 34, 'n² stretched, never bent', 'var(--ink2)', 'start', true),
+      after: runStretch }
+  ];
 
   // ---- stepping ----
-  let i=0;
-  const dots=$('dots'); scenes.forEach((_,k)=>{const s=document.createElement('span'); s.addEventListener('click',()=>go(k)); dots.appendChild(s);});
-  function go(k){ i=Math.max(0,Math.min(scenes.length-1,k)); const s=scenes[i];
-    s.run(); showCurves(s.chart);
-    $('stepnum').textContent=i+1; $('title').textContent=s.title; $('body').textContent=s.body; $('sym').textContent=s.sym; $('num').textContent=s.num; $('scene-tag').textContent=s.tag;
-    [...dots.children].forEach((d,k2)=>d.classList.toggle('on',k2===i));
-    $('prev').disabled=i===0; $('next').textContent = i===scenes.length-1 ? 'Start over' : 'Next scene';
+  let i = 0;
+  const dots = $('dots');
+  scenes.forEach((_, k) => { const s = document.createElement('span'); s.addEventListener('click', () => go(k)); dots.appendChild(s); });
+
+  function go(k){
+    const from = i;
+    i = Math.max(0, Math.min(scenes.length - 1, k));
+    clearTimers();
+    const s = scenes[i];
+    s.run(from);
+    setChart(i);
+    $('stepnum').textContent = i + 1;
+    $('title').textContent = s.title;
+    $('body').textContent = s.body;
+    $('sym').textContent = s.sym;
+    $('num').textContent = s.num;
+    $('scene-tag').textContent = s.tag;
+    [...dots.children].forEach((d, k2) => d.classList.toggle('on', k2 === i));
+    $('prev').disabled = i === 0;
+    $('next').textContent = i === scenes.length - 1 ? 'Start over' : 'Next scene';
   }
-  $('next').addEventListener('click',()=>go(i===scenes.length-1?0:i+1));
-  $('prev').addEventListener('click',()=>go(i-1));
-  document.addEventListener('keydown',e=>{ if(e.key==='ArrowRight')go(i+1); if(e.key==='ArrowLeft')go(i-1); });
+
+  $('next').addEventListener('click', () => go(i === scenes.length - 1 ? 0 : i + 1));
+  $('prev').addEventListener('click', () => go(i - 1));
+  document.addEventListener('keydown', e => {
+    if(e.key === 'ArrowRight') go(i + 1);
+    if(e.key === 'ArrowLeft') go(i - 1);
+  });
   go(0);
 })();
 </script>

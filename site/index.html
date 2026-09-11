@@ -8,12 +8,31 @@
       name="description"
       content="Interactive visuals for an algorithms course. Each one explains an algorithm to someone with no maths background, without simplifying it into something untrue."
     />
+    <meta name="color-scheme" content="light dark" />
+
+    <!--
+      Set the theme before first paint so a saved choice does not flash the
+      wrong colours. Storage can throw (private windows, blocked site data),
+      so a failure here must leave the page on the system preference.
+    -->
+    <script>
+      try {
+        var saved = localStorage.getItem('theme');
+        if (saved === 'light' || saved === 'dark') {
+          document.documentElement.setAttribute('data-theme', saved);
+        }
+      } catch (e) {
+        /* system preference it is */
+      }
+    </script>
+
     <style>
       /* Palette shared with the gale-shapley page, so the two read as one site. */
       :root {
         color-scheme: light dark;
 
         --bg: #fbfaf8;
+        --bg-tint: #f2ede4;
         --surface: #ffffff;
         --surface-sunk: #f4f1ec;
         --border: #e3ded7;
@@ -23,15 +42,27 @@
         --ink-faint: #8b857d;
 
         --accent: #2f6f5e;
+        --accent-wash: #e8f1ee;
         --live: #b8860b;
 
-        --radius: 14px;
+        --shadow-card: 0 1px 2px rgba(27, 26, 24, 0.04), 0 8px 24px -16px rgba(27, 26, 24, 0.28);
+        --shadow-card-hover: 0 2px 4px rgba(27, 26, 24, 0.05),
+          0 18px 38px -20px rgba(27, 26, 24, 0.36);
+
+        --radius: 16px;
         --radius-sm: 10px;
+
+        --display:
+          'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia,
+          ui-serif, serif;
+        --sans:
+          ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
       }
 
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme='light']) {
           --bg: #14161a;
+          --bg-tint: #1a1e24;
           --surface: #1c1f24;
           --surface-sunk: #171a1e;
           --border: #2e333a;
@@ -41,12 +72,18 @@
           --ink-faint: #837e77;
 
           --accent: #7fc4ac;
+          --accent-wash: #1f2c2a;
           --live: #e3bf5e;
+
+          --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 26px -18px rgba(0, 0, 0, 0.8);
+          --shadow-card-hover: 0 2px 6px rgba(0, 0, 0, 0.45),
+            0 20px 40px -20px rgba(0, 0, 0, 0.9);
         }
       }
 
       :root[data-theme='dark'] {
         --bg: #14161a;
+        --bg-tint: #1a1e24;
         --surface: #1c1f24;
         --surface-sunk: #171a1e;
         --border: #2e333a;
@@ -56,102 +93,283 @@
         --ink-faint: #837e77;
 
         --accent: #7fc4ac;
+        --accent-wash: #1f2c2a;
         --live: #e3bf5e;
+
+        --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 26px -18px rgba(0, 0, 0, 0.8);
+        --shadow-card-hover: 0 2px 6px rgba(0, 0, 0, 0.45),
+          0 20px 40px -20px rgba(0, 0, 0, 0.9);
       }
 
       * {
         box-sizing: border-box;
       }
 
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+
       body {
         margin: 0;
         background: var(--bg);
         color: var(--ink);
-        font:
-          15px/1.55 ui-sans-serif,
-          system-ui,
-          -apple-system,
-          'Segoe UI',
-          Roboto,
-          sans-serif;
+        font: 15px/1.6 var(--sans);
         -webkit-font-smoothing: antialiased;
       }
 
+      /* A soft wash behind the masthead so the page opens with something other
+         than flat paper. Purely decorative, sits under everything. */
+      .backdrop {
+        position: fixed;
+        inset: 0 0 auto 0;
+        height: 460px;
+        background:
+          radial-gradient(
+            720px 300px at 12% -10%,
+            color-mix(in srgb, var(--accent) 14%, transparent),
+            transparent 70%
+          ),
+          linear-gradient(180deg, var(--bg-tint), transparent);
+        pointer-events: none;
+        z-index: 0;
+      }
+
       .page {
+        position: relative;
+        z-index: 1;
         max-width: 1040px;
         margin: 0 auto;
-        padding: 40px 20px 90px;
+        padding-block: 44px 96px;
+        padding-inline: 20px;
       }
 
       /* --- masthead ------------------------------------------------------- */
 
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 44px;
+      }
+
+      .wordmark {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+      }
+
+      .wordmark svg {
+        display: block;
+        color: var(--accent);
+      }
+
+      .themetoggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--ink-soft);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 6px 13px 6px 11px;
+        cursor: pointer;
+        transition:
+          border-color 120ms ease,
+          color 120ms ease;
+      }
+
+      .themetoggle:hover {
+        border-color: var(--border-strong);
+        color: var(--ink);
+      }
+
+      .themetoggle:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      .themetoggle svg {
+        display: block;
+      }
+
+      /* Only one of the two glyphs shows, whichever the click would give you. */
+      .themetoggle .icon-dark,
+      .themetoggle .label-dark {
+        display: none;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) .themetoggle .icon-light,
+        :root:not([data-theme='light']) .themetoggle .label-light {
+          display: none;
+        }
+
+        :root:not([data-theme='light']) .themetoggle .icon-dark,
+        :root:not([data-theme='light']) .themetoggle .label-dark {
+          display: inline;
+        }
+      }
+
+      :root[data-theme='dark'] .themetoggle .icon-light,
+      :root[data-theme='dark'] .themetoggle .label-light {
+        display: none;
+      }
+
+      :root[data-theme='dark'] .themetoggle .icon-dark,
+      :root[data-theme='dark'] .themetoggle .label-dark {
+        display: inline;
+      }
+
       .masthead {
-        margin-bottom: 36px;
+        margin-bottom: 44px;
+        max-width: 66ch;
+      }
+
+      .masthead__eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 14px;
       }
 
       .masthead h1 {
-        font-size: 30px;
-        line-height: 1.2;
+        font-family: var(--display);
+        font-size: clamp(38px, 6.2vw, 60px);
+        font-weight: 600;
+        line-height: 1.04;
         letter-spacing: -0.02em;
-        margin: 0 0 10px;
+        margin: 0 0 18px;
       }
 
       .lede {
         color: var(--ink-soft);
+        font-size: 17px;
+        line-height: 1.65;
         margin: 0;
-        max-width: 62ch;
+        max-width: 58ch;
       }
 
       .masthead__meta {
-        margin-top: 16px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 14px;
+        margin-top: 24px;
         font-size: 13px;
         color: var(--ink-faint);
       }
 
       .masthead__meta a {
-        color: inherit;
+        color: var(--ink-soft);
+        text-decoration-color: var(--border-strong);
+        text-underline-offset: 3px;
+      }
+
+      .masthead__meta a:hover {
+        color: var(--accent);
+        text-decoration-color: currentColor;
+      }
+
+      .dot {
+        color: var(--border-strong);
       }
 
       /* --- the shelf of visuals --------------------------------------------- */
+
+      .shelf__head {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+
+      .shelf__head h2 {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin: 0;
+      }
+
+      .shelf__rule {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
 
       .shelf {
         list-style: none;
         margin: 0;
         padding: 0;
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 18px;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
       }
 
       .card {
         position: relative;
         display: flex;
         flex-direction: column;
-        gap: 10px;
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        padding: 20px 22px 18px;
+        overflow: hidden;
+        box-shadow: var(--shadow-card);
         transition:
-          border-color 120ms ease,
-          transform 120ms ease;
+          border-color 140ms ease,
+          box-shadow 140ms ease,
+          transform 140ms ease;
       }
 
       .card:has(.card__link:hover),
       .card:has(.card__link:focus-visible) {
         border-color: var(--accent);
-        transform: translateY(-1px);
+        box-shadow: var(--shadow-card-hover);
+        transform: translateY(-2px);
       }
 
       .card:has(.card__link:focus-visible) {
         outline: 2px solid var(--accent);
-        outline-offset: 2px;
+        outline-offset: 3px;
+      }
+
+      /* Each card opens with a small drawing of what the page actually does.
+         Inline SVG, so the page stays a single file that loads nothing. */
+      .card__thumb {
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 7;
+        max-width: 100%;
+        background: var(--surface-sunk);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .card__body {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1;
+        padding: 18px 22px 18px;
       }
 
       .card__eyebrow {
-        font-size: 12px;
+        font-size: 11.5px;
         font-weight: 600;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.09em;
         text-transform: uppercase;
         color: var(--ink-faint);
         display: flex;
@@ -162,9 +380,11 @@
 
       .card__title {
         margin: 0;
-        font-size: 20px;
-        line-height: 1.25;
-        letter-spacing: -0.01em;
+        font-family: var(--display);
+        font-size: 25px;
+        font-weight: 600;
+        line-height: 1.18;
+        letter-spacing: -0.015em;
       }
 
       /* The whole card is the target, but only the title carries the link so
@@ -192,18 +412,32 @@
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        margin-top: 4px;
+        margin-top: 8px;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
         font-size: 13px;
         color: var(--ink-faint);
+      }
+
+      .card__foot code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12.5px;
       }
 
       .card__cta {
         color: var(--accent);
         font-weight: 600;
+        white-space: nowrap;
       }
 
       .card__cta::after {
         content: ' \2192';
+        display: inline-block;
+        transition: transform 140ms ease;
+      }
+
+      .card:has(.card__link:hover) .card__cta::after {
+        transform: translateX(3px);
       }
 
       /* Status marks. "Live" is the only one you can click into. */
@@ -222,13 +456,13 @@
 
       .status--live {
         color: var(--accent);
-        border-color: var(--accent);
-        background: transparent;
+        border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+        background: var(--accent-wash);
       }
 
       .status--soon {
         color: var(--live);
-        border-color: var(--live);
+        border-color: color-mix(in srgb, var(--live) 45%, transparent);
         background: transparent;
       }
 
@@ -237,6 +471,12 @@
       .card--soon {
         background: transparent;
         border-style: dashed;
+        box-shadow: none;
+      }
+
+      .card--soon .card__thumb {
+        background: transparent;
+        border-bottom-style: dashed;
       }
 
       .card--soon .card__title {
@@ -246,10 +486,11 @@
       /* --- foot ------------------------------------------------------------- */
 
       .foot {
-        margin-top: 56px;
-        padding-top: 20px;
+        margin-top: 64px;
+        padding-top: 22px;
         border-top: 1px solid var(--border);
         font-size: 13px;
+        line-height: 1.65;
         color: var(--ink-faint);
         max-width: 70ch;
       }
@@ -258,20 +499,87 @@
         color: inherit;
       }
 
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+      }
+
       @media (max-width: 480px) {
         .page {
-          padding: 28px 16px 60px;
+          padding-block: 28px 64px;
+          padding-inline: 16px;
         }
 
-        .masthead h1 {
-          font-size: 26px;
+        .lede {
+          font-size: 16px;
+        }
+
+        .card__title {
+          font-size: 22px;
         }
       }
     </style>
   </head>
   <body>
+    <div class="backdrop" aria-hidden="true"></div>
+
     <main class="page">
+      <div class="topbar">
+        <span class="wordmark">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <circle cx="4" cy="4" r="2.2" fill="currentColor" />
+            <circle cx="14" cy="9" r="2.2" fill="currentColor" />
+            <circle cx="4" cy="14" r="2.2" fill="currentColor" />
+            <path
+              d="M4 4 L14 9 L4 14"
+              stroke="currentColor"
+              stroke-width="1.3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              opacity="0.55"
+            />
+          </svg>
+          Algorithms, seen
+        </span>
+
+        <button class="themetoggle" type="button" id="theme-toggle">
+          <svg
+            class="icon-light"
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M13.2 9.6A5.6 5.6 0 0 1 6.4 2.8 5.6 5.6 0 1 0 13.2 9.6Z"
+              fill="currentColor"
+            />
+          </svg>
+          <svg
+            class="icon-dark"
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="8" cy="8" r="3.1" fill="currentColor" />
+            <path
+              d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.05 3.05l1.13 1.13M11.82 11.82l1.13 1.13M12.95 3.05l-1.13 1.13M4.18 11.82l-1.13 1.13"
+              stroke="currentColor"
+              stroke-width="1.3"
+              stroke-linecap="round"
+            />
+          </svg>
+          <span class="label-light">Dark</span>
+          <span class="label-dark">Light</span>
+        </button>
+      </div>
+
       <header class="masthead">
+        <p class="masthead__eyebrow">An algorithms course, one page at a time</p>
         <h1>Algorithms, seen</h1>
         <p class="lede">
           One interactive page per algorithm, built over a semester. Each explains the real
@@ -279,66 +587,228 @@
           untrue. Press the buttons, break the results, read the proofs when you want them.
         </p>
         <p class="masthead__meta">
-          Source and notes live on
-          <a href="https://github.com/jennarbates/Algorithms">GitHub</a>.
+          <span>No tracking, no dependencies, one file per page</span>
+          <span class="dot" aria-hidden="true">&bull;</span>
+          <span>
+            Source and notes on
+            <a href="https://github.com/jennarbates/Algorithms">GitHub</a>
+          </span>
         </p>
       </header>
 
+      <div class="shelf__head">
+        <h2>The shelf</h2>
+        <span class="shelf__rule" aria-hidden="true"></span>
+      </div>
+
       <!--
         Adding a visual: copy a live card, point href at the project's folder
-        name (it is served at ./<folder>/), and write the blurb in the same
-        voice as the others. That is the whole job; the deploy workflow finds
-        and builds the project on its own.
+        name (it is served at ./<folder>/), draw a small thumbnail in the same
+        16:7 viewBox, and write the blurb in the same voice as the others.
+        That is the whole job; the deploy workflow finds and builds the project
+        on its own.
       -->
       <ul class="shelf">
         <li class="card">
-          <div class="card__eyebrow">
-            <span>Stable matching</span>
-            <span class="status status--live">Live</span>
-          </div>
-          <h2 class="card__title">
-            <a class="card__link" href="./gale-shapley/">Who gets in, and why</a>
-          </h2>
-          <p class="card__blurb">
-            Three students, three schools, one seat each. Watch who asks whom, who gets held,
-            who gets bumped, and then try to find two people who would rather have each other.
-            The result depends on who does the asking.
-          </p>
-          <div class="card__foot">
-            <span>Gale-Shapley, 1962</span>
-            <span class="card__cta">Open</span>
+          <!-- Two columns of people, proposals crossing between them, one pair held. -->
+          <svg
+            class="card__thumb"
+            viewBox="0 0 320 140"
+            role="img"
+            aria-label="Sketch of three students on the left joined by lines to three schools on the right, with one pairing highlighted"
+          >
+            <g stroke="var(--border-strong)" stroke-width="1.5" fill="none" opacity="0.75">
+              <path d="M96 38 L224 74" />
+              <path d="M96 70 L224 38" />
+              <path d="M96 70 L224 106" />
+              <path d="M96 102 L224 74" />
+            </g>
+            <path d="M96 38 L224 38" stroke="var(--accent)" stroke-width="2.4" fill="none" />
+            <path
+              d="M96 102 L224 106"
+              stroke="var(--accent)"
+              stroke-width="2.4"
+              fill="none"
+              opacity="0.45"
+              stroke-dasharray="5 4"
+            />
+            <g fill="var(--ink-faint)">
+              <circle cx="96" cy="38" r="7" />
+              <circle cx="96" cy="70" r="7" />
+              <circle cx="96" cy="102" r="7" />
+            </g>
+            <g fill="none" stroke="var(--ink-faint)" stroke-width="2">
+              <rect x="217" y="31" width="14" height="14" rx="3" />
+              <rect x="217" y="67" width="14" height="14" rx="3" />
+              <rect x="217" y="99" width="14" height="14" rx="3" />
+            </g>
+            <circle cx="96" cy="38" r="7" fill="var(--accent)" />
+            <rect
+              x="217"
+              y="31"
+              width="14"
+              height="14"
+              rx="3"
+              fill="var(--accent)"
+              stroke="var(--accent)"
+              stroke-width="2"
+            />
+          </svg>
+
+          <div class="card__body">
+            <div class="card__eyebrow">
+              <span>Stable matching</span>
+              <span class="status status--live">Live</span>
+            </div>
+            <h3 class="card__title">
+              <a class="card__link" href="./gale-shapley/">Who gets in, and why</a>
+            </h3>
+            <p class="card__blurb">
+              Three students, three schools, one seat each. Watch who asks whom, who gets held,
+              who gets bumped, and then try to find two people who would rather have each other.
+              The result depends on who does the asking.
+            </p>
+            <div class="card__foot">
+              <span>Gale-Shapley, 1962</span>
+              <span class="card__cta">Open</span>
+            </div>
           </div>
         </li>
 
         <li class="card">
-          <div class="card__eyebrow">
-            <span>Growth of functions</span>
-            <span class="status status--live">Live</span>
-          </div>
-          <h2 class="card__title">
-            <a class="card__link" href="./big-o/">The Big-O Building</a>
-          </h2>
-          <p class="card__blurb">
-            A running time stands on a roof. Its small terms jump off, and what is left up top
-            is c times a simpler function. Then watch that function try to get back up without
-            c, and end up in the basement. Five scenes, with the real curves alongside.
-          </p>
-          <div class="card__foot">
-            <span>T(n) &le; c&middot;f(n) for n &gt; n&#8320;</span>
-            <span class="card__cta">Open</span>
+          <!-- T(n) under c*f(n) past the crossing point n0. -->
+          <svg
+            class="card__thumb"
+            viewBox="0 0 320 140"
+            role="img"
+            aria-label="Sketch of two rising curves crossing at a marked point, the upper one labelled c times f of n and the lower one T of n"
+          >
+            <g stroke="var(--border)" stroke-width="1" opacity="0.9">
+              <path d="M40 34 H288" />
+              <path d="M40 64 H288" />
+              <path d="M40 94 H288" />
+            </g>
+            <path
+              d="M40 116 H288"
+              stroke="var(--border-strong)"
+              stroke-width="1.5"
+              fill="none"
+            />
+            <path d="M40 116 V22" stroke="var(--border-strong)" stroke-width="1.5" fill="none" />
+            <path
+              d="M148 116 V66"
+              stroke="var(--live)"
+              stroke-width="1.4"
+              stroke-dasharray="4 4"
+              fill="none"
+              opacity="0.9"
+            />
+            <!-- T(n) is on top until n0, then c*f(n) overtakes it and stays there. -->
+            <path
+              d="M44 96 C 90 88, 130 80, 148 72 S 230 56, 284 48"
+              fill="none"
+              stroke="var(--ink-faint)"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-dasharray="6 5"
+            />
+            <path
+              d="M44 112 C 90 104, 130 88, 148 72 S 230 34, 284 20"
+              fill="none"
+              stroke="var(--accent)"
+              stroke-width="2.6"
+              stroke-linecap="round"
+            />
+            <circle cx="148" cy="72" r="3.4" fill="var(--live)" />
+            <circle cx="148" cy="116" r="3.4" fill="var(--live)" />
+            <text
+              x="152"
+              y="132"
+              font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+              font-size="12"
+              fill="var(--live)"
+            >
+              n0
+            </text>
+            <text
+              x="222"
+              y="16"
+              font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+              font-size="12"
+              fill="var(--accent)"
+            >
+              c&#183;f(n)
+            </text>
+            <text
+              x="248"
+              y="40"
+              font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+              font-size="12"
+              fill="var(--ink-faint)"
+            >
+              T(n)
+            </text>
+          </svg>
+
+          <div class="card__body">
+            <div class="card__eyebrow">
+              <span>Growth of functions</span>
+              <span class="status status--live">Live</span>
+            </div>
+            <h3 class="card__title">
+              <a class="card__link" href="./big-o/">The Big-O Building</a>
+            </h3>
+            <p class="card__blurb">
+              A running time stands on a roof. Its small terms jump off, and what is left up top
+              is c times a simpler function. Then watch that function try to get back up without
+              c, and end up in the basement. Five scenes, with the real curves alongside.
+            </p>
+            <div class="card__foot">
+              <span><code>T(n) &le; c&middot;f(n) for n &gt; n&#8320;</code></span>
+              <span class="card__cta">Open</span>
+            </div>
           </div>
         </li>
 
         <li class="card card--soon" aria-label="More visuals coming later in the semester">
-          <div class="card__eyebrow">
-            <span>Next up</span>
-            <span class="status status--soon">Soon</span>
+          <svg
+            class="card__thumb"
+            viewBox="0 0 320 140"
+            role="img"
+            aria-label="An empty dashed frame standing in for a visual that is not built yet"
+          >
+            <rect
+              x="60"
+              y="30"
+              width="200"
+              height="80"
+              rx="10"
+              fill="none"
+              stroke="var(--border-strong)"
+              stroke-width="1.6"
+              stroke-dasharray="7 6"
+              opacity="0.8"
+            />
+            <path
+              d="M160 58 V82 M148 70 H172"
+              stroke="var(--border-strong)"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              opacity="0.8"
+            />
+          </svg>
+
+          <div class="card__body">
+            <div class="card__eyebrow">
+              <span>Next up</span>
+              <span class="status status--soon">Soon</span>
+            </div>
+            <h3 class="card__title">More as the semester goes</h3>
+            <p class="card__blurb">
+              New visuals land here as each one is built. Each is its own small project with its
+              own tests, so a page never says something the code cannot back up.
+            </p>
           </div>
-          <h2 class="card__title">More as the semester goes</h2>
-          <p class="card__blurb">
-            New visuals land here as each one is built. Each is its own small project with its
-            own tests, so a page never says something the code cannot back up.
-          </p>
         </li>
       </ul>
 
@@ -348,5 +818,43 @@
         example.
       </footer>
     </main>
+
+    <script>
+      (function () {
+        var root = document.documentElement;
+        var button = document.getElementById('theme-toggle');
+        if (!button) return;
+
+        function current() {
+          var set = root.getAttribute('data-theme');
+          if (set === 'light' || set === 'dark') return set;
+          return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function label() {
+          button.setAttribute(
+            'aria-label',
+            current() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
+          );
+        }
+
+        button.addEventListener('click', function () {
+          var next = current() === 'dark' ? 'light' : 'dark';
+          root.setAttribute('data-theme', next);
+          try {
+            localStorage.setItem('theme', next);
+          } catch (e) {
+            /* the choice just will not persist */
+          }
+          label();
+        });
+
+        window
+          .matchMedia('(prefers-color-scheme: dark)')
+          .addEventListener('change', label);
+
+        label();
+      })();
+    </script>
   </body>
 </html>
