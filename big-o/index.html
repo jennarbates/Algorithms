@@ -6,7 +6,7 @@
     <title>The Big-O Building</title>
     <meta
       name="description"
-      content="The definition of Big-O, T(n) <= c f(n) for all n > n0, told as a building: the small terms jump off the roof, and f(n) can only get back up if it brings c."
+      content="The definition of Big-O, T(n) <= c f(n) for all n > n0, told as a building: the leading term swells until it shoves the small terms off the roof, and f(n) can only get back up if it brings c."
     />
     <style>
 :root{
@@ -194,7 +194,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         <span class="lg"><i class="sw-low"></i>4n + 6, lower order</span>
       </div>
       <div class="svgwrap">
-      <svg viewBox="0 0 560 560" role="img" aria-label="A building with a roof, street and basement. The terms of T(n) move between them, and the lower order terms fall to the street.">
+      <svg viewBox="0 0 560 560" role="img" aria-label="A building with a roof, street and basement. The terms of T(n) move between them. The leading term grows until it pushes the lower order terms off the roof and they fall to the street.">
         <!-- sky -->
         <rect x="0" y="0" width="560" height="380" fill="var(--sky)"/>
         <!-- ground -->
@@ -376,9 +376,59 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 
   // geometry. Chip centres; the roof slab top is y = 104, so a standing chip sits at y = 89.
   const ROOF = {C:[198,89], F:[242,89], a:[300,89], b:[358,89]};
-  // resting rotation includes a full tumble, so 374 lands flat with one turn on the way
-  const DEAD = {a:[424,361,374], b:[488,362,-371]};
+  // resting rotation includes a full tumble, so 374 lands flat with one turn on the way.
+  // Both are positive: a chip shoved off the right edge topples clockwise, never backwards.
+  const DEAD = {a:[424,361,374], b:[488,362,349]};
   const SHAFT_X = 163, CAR_DOWN = 420, BASE_Y = 506;
+
+  // ---- the squeeze ----
+  // The leading term does not politely wait for the small ones to leave: it swells with n
+  // until there is no roof left for them. Everything below is driven by one number, the
+  // scale s of the two surviving chips, so the push can never drift out of step with the
+  // growth that is supposed to be causing it.
+  const HW = 18, HH = 15;             // half width and half height of a chip at s = 1
+  const ROOF_TOP = 104, ROOF_R = 378; // the slab the chips stand on, and its right edge
+  const BLOCK_L = 180;                // left edge of the c-and-f pair, pinned as they grow
+  const GAP_IN = 8;                   // spacing inside the pair, which grows with it
+  const GAP_OUT = 22, GAP_TIGHT = 13; // spacing out to the small chips: it closes as they are crushed
+  const GROW = 2.4;                   // final scale: enough to shove 4n past the roof edge
+  const BRK_Y = 20;                   // a chip at GROW reaches y = 32, so its label goes above that
+  const gapOut = s => GAP_OUT - (GAP_OUT - GAP_TIGHT) * (s - 1) / (GROW - 1);
+
+  // Where the two survivors sit at scale s, standing on the slab and growing rightward.
+  function bigAt(s){
+    const hw = HW*s, y = ROOF_TOP - HH*s;
+    const cx = BLOCK_L + hw, fx = cx + 2*hw + GAP_IN;
+    return {C:[cx, y, 0, s], F:[fx, y, 0, s], right: fx + hw};
+  }
+  // Where the two small chips get pushed to, kept in contact with the growing pair.
+  function pushAt(s){
+    const r = bigAt(s).right, g = gapOut(s);
+    return {a: r + g + HW, b: r + g*2 + HW*3};
+  }
+  // Two pumps with a beat between them: the first tips 6 over the edge, the second 4n.
+  const PUMP = [
+    {t0:0,   t1:600,  s0:1,    s1:1.45},
+    {t0:600, t1:800,  s0:1.45, s1:1.45},
+    {t0:800, t1:1500, s0:1.45, s1:GROW}
+  ];
+  const GROW_MS = 1500, DROP_B = 640, DROP_A = 1540;
+  function scaleAt(t){
+    const p = PUMP.find(p => t <= p.t1) || PUMP[PUMP.length-1];
+    if(t >= GROW_MS) return GROW;
+    const u = p.t1 === p.t0 ? 1 : (t - p.t0) / (p.t1 - p.t0);
+    return p.s0 + (p.s1 - p.s0) * (1 - Math.pow(1 - u, 3));   // ease out: a lurch, then settle
+  }
+  // Sample the curve above into keyframes. `at` turns a scale into this chip's transform.
+  function squeezeFrames(at, dur){
+    const frames = [], N = 34;
+    for(let i = 0; i <= N; i++){
+      const t = (i / N) * dur;
+      frames.push({transform: at(scaleAt(t)), offset: +(i / N).toFixed(4)});
+    }
+    return frames;
+  }
+  const tf = (x, y, r, s) => `translate(${(+x).toFixed(1)}px,${(+y).toFixed(1)}px) rotate(${r||0}deg) scale(${s||1})`;
 
   // one place to cancel everything in flight, so scenes never fight each other
   let timers = [];
@@ -390,8 +440,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   // Cancelling a running fall reverts the chip to its inline transform, which is still the
   // roof. Letting the CSS transition run from there would drop the number a second time, so
   // anything interrupting a fall commits the new position with transitions off.
-  function setT(chip, x, y, r, snap){
-    const t = `translate(${x}px,${y}px) rotate(${r||0}deg)`;
+  function setT(chip, x, y, r, s, snap){
+    const t = tf(x, y, r, s);
     if(snap){
       chip.style.transition = 'none';
       chip.style.transform = t;
@@ -402,27 +452,28 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       chip.style.transform = t;
     }
   }
-  function place(chip, x, y, r){
+  function place(chip, x, y, r, s){
     const interrupted = running.has(chip);
     stopAnim(chip);
-    setT(chip, x, y, r, interrupted);
+    setT(chip, x, y, r, s, interrupted);
   }
-  function snapTo(chip, x, y, r){ stopAnim(chip); setT(chip, x, y, r, true); }
+  function snapTo(chip, x, y, r, s){ stopAnim(chip); setT(chip, x, y, r, s, true); }
   function cls(chip, add, remove){
     (remove||[]).forEach(c => chip.classList.remove(c));
     (add||[]).forEach(c => chip.classList.add(c));
   }
 
-  // ---- the jump ----
-  // x eases out hard so the chip clears the roof edge before it starts dropping,
-  // y is a small hop followed by a parabola, and the whole thing tumbles and bounces once.
+  // ---- the shove ----
+  // Nobody jumps. The chip is already hanging over the edge when the big term gives it the
+  // last push, so there is no hop: y is pure gravity from the first frame, x carries the
+  // sideways momentum it was pushed with, and the chip topples forward over the corner.
   function fallFrames(x0, y0, x1, y1, rot){
     const frames = [], N = 26, land = 0.78, xImpact = x1 - 12;
     for(let i = 0; i <= N; i++){
       const t = i / N;
-      const yn = 1.5*t*t - 0.5*t;                 // negative early: the hop
-      const xn = 1 - Math.pow(1 - t, 2.4);        // fast out, then coasting
-      const rn = 1 - Math.pow(1 - t, 1.5);        // tumble, decelerating
+      const yn = t*t;                             // straight into the fall, no hop
+      const xn = 1 - Math.pow(1 - t, 1.7);        // pushed, then coasting
+      const rn = 1 - Math.pow(1 - t, 1.5);        // topple, decelerating
       frames.push({
         transform: `translate(${(x0 + (xImpact - x0)*xn).toFixed(1)}px,${(y0 + (y1 - y0)*yn).toFixed(1)}px) rotate(${(rot*rn).toFixed(1)}deg)`,
         offset: +(t*land).toFixed(4)
@@ -447,24 +498,41 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     }
   }
 
-  function jump(key, delay){
-    const chip = chips[key], blood = bloods[key];
-    const [x0, y0] = ROOF[key], [x1, y1, rot] = DEAD[key];
-    cls(chip, ['fall'], []);
-    if(reduce){ place(chip, x1, y1, rot); cls(chip, ['dead'], []); blood.classList.add('on'); return; }
+  // Commit a keyframe animation's end state to the inline transform. Transitions stay off
+  // for the whole run so cancelling the animation can never replay the move as a tween.
+  function drive(chip, frames, dur, endTransform){
     stopAnim(chip);
     chip.style.transition = 'none';
-    chip.style.transform = `translate(${x0}px,${y0}px)`;
+    const anim = chip.animate(frames, {duration:dur, easing:'linear', fill:'both'});
+    running.set(chip, anim);
+    anim.onfinish = () => {
+      stopAnim(chip);
+      chip.style.transform = endTransform;
+      chip.style.transition = '';
+    };
+    return anim;
+  }
+
+  // The two survivors swell, and the small chip riding ahead of them gets walked to the edge.
+  function squeeze(){
+    drive(chips.C, squeezeFrames(s => tf(...bigAt(s).C), GROW_MS), GROW_MS, tf(...bigAt(GROW).C));
+    drive(chips.F, squeezeFrames(s => tf(...bigAt(s).F), GROW_MS), GROW_MS, tf(...bigAt(GROW).F));
+    // 4n is pushed for the whole squeeze; 6 only until it runs out of roof and goes over.
+    drive(chips.a, squeezeFrames(s => tf(pushAt(s).a, 89), GROW_MS), GROW_MS, tf(pushAt(GROW).a, 89));
+    drive(chips.b, squeezeFrames(s => tf(pushAt(s).b, 89), DROP_B), DROP_B, tf(pushAt(scaleAt(DROP_B)).b, 89));
+  }
+
+  // A chip goes over the edge from wherever the push left it, not from where it started.
+  function shove(key, delay, startX){
+    const chip = chips[key], blood = bloods[key];
+    const x0 = startX == null ? ROOF[key][0] : startX, y0 = 89;
+    const [x1, y1, rot] = DEAD[key];
+    cls(chip, ['fall'], []);
+    if(reduce){ place(chip, x1, y1, rot); cls(chip, ['dead'], []); blood.classList.add('on'); return; }
     blood.classList.remove('on');
-    const dur = 1500;
+    const dur = 1300;
     later(() => {
-      const anim = chip.animate(fallFrames(x0, y0, x1, y1, rot), {duration:dur, easing:'linear', fill:'both'});
-      running.set(chip, anim);
-      anim.onfinish = () => {
-        stopAnim(chip);
-        chip.style.transform = `translate(${x1}px,${y1}px) rotate(${rot}deg)`;
-        chip.style.transition = '';
-      };
+      drive(chip, fallFrames(x0, y0, x1, y1, rot), dur, tf(x1, y1, rot));
       later(() => { cls(chip, ['dead'], []); splat(blood); }, dur*0.78);
     }, delay);
   }
@@ -528,19 +596,32 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         mark('n0mark', 0); mark('deadNote', 0); mark('baseNote', 0);
       } },
 
-    { tag:'Street', title:'The lower order terms jump',
-      body:'As n grows, 4n and 6 become a rounding error next to 14n². Big-O only cares about the roof for large n, so those two terms leave the building the fast way. They land on the street and stay there.',
-      sym:'lower order terms → dropped', num:'4n + 6 is gone, 14n² remains',
+    { tag:'Street', title:'The big term crowds them off',
+      body:'Now let n grow. 14n² swells far faster than 4n or 6 ever can, and the roof is only so wide. The leading term takes the whole slab for itself and shoulders the small terms along it, first 6 and then 4n, until there is nothing under them and they go over the edge. Nobody jumps. They are pushed.',
+      sym:'lower order terms → crowded out', num:'4n + 6 is gone, 14n² remains',
       run(from){
-        place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
         setC('14'); ops(0, 0, 0); tail('', ''); $('eqbar').classList.add('drop');
         bracket($('brkTop'), 36, 0, 0, '', INK);
-        bracket($('brkA'), 64, 180, 260, '14n², the survivor', INK);
         bracket($('brkB'), 64, 0, 0, '', RED);
         car.style.transform = 'translateY(0)'; fDown = false;
         mark('n0mark', 0); mark('baseNote', 0);
-        if(from === 0){ jump('a', 40); jump('b', 170); later(() => mark('deadNote', 1), 1500); }
-        else { snapDead('a'); snapDead('b'); mark('deadNote', 1); }
+        const g = bigAt(GROW), label = () =>
+          bracket($('brkA'), BRK_Y, BLOCK_L, Math.round(g.right), '14n², the survivor', INK);
+        if(from === 0 && !reduce){
+          bracket($('brkA'), BRK_Y, 0, 0, '', INK);
+          mark('deadNote', 0);
+          place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
+          restRoof('a'); restRoof('b');
+          squeeze();
+          shove('b', DROP_B, pushAt(scaleAt(DROP_B)).b);
+          shove('a', DROP_A, pushAt(GROW).a);
+          later(label, 2150);
+          later(() => mark('deadNote', 1), 2350);
+        } else {
+          place(chips.C, ...g.C); place(chips.F, ...g.F);
+          snapDead('a'); snapDead('b');
+          label(); mark('deadNote', 1);
+        }
       } },
 
     { tag:'Roof', title:'What stays up is c·f(n)',
@@ -559,7 +640,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       } },
 
     { tag:'Basement', title:'f(n) alone rides the elevator down',
-      body:'Send f(n) up without c and it cannot hold the roof. n² by itself is smaller than 14n² + 4n + 6 for every single n, so it rides the elevator all the way to the basement, below even the terms that jumped. Right shape, wrong size.',
+      body:'Send f(n) up without c and it cannot hold the roof. n² by itself is smaller than 14n² + 4n + 6 for every single n, so it rides the elevator all the way to the basement, below even the terms that were pushed off. Right shape, wrong size.',
       sym:'f(n) on its own is not ≥ T(n)', num:'n² < 14n² + 4n + 6 for every n',
       run(){
         snapDead('a'); snapDead('b');

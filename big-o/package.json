@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "The definition of Big-O told as a building: lower order terms jump off the roof, and f(n) can only get back up if it brings c.",
+  "description": "The definition of Big-O told as a building: the leading term grows until it shoves the lower order terms off the roof, and f(n) can only get back up if it brings c.",
   "scripts": {
     "build": "node build.mjs",
     "preview": "python3 -m http.server --directory dist 8000"

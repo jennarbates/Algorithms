@@ -6,11 +6,13 @@ An animated, step-through explanation of the definition of Big-O:
 T(n) <= c * f(n)   for all n > n0
 ```
 
-told as a building. `T(n)` starts on the roof. Its lower order terms jump off
-and land on the street. What is left up top is `c * f(n)`. Then `f(n)` tries to
-go up on its own and can only ride the elevator down to the basement, below
-even the terms that jumped, because without `c` it is smaller than `T(n)`.
-Bring `c` along and it goes straight back to the roof.
+told as a building. `T(n)` starts on the roof, every term of it standing side by
+side. Then `n` grows: the leading term swells until it owns the whole slab and
+shoulders the lower order terms off the edge, and they land on the street. What
+is left up top is `c * f(n)`. Then `f(n)` tries to go up on its own and can only
+ride the elevator down to the basement, below even the terms that were pushed
+off, because without `c` it is smaller than `T(n)`. Bring `c` along and it goes
+straight back to the roof.
 
 The worked example throughout is `T(n) = 14n^2 + 4n + 6`, with `f(n) = n^2`,
 `c = 15` and `n0 = 5`. Note that `c = 14` does not work, since `14n^2` is
@@ -33,10 +35,22 @@ not only in the prose. The equation strip above the drawing colours `c` green,
 the plot use, and brackets over the roof name whatever is standing on it in
 that scene.
 
-Scene 2 animates the jump: the two lower order terms leap clear of the roof,
-tumble, bounce once and land in a spreading pool on the street. All of it
-respects `prefers-reduced-motion`, which snaps the terms straight to the
-pavement.
+Scene 2 animates the squeeze, and the mechanism is the point: nothing jumps. The
+`14` and `n^2` chips grow in two pumps, from full size to 2.4x, pinned at their
+left edge so all of that growth travels rightward. The two lower order terms are
+carried along in front of them, the gap between the pair and the small terms
+closing from 22px to 13px as the pressure builds, until each one runs out of roof
+and topples over the edge: `6` on the first pump, `4n` on the second. The fall
+has no upward hop, because a chip that is shoved does not leap; it just tips,
+tumbles, bounces once and lands in a spreading pool on the street.
+
+One number drives all of it. `scaleAt(t)` gives the scale of the surviving pair
+at any moment, `bigAt(s)` turns that into their positions and `pushAt(s)` into
+the positions of the two chips being shoved, so the push can never drift out of
+step with the growth that is supposed to be causing it. `GROW` is set to the
+scale at which `4n` runs out of roof, which is why the pair ends up filling the
+slab with about 17px to spare. All of it respects `prefers-reduced-motion`,
+which snaps the pair to full size and the terms straight to the pavement.
 
 ## The plot
 
