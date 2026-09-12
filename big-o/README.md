@@ -15,8 +15,9 @@ to what that does and does not promise.
 In between it is told as a building. `T(n)` starts on the roof, every term of it
 standing side by side. Then `n` grows: the leading term swells until it owns the
 whole slab and shoulders the lower order terms off the edge, and they land on
-the street. Left alone up there it goes straight through the slab, which is the
-picture of `14n^2` being smaller than `T(n)`, and only `c` can lift it back out.
+the street. Left alone up there, at the size it grew to, it brings the slab down
+and goes through with it, which is the picture of `14n^2` being smaller than
+`T(n)`, and only `c` can lift it back out.
 Then `f(n)` tries to go up on its own and can only ride the elevator down to the
 basement, because without `c` it is smaller than `T(n)`. Bring `c` along and it
 goes straight back to the roof.
@@ -112,9 +113,11 @@ asymptotic notation known in advance. Concretely that means:
 - `Theta` is given its pronunciation and its meaning, pinned from both sides,
   rather than being dropped in as a symbol in the last step.
 - every `n` the page evaluates at is a whole number, because it told the reader
-  `n` is a count. The magnified spot is `n = 11`. The only fractional values on
-  the page are places where two curves cross, `n = 5.16`, and those are named as
-  crossings rather than as inputs.
+  `n` is a count. That arithmetic lives in the captions rather than on the plot,
+  for the reason in *The plot argues in symbols* below, and the magnifier is
+  centred on a whole `n` too. The only fractional values on the page are places
+  where two curves cross, `n = 5.16`, and those are named as crossings rather
+  than as inputs.
 - the `n0 = 5` versus `from n = 6 on` gap is the easiest thing on the page to
   trip over, so step 6 shows both sides of it, 25 against 26 and 36 against 30,
   and then says why the rule reads `for every n greater than n0`.
@@ -143,13 +146,20 @@ has no upward hop, because a chip that is shoved does not leap; it just tips,
 tumbles, bounces once and lands in a spreading pool on the street.
 
 Then the slab goes too. With `4n` still in the air the pair leans on it, a red
-zigzag opens across the concrete, and 400ms later it fails: the roof is clipped
-away between `x = 174` and `x = 300`, the torn ends and the loose chunks show,
-fragments tumble to the street, dust lifts off the break and the whole drawing
-takes a 2px knock. The pair falls on `t^2` with no bounce at the bottom, only an
-overshoot and a settle, because heavy things do not spring back. It sheds its
-2.4x on the way down, which reads as falling into the building rather than
-past it, and comes to rest at `y = 122` wedged in its own hole.
+zigzag opens across the concrete and the whole drawing starts to tremble, a
+shake that grows from nothing over 420ms. Then it fails. The roof is clipped
+away between `x = 160` and `x = 346`, which is nearly all of it, the span that
+went missing drops into the street as two halves tipping apart (`#slabFall`,
+so the roof that is suddenly gone has somewhere to have gone), eight fragments
+tumble after it, dust lifts off the break, and the drawing takes a 6.5px shake
+decaying over a second.
+
+The pair falls on `t^2`, straight down, with no bounce at the bottom, only an
+overshoot and a settle, because heavy things do not spring back. It keeps its
+2.4x the whole way and keeps it at rest. Shrinking it on the way through would
+take away the reason the roof broke, so the size that did the damage is the
+size that lands, and it only returns to normal at the step change, once the
+point has been made.
 
 One number drives all of it. `scaleAt(t)` gives the scale of the surviving pair
 at any moment, `bigAt(s)` turns that into their positions and `pushAt(s)` into
@@ -157,7 +167,8 @@ the positions of the two chips being shoved, so the push can never drift out of
 step with the growth that is supposed to be causing it. `GROW` is set to the
 scale at which `4n` runs out of roof, which is why the pair ends up filling the
 slab with about 17px to spare. All of it respects `prefers-reduced-motion`,
-which snaps the pair to full size and the terms straight to the pavement.
+which snaps the pair to full size and the terms straight to the pavement, and
+opens the roof already broken with no shake, no falling span and no dust.
 
 ### One idea per step
 
@@ -183,11 +194,19 @@ They get down there by breaking through, at the end of step 3, rather than by
 gliding down when the step changes. One `clipPath` (`#slabGap`) is applied to
 both copies of the roof at once, so the hole is a hole in one slab and not two
 slabs disagreeing, and `roofBreak(on)` is the only thing that opens or closes
-it. The gap runs to `x = 300` rather than stopping at the chips, because step 5
-slides `n^2` right to `x = 278` to make room for the `+1`, and a narrower hole
-would leave the top of that chip tucked under the surviving slab. At the end of
-step 6 the pair rises back through, `roofBreak(false)` closes the slab behind
-it, and that is the payoff for `c = 15`.
+it. At the end of step 6 the pair rises back through, `roofBreak(false)` closes
+the slab behind it, and that is the payoff for `c = 15`.
+
+Because the pair goes through at 2.4x, the hole has to be almost the whole
+slab, and that costs the argument something: steps 4 to 6 need a roof *line*
+for the survivors to be under, and there is barely any roof left to be under.
+So `#roofGhost` keeps the line without the slab. A dashed green rule sits at
+`y = 108`, exactly where the concrete was, between two surviving stubs at each
+end of the span. The stubs say it was a slab, the dashed line says where its
+height was, and both go away when the real slab comes back. At 2.4x the pair
+rests at `y = 162`, deep enough that its top clears that line by a clear
+margin; at normal size from step 4 on it rests at `y = 122`, where the line
+crosses its top edge the way the solid slab used to.
 
 ### Where the 15 comes from
 
@@ -211,26 +230,42 @@ The plot is not one fixed picture. Each step gets its own window on the same
 functions, chosen so the thing that step is claiming is actually visible, and
 the move from one window to the next is animated so the zoom can be followed.
 
+### The plot argues in symbols, the prose does the arithmetic
+
+`n` is a free variable, so picking an `n` to measure at is an arbitrary choice
+the reader did not make, and a plot covered in values from arbitrary spots
+reads as a table rather than a claim. So the annotations on the plot say what
+is true of the relationship at every `n`: `15n^2` starts below `T(n)` and ends
+above it, the red band is `4n + 6` and is positive everywhere, `n^2` is under
+`T(n)` at every `n`. The gap markers and probe dots stay, because the marker
+is a pointer rather than a measurement, but they no longer carry a number.
+
+Three kinds of value survive on the plot, because they are answers rather than
+samples: `n0 = 5`, the constant read-out counting up to `c = 15`, the crossing
+at `n = 5.16`, and `n^3` holding from `n = 15`. The worked arithmetic that
+checks all of this still exists, in the caption and in the `NUMBERS` line
+beside it, where a reader who wants the sum can find it without the picture
+being made of sums.
+
 | Step | Window | What it shows |
 | --- | --- | --- |
-| 1 | n 0 to 12 | `T(n)` with everything above it washed green: the region a bound is allowed to live in |
+| 1 | n 0 to 12 | `T(n)` with everything above it washed green: the region a bound is allowed to live in. `T(n)` itself is drawn as the building's slab, same fill and same two edge lines, so the green reads as the roof and everything over it |
 | 2 | n 0 to 12 | `T(n)` on its own |
 | 3 | n 0 to 12 | `T(n)` against `14n^2`, with the sliver between them marked: that sliver is all of `4n + 6` |
 | 4 | n 0 to 12 | the same picture with that sliver magnified eight times, see below |
-| 5 | n 0 to 12 | `T(n)` and `15n^2` at full height, with the distance between them measured at `n = 3` and `n = 9` |
+| 5 | n 0 to 12 | `T(n)` and `15n^2` at full height, with the distance between them marked twice: once early where `15n^2` is underneath, once later where it is on top and staying there |
 | 6 | the gap, y from -20 to 100 | `15n^2 - T(n)`, which is `n^2 - 4n - 6`, red below zero and green above. At this scale the sign change at `n = 5.16` is obvious, where on the raw curves it is a couple of pixels. This one subtracts on screen, see below |
-| 7 | n 0 to 12, y to 620 | `n^2` large enough to see at last, with `T(n)` leaving the top of the chart at `n = 6.5` and the distance between them marked at `n = 6`. `4n + 6` is drawn in too, low in the frame, with a dot where `n^2` overtakes it at `n = 5.16`, which is `n0` |
+| 7 | n 0 to 12, y to 620 | `n^2` large enough to see at last, with `T(n)` climbing out of the top of the frame and the distance between the two marked. `4n + 6` is drawn in too, low in the frame, with a dot where `n^2` overtakes it at `n = 5.16`, which is `n0` |
 | 8 | n 0 to 12 | the same `n^2` curve scaled vertically from `c = 1` to `c = 15`, with a live readout of `c`, landing on the dashed target above `T(n)` |
 | 9 | n 0 to 30 | `T(n)`, `15n^2` and `n^3`, far enough out that the loose bound has visibly pulled away from the tight one |
 
 ### Magnifying `4n + 6`
 
 Step 3 says the sliver between `T(n)` and `14n^2` is all of `4n + 6`. Step 4
-lets that be checked. At `n = 11` the whole of `4n + 6` is 50 against a
-`T(n)` of 1744, which on a plot 486 pixels tall is about ten pixels, so an
-18px square is cut out of the plot at that spot and redrawn eight times bigger
-as a detail panel in the empty upper left, with connector lines back to the box
-it came from. The panel grows out of that box rather than appearing, so the zoom
+makes it visible. Somewhere around `n = 11` that sliver is about ten pixels on
+a plot 486 pixels tall, so an 18px square is cut out of the plot there and
+redrawn eight times bigger as a detail panel in the empty upper left, with
+connector lines back to the box it came from. The panel grows out of that box rather than appearing, so the zoom
 is watched instead of asserted.
 
 None of it is a special case: a view can carry its own box (`bx0`, `bx1`, `by0`,
@@ -267,18 +302,19 @@ curve out of nowhere. So it is derived across two steps, each with one equation
 strip that does not change while it is being read.
 
 **Step 5, `is T(n) <= 15n^2 ?`** Both curves at full height, on top of each
-other. The distance is measured twice: at `n = 3`, where `15n^2` is 9 below
-`T(n)`, and at `n = 9`, where it is 39 above. Nine and thirty-nine against
-heights of 144 and 1176, which is why the crossing cannot be seen here.
+other. The distance between them is marked twice, once on each side of the
+crossing: early, where `15n^2` is the one underneath, and later, where it is
+the one on top and stays there. Both gaps are tiny against the heights they
+are measured from, which is why the crossing cannot be seen at this scale.
 
 **Step 6, `15n^2 - (14n^2 + 4n + 6) = n^2 - 4n - 6`** `T(n)` sinks onto the axis
 and `15n^2` is carried down with it, because subtracting `T(n)` from both is
 exactly that. The y window deliberately holds still for the first 45% of the
 move, so what you see is the curves coming down rather than the camera closing
 in, and only then follows them into the zoomed window. Two dots on the finished
-curve carry the same 9 and 39 back, at `n = 3` below the line and `n = 9` above
-it, so it is visibly the distance measured in the step before and not a new
-object.
+curve sit at the same two places the gaps were marked, one below the line and
+one above it, so the curve is visibly the distance measured in the step before
+and not a new object.
 
 Under `prefers-reduced-motion` the subtraction is skipped and step 6 opens on
 the finished plot.
