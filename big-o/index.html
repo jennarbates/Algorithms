@@ -30,6 +30,9 @@
   --chip-bg:#1E2A38; --blood:#B4271A; --blood2:#7E1610;
 }
 *{box-sizing:border-box}
+/* several things here are hidden by attribute and styled with a display of their own,
+   which would otherwise win: hiding has to beat laying out, always. */
+[hidden]{display:none !important}
 html{height:100%}
 body{margin:0;-webkit-font-smoothing:antialiased;background:var(--paper);color:var(--ink);
   font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5;
@@ -163,6 +166,120 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   .anno{animation:none}
 }
 
+/* ---------- practice ---------- */
+/* The questions share the page's tokens and its panel furniture, because they are
+   the same lesson: green is "this holds", red is "this fails", gold is "you picked
+   this". Nothing here introduces a colour the walkthrough has not already taught. */
+.modes{display:inline-flex;gap:2px;border:1px solid var(--line);border-radius:9px;padding:2px;margin-left:14px;
+  vertical-align:middle}
+.modes button{background:transparent;color:var(--ink2);font-size:12px;font-weight:600;padding:4px 13px;border-radius:7px}
+.modes button.on{background:var(--ink);color:var(--paper)}
+.stage[hidden],.practice[hidden]{display:none}
+
+.practice{flex:1 1 auto;min-height:0;display:grid;gap:12px;
+  grid-template-columns:minmax(0,1fr) minmax(300px,340px)}
+.qwrap{flex:1 1 auto;min-height:0;overflow:auto;padding:4px 18px 16px}
+.qtests{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);margin-top:6px}
+.qprompt{font-size:19px;font-weight:700;line-height:1.26;margin:6px 0 11px;text-wrap:balance;max-width:64ch}
+.qgiven{font-size:13.5px;font-weight:600;padding:7px 12px;border-left:3px solid var(--line);
+  margin-bottom:12px;display:inline-block}
+.qcode{font-size:13px;line-height:1.55;background:var(--paper);border:1px solid var(--line);
+  border-radius:9px;padding:10px 14px;margin:0 0 13px;overflow-x:auto;max-width:52ch}
+.qlead{font-size:12.5px;color:var(--ink2);margin:0 0 10px;max-width:64ch}
+
+/* options. A button, so the whole row is the target and the keyboard gets it free. */
+.qopts{display:flex;flex-direction:column;gap:8px;max-width:68ch}
+.opt{display:block;width:100%;text-align:left;background:var(--paper);color:var(--ink);
+  border:1px solid var(--line);border-radius:10px;padding:0;font-weight:400;cursor:pointer}
+.opt .line{display:flex;gap:11px;align-items:flex-start;padding:10px 13px}
+.opt .tick{flex:0 0 auto;width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line);
+  display:grid;place-items:center;font-size:12px;font-weight:700;margin-top:1px;color:transparent;
+  transition:background .18s,border-color .18s,color .18s}
+.opt .txt{font-size:14px;line-height:1.44}
+.opt .txt .mono{font-size:13.5px}
+.opt:hover{border-color:var(--ink2)}
+.opt.sel{border-color:var(--brass)}
+.opt.sel .tick{border-color:var(--brass);background:var(--brass-soft);color:var(--brass)}
+.opt.right{border-color:var(--roof);background:var(--roof-soft)}
+.opt.right .tick{border-color:var(--roof);background:var(--roof);color:var(--paper2)}
+.opt.wrong{border-color:var(--fall);background:var(--fall-soft)}
+.opt.wrong .tick{border-color:var(--fall);background:var(--fall);color:var(--paper2)}
+.opt.missed{border-color:var(--roof);border-style:dashed}
+.opt.missed .tick{border-color:var(--roof);color:var(--roof)}
+.opt .why{display:block;font-size:13px;line-height:1.52;color:var(--ink);padding:0 14px 11px 45px}
+.opt .why .verdictword{font-weight:700}
+.opt.right .why .verdictword{color:var(--roof)}
+.opt.wrong .why .verdictword{color:var(--fall)}
+.opt.missed .why .verdictword{color:var(--roof)}
+
+/* ordering */
+/* Unchecked the row is name then arrows. Checked it is name, mark, reason, and the name
+   keeps a fixed width either way so the reasons line up as a column rather than a ragged
+   edge that moves with the length of each label. */
+.qorder{display:flex;flex-direction:column;gap:6px;max-width:74ch}
+.ord{display:flex;align-items:center;flex-wrap:wrap;gap:4px 11px;background:var(--paper);
+  border:1px solid var(--line);border-radius:10px;padding:7px 9px 7px 11px}
+.ord .rank{font-size:10.5px;color:var(--ink2);width:14px;text-align:right;font-variant-numeric:tabular-nums;
+  flex:0 0 auto}
+.ord .name{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14.5px;font-weight:600;
+  flex:0 0 auto;min-width:76px;white-space:nowrap}
+.ord .mark{flex:0 0 auto;width:13px;font-size:12.5px;font-weight:700;color:var(--ink2)}
+.ord.right .mark{color:var(--roof)}
+.ord.wrong .mark{color:var(--fall)}
+.ord .mv{display:flex;gap:4px;flex:0 0 auto;margin-left:auto}
+.ord .mv button{background:transparent;border:1px solid var(--line);color:var(--ink2);
+  padding:1px 9px;font-size:12px;border-radius:6px;font-weight:700}
+.ord .mv button:hover:not(:disabled){color:var(--ink);border-color:var(--ink2)}
+.ord.right{border-color:var(--roof);background:var(--roof-soft)}
+.ord.wrong{border-color:var(--fall);background:var(--fall-soft)}
+.ord .why{flex:1 1 300px;font-size:12.5px;line-height:1.5;color:var(--ink);min-width:0}
+
+/* numeric entry */
+.qnum{display:flex;gap:11px;align-items:center;flex-wrap:wrap;font-size:14px}
+.qnum input{font:inherit;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:16px;
+  font-weight:600;width:112px;padding:8px 12px;border:1px solid var(--line);border-radius:9px;
+  background:var(--paper);color:var(--ink)}
+.qnum input:focus{outline:2px solid var(--brass);outline-offset:1px}
+.qnum.right input{border-color:var(--roof);background:var(--roof-soft);color:var(--roof)}
+.qnum.wrong input{border-color:var(--fall);background:var(--fall-soft);color:var(--fall)}
+
+/* the closing note: what the question was really about, once it has been answered */
+.verdict{margin-top:15px;max-width:68ch;border-left:3px solid var(--line);padding:1px 0 1px 13px}
+.verdict.ok{border-color:var(--roof)} .verdict.no{border-color:var(--fall)}
+.verdict h3{margin:0 0 5px;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+.verdict p{margin:0 0 8px;font-size:13.5px;line-height:1.52}
+.jump{font-size:12.5px;font-weight:600;color:var(--roof);background:transparent;border:0;padding:0;
+  cursor:pointer;text-align:left;font-family:inherit}
+.jump:hover{text-decoration:underline}
+
+/* side column */
+.qside{display:flex;flex-direction:column;min-height:0;gap:12px}
+.qside .cap{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);
+  display:block;margin-bottom:6px}
+.tierpick{display:flex;gap:6px}
+.tierpick button{flex:1 1 0;font-size:12.5px;padding:7px 6px;background:transparent;color:var(--ink);
+  border:1px solid var(--line);font-weight:600}
+.tierpick button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.qmap{display:flex;flex-wrap:wrap;gap:5px}
+.qmap button{width:27px;height:27px;padding:0;font-size:12px;font-weight:600;border-radius:7px;
+  background:var(--paper);color:var(--ink2);border:1px solid var(--line)}
+.qmap button.on{outline:2px solid var(--brass);outline-offset:1px}
+.qmap button.first{background:var(--roof);border-color:var(--roof);color:var(--paper2)}
+.qmap button.after{background:var(--roof-soft);border-color:var(--roof);color:var(--roof)}
+.qmap button.miss{background:var(--fall-soft);border-color:var(--fall);color:var(--fall)}
+.tally{font-size:12.5px;color:var(--ink2);line-height:1.55;margin:0}
+.tally b{color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums}
+.qside .legendkey{font-size:11px;color:var(--ink2);line-height:1.7}
+.qside .legendkey i{width:9px;height:9px;border-radius:3px;display:inline-block;border:1.5px solid var(--line);
+  margin-right:5px;vertical-align:-1px}
+.qside .legendkey i.k-first{background:var(--roof);border-color:var(--roof)}
+.qside .legendkey i.k-after{background:var(--roof-soft);border-color:var(--roof)}
+.qside .legendkey i.k-miss{background:var(--fall-soft);border-color:var(--fall)}
+.backnote{font-size:12px;color:var(--ink2);border-top:1px solid var(--line);padding-top:8px;margin:0}
+.backnote button{font-size:12px;padding:0;background:transparent;color:var(--roof);border:0;
+  font-weight:600;cursor:pointer;font-family:inherit}
+.backnote button:hover{text-decoration:underline}
+
 /* narrower or shorter screens: unlock the height, keep the controls reachable */
 @media (max-width:1180px),(max-height:600px){
   html{height:auto}
@@ -176,10 +293,18 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   .svgwrap{height:min(62vh,560px)}
   .controls{position:fixed;left:0;right:0;bottom:0;background:var(--paper);padding:10px 18px;
     border-top:1px solid var(--line);z-index:20;box-shadow:0 -6px 18px rgba(0,0,0,.08)}
+  /* the question is the whole screen here; the progress column follows it */
+  .practice{grid-template-columns:minmax(0,1fr);grid-auto-rows:min-content}
+  .qwrap{overflow:visible;padding:4px 14px 18px}
+  .qside{display:block}
+  .qside > * + *{margin-top:14px}
+  .qprompt{font-size:20px}
 }
 @media (max-width:720px){
   .stage{grid-template-columns:1fr}
   .svgwrap{height:min(58vh,480px)}
+  .modes{margin-left:0;margin-top:4px}
+  .ord{flex-wrap:wrap}
 }
 </style>
   </head>
@@ -190,6 +315,10 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     <div>
       <a class="back" href="../">&larr; All visuals</a>
       <h1 style="display:inline-block">The Big-O Building</h1>
+      <span class="modes" role="group" aria-label="Mode">
+        <button id="mode-walk" class="on" aria-pressed="true">Walkthrough</button>
+        <button id="mode-drill" aria-pressed="false">Practice</button>
+      </span>
     </div>
     <div class="rule">
       <span class="eyebrow">The rule</span>
@@ -197,7 +326,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     </div>
   </header>
 
-  <div class="stage">
+  <div class="stage" id="stage">
     <!-- the building -->
     <div class="panel">
       <div class="panel-head"><span>Section view</span><span id="scene-tag">Roof</span></div>
@@ -499,14 +628,69 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       <div class="controls">
         <button class="ghost" id="prev">Back</button>
         <button id="next">Next scene</button>
+        <button class="ghost small" id="toq" hidden>Back to the question</button>
         <div class="dots" id="dots"></div>
       </div>
     </aside>
   </div>
 
+  <!-- practice. Same furniture as the stage: a wide panel and a narrow column. -->
+  <div class="practice" id="practice" hidden>
+    <div class="panel">
+      <div class="panel-head"><span id="q-tier">Tier 1</span><span id="q-count">Question 1 of 9</span></div>
+      <div class="qwrap" id="qwrap">
+        <div class="qtests" id="q-tests"></div>
+        <h2 class="qprompt" id="q-prompt"></h2>
+        <div class="qgiven mono" id="q-given" hidden></div>
+        <pre class="qcode mono" id="q-code" hidden></pre>
+        <p class="qlead" id="q-lead" hidden></p>
+        <div id="q-field"></div>
+        <div class="verdict" id="q-verdict" hidden>
+          <h3 id="q-verdict-head">What this was testing</h3>
+          <p id="q-verdict-body"></p>
+          <button class="jump" id="q-jump" hidden></button>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="ghost" id="q-prev">Back</button>
+        <button id="q-check">Check</button>
+        <button id="q-next">Next question</button>
+        <button class="ghost small" id="q-retry" hidden>Try again</button>
+      </div>
+    </div>
+
+    <aside class="side qside">
+      <div>
+        <span class="cap">Two tiers</span>
+        <div class="tierpick">
+          <button id="tier-1" class="on">1 &middot; the definition</button>
+          <button id="tier-2">2 &middot; using it</button>
+        </div>
+      </div>
+      <div>
+        <span class="cap">Questions</span>
+        <div class="qmap" id="q-map"></div>
+      </div>
+      <div>
+        <span class="cap">Where you are</span>
+        <p class="tally" id="q-tally"></p>
+      </div>
+      <div class="legendkey">
+        <i class="k-first"></i>right first time<br />
+        <i class="k-after"></i>right after a miss<br />
+        <i class="k-miss"></i>answered, not right yet<br />
+        <i></i>not tried
+      </div>
+      <p class="backnote">
+        Every question points back at the step that settles it.
+        <button id="q-toback">Return to the walkthrough</button>
+      </p>
+    </aside>
+  </div>
+
   <footer class="foot">
     The building is a metaphor, the plot is the real thing: 15n&sup2; is above T(n) from n = 6 onward, and n&sup2; alone never is.
-    Arrow keys step through the scenes. Source on <a href="https://github.com/jennarbates/Algorithms">GitHub</a>.
+    Arrow keys step through the scenes, and Practice tests the parts of this that are easiest to get wrong. Source on <a href="https://github.com/jennarbates/Algorithms">GitHub</a>.
   </footer>
 </div>
 
@@ -1576,6 +1760,669 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     }, HOLD);
   }
 
+  // ---- practice ----
+  // The walkthrough can only show one worked example, and a reader who follows all nine
+  // steps can still come away with the wrong general rule: that Big-O is the leading term,
+  // that lower order terms vanish, that the bound is a measurement. So every question here
+  // is built around one specific wrong belief, and every wrong option is a belief someone
+  // actually holds rather than a filler answer. Picking one is supposed to teach as much as
+  // getting it right, which is why the explanation lives under the option you chose and the
+  // other options stay open to be read.
+  //
+  // Two tiers. Tier 1 stays on T(n) = 14n² + 4n + 6, so the reader is checking whether they
+  // understood what they just watched. Tier 2 takes the same definition to functions and
+  // code the page never drew, which is the only way to tell understanding from recall.
+  //
+  // kind:
+  //   choice  one right answer, revealed one option at a time as they are clicked
+  //   multi   tick every true one, then check; each row is then judged on its own
+  //   number  type a value, checked against the real inequality, with named near misses
+  //   order   put them in order, checked position by position
+  // step: the 0 based index of the scene that settles the question, for the jump link.
+
+  const T14 = n => 14*n*n + 4*n + 6;
+
+  const BANK = [
+    // ---------------- tier 1: the definition, on the page's own example ----------------
+    { tier:1, kind:'choice', step:3,
+      tests:'what the constant has to cover',
+      given:'T(n) = 14n² + 4n + 6,  f(n) = n²',
+      prompt:'A reader says: c = 14 is fine, you just have to pick n₀ big enough, because 4n + 6 is negligible next to 14n². Where does that go wrong?',
+      options:[
+        { t:'14n² ≥ T(n) cancels down to 0 ≥ 4n + 6, and 4n + 6 is positive at every n. No n₀ can rescue it.',
+          ok:true,
+          why:'c = 14 is the one value that fails structurally rather than by being too small: it leaves nothing over to pay for what was dropped. Every c above 14 works eventually, because the spare (c − 14)n² outgrows 4n + 6.' },
+        { t:'Nowhere. The share (4n + 6) / T(n) really does go to zero, so past some n₀ the inequality holds.',
+          why:'The share does go to zero, and that part is true. But the inequality is not about shares. Cancel 14n² from both sides of 14n² ≥ 14n² + 4n + 6 and what is left is 0 ≥ 4n + 6, which is false at every n. A share fading to nothing is not a quantity reaching zero.' },
+        { t:'It fails only for small n. Setting n₀ = 1000 fixes it.',
+          why:'Check n = 1000. 14n² is 14,000,000 and T(1000) is 14,004,006, still short by 4006, which is exactly 4n + 6. The shortfall is not a small-n artefact. It is the size of what you threw away, and it grows.' },
+        { t:'It fails because c must always be strictly greater than the leading coefficient.',
+          why:'True here, but not a rule. It holds because the remainder 4n + 6 is positive. Take T(n) = 14n² − 4n instead and c = 14 works from n = 0 on, with nothing to spare. What decides it is the sign of what is left over, not the coefficient.' }
+      ],
+      close:'Raising c is a payment for the terms you stopped naming. c = 14 is the one constant that pays nothing.' },
+
+    { tier:1, kind:'multi', step:5,
+      tests:'how many n₀ there are',
+      given:'c = 15,  f(n) = n²',
+      prompt:'Tick every n₀ that makes T(n) ≤ 15n² true for all n > n₀.',
+      options:[
+        { t:'n₀ = 3',
+          why:'n₀ = 3 asks about every n from 4 up, and it fails immediately: at n = 4, 15·16 = 240 against T(4) = 246.' },
+        { t:'n₀ = 4',
+          why:'One short. n₀ = 4 asks about every n from 5 up, and at n = 5, 15·25 = 375 against T(5) = 376. A single step is still a failure.' },
+        { t:'n₀ = 5', ok:true,
+          why:'It is also the smallest that works: n = 5 is the last failure, and the rule only asks about n strictly greater than n₀, so the last failure is exactly what n₀ names.' },
+        { t:'n₀ = 6', ok:true,
+          why:'Every n₀ above the smallest one also works, because a larger n₀ asks about fewer values of n. There is nothing to lose by overshooting.' },
+        { t:'n₀ = 10', ok:true,
+          why:'Same reason. It is a weaker witness than n₀ = 5 but an equally valid one.' },
+        { t:'n₀ = 100', ok:true,
+          why:'The definition asks that some n₀ exists, never that you found the smallest, so n₀ = 100 proves the same statement as n₀ = 5.' }
+      ],
+      close:'n₀ is not unique, and neither is c. The definition is an existence claim: one witness is enough, and the tightest witness earns no extra credit.' },
+
+    { tier:1, kind:'number', step:5,
+      tests:'what a bigger constant buys',
+      given:'T(n) = 14n² + 4n + 6,  f(n) = n²,  c = 18',
+      prompt:'With c = 15 the smallest n₀ is 5. Raise the constant to c = 18. What is the smallest n₀ now?',
+      unit:'n₀ =',
+      answer:1,
+      near:[
+        { v:0, why:'n₀ = 0 asks about every n from 1 up, and n = 1 already fails: 18·1 = 18 against T(1) = 24. So n₀ has to be at least 1.' },
+        { v:5, why:'That is the n₀ that goes with c = 15. A larger constant opens the margin sooner, so its n₀ drops: at n = 2, 18·4 = 72 against T(2) = 70, already clear.' },
+        { v:2, why:'n = 2 is the first n that works, not the last that fails. n₀ names the last failure, because the rule reads for every n greater than n₀.' }
+      ],
+      why:'18n² ≥ 14n² + 4n + 6 is 4n² − 4n − 6 ≥ 0, which is true from n = 2 on (at n = 2 it is 16 − 8 − 6 = 2). So the last failing n is 1, and n₀ = 1.',
+      close:'c and n₀ trade against each other: 15 needs n₀ = 5, 16 needs 2, 18 needs 1, and c = 50 needs no n₀ at all. Every one of those pairs is an equally good witness that T(n) = O(n²).' },
+
+    { tier:1, kind:'multi', step:8,
+      tests:'how many bounds are true at once',
+      given:'T(n) = 14n² + 4n + 6',
+      prompt:'Tick every true statement.',
+      options:[
+        { t:'T(n) = O(n²)', ok:true,
+          why:'With c = 15 and n₀ = 5. This is the tight one, which is why it is the one worth saying.' },
+        { t:'T(n) = O(n³)', ok:true,
+          why:'A ceiling does not have to be low. c = 1 and n₀ = 14 work: at n = 15, n³ is 3375 against T(15) = 3216, and n = 14 is the last failure at 2744 against 2806. Weaker than O(n²), but not false.' },
+        { t:'T(n) = O(n)',
+          why:'For any fixed c, the line cn loses to 14n² once n passes c, and the gap only widens. Big-O forgives any constant, but no constant turns a line into a parabola.' },
+        { t:'T(n) = Θ(n²)', ok:true,
+          why:'This is the stronger claim of the two: Θ pins T(n) from both sides at once: 14n² ≤ T(n) ≤ 15n² for every n past 5. Only n² can carry a Θ here.' },
+        { t:'T(n) = Θ(n³)',
+          why:'This is the line O and Θ sit either side of. T(n) = O(n³) is true, but the floor fails: T(n) / n³ goes to zero, so no c keeps c·n³ underneath T(n). Loose ceilings are allowed. Loose Θ is not.' },
+        { t:'T(n) = O(n² log n)', ok:true,
+          why:'Same reason as n³, and the same c even: log₂ n is at least 1 from n = 2, so 15n² log₂ n is at least 15n², which already covers T(n) past n = 5. A valid ceiling, just a needlessly high one.' }
+      ],
+      close:'Four of these are true at the same time about the same function, because Big-O asks whether a ceiling exists and never which ceiling is lowest.' },
+
+    { tier:1, kind:'choice', step:6,
+      tests:'what height means in the drawing',
+      prompt:'In the opening steps 14n², 4n and 6 all stand level on the roof, even though 14n² dwarfs 6. Later n² is sent to the basement for being too small. What changed?',
+      options:[
+        { t:'Nothing changed. The drawing is inconsistent.',
+          why:'It would be, if the roof meant one thing throughout. It does not, and the page says so rather than leaving you to notice: the meaning switches once, and the switch is what the next option describes.' },
+        { t:'The roof always meant "at or above T(n)", and putting 6 up there was a slip.',
+          why:'Then 4n and 6 would never have been on the roof at all. But the opening steps are about naming the parts of T(n), and 6 is one of them. Membership, not size.' },
+        { t:'n grew, so 6 stopped being a term of T(n).',
+          why:'6 is a term of T(n) at every n. Nothing about T(n) changes when n grows. What changes is only which term dominates the sum, and that is a fact about the sum, not about the terms.' },
+        { t:'Height first meant "is a term of T(n)". Once the chips come back up as c·f(n) it means "is at or above T(n)".',
+          ok:true,
+          why:'Under the first reading n² would belong on the roof, since it is part of the leading term. Under the second it does not, because n² alone is below T(n) at every n. The two readings genuinely contradict each other, which is why naming the switch is not optional.' }
+      ],
+      close:'Two different questions wear the same picture: what is T(n) made of, and what sits above T(n). Keeping them apart is most of what the definition asks you to hold.' },
+
+    { tier:1, kind:'choice', step:7,
+      tests:'what multiplying by c does',
+      prompt:'Multiplying f(n) by a larger constant does what to its curve?',
+      options:[
+        { t:'Shifts it up by c.',
+          why:'That is f(n) + c, not c·f(n). Adding lifts every point by the same amount. Multiplying lifts each point in proportion to how high it already is, which is why the effect grows with n and why it can catch a curve that is pulling away.' },
+        { t:'Stretches it vertically about the n axis. The shape is untouched.', ok:true,
+          why:'That is the whole mechanism of the definition. c is a vertical stretch and nothing else. It cannot bend a curve, move where it is steep, or change which function eventually wins. All it can do is lift the whole thing until it clears T(n) from some point on.' },
+        { t:'Makes it grow faster, so a big enough c can make c·n² overtake n³.',
+          why:'No c does that. c·n² ≥ n³ rearranges to c ≥ n, which fails the moment n passes c. Growth rate belongs to the shape, and constants cannot touch it. That is exactly why Big-O is free to ignore them.' },
+        { t:'Moves it rightward, so the crossing happens later.',
+          why:'Raising c moves the crossing earlier, and it moves nothing sideways. Compare c = 15 with n₀ = 5 against c = 18 with n₀ = 1: more constant, earlier crossing.' }
+      ],
+      close:'The constant is a lift, not an accelerator. Everything Big-O forgives, it forgives because a lift is all c can do.' },
+
+    { tier:1, kind:'choice', step:0,
+      tests:'what a bound promises',
+      prompt:'An algorithm’s running time is T(n) = O(n²). Which of these follows?',
+      options:[
+        { t:'On an input of size 1000 it takes about 1,000,000 steps.',
+          why:'Big-O carries no scale. c is unnamed and could be 0.001 or 5000, and nothing says T(n) gets anywhere near the ceiling: the constant function T(n) = 6 is O(n²) as well.' },
+        { t:'It is slower than an O(n) algorithm on large inputs.',
+          why:'Two faults at once. O(n²) is only a ceiling, so this algorithm might really be O(n) as well. And even with true growth rates, constants decide real inputs: 1000n loses to n² only once n passes 1000.' },
+        { t:'It takes at least some fixed multiple of n² steps.',
+          why:'That is a floor, which is Ω, not O. Big-O bounds from above only. A claim that does both at once is Θ.' },
+        { t:'Past some n₀ its step count stays under a fixed multiple of n². Nothing more.', ok:true,
+          why:'That is the entire content of the claim. Some c exists, some n₀ exists, and past n₀ the ceiling holds. No promise about seconds, none about small inputs, and none that T(n) is close to n².' }
+      ],
+      close:'Big-O is an existence claim about two functions. Everything people usually want from it, speed, tightness, worst case, has to be asked for separately.' },
+
+    { tier:1, kind:'choice', step:3,
+      tests:'why the small terms can be dropped',
+      given:'T(n) = 14n² + 4n + 6',
+      prompt:'Why is it legitimate to leave 4n + 6 out of the name of the bound?',
+      options:[
+        { t:'Because 4n + 6 becomes negligibly small.',
+          why:'It does not become small. At n = 1000 it is 4006, and it grows without limit. What shrinks is its share of T(n), and a small share is not a small number. 14n² alone falls short of T(n) by exactly 4n + 6, at every n, forever.' },
+        { t:'Because Big-O ignores lower order terms by definition.',
+          why:'The definition never mentions terms. It says some c and some n₀ exist with T(n) ≤ c·f(n) past n₀. Dropping lower order terms is something you derive from that, not a rule written into it, and treating it as a rule is exactly what makes c = 14 look reasonable.' },
+        { t:'Because a constant can be raised to cover them: one more unit of c buys a whole n², which outgrows 4n + 6 from n = 6.',
+          ok:true,
+          why:'This is a payment, not a dismissal. The terms are still there and still positive. What makes them droppable from the name is that the constant, which the definition hands you for free, is large enough to absorb them.' },
+        { t:'Because 4n + 6 is smaller than 14n² at every n.',
+          why:'True, and not sufficient. 14n² is also smaller than T(n) at every n, which is precisely why 14n² is not a bound. Being the smaller part of a sum is no licence to delete it.' }
+      ],
+      close:'The terms are outgrown, not killed. What lets you stop naming them is the constant, and that is why c = 15 and not 14.' },
+
+    { tier:1, kind:'order', step:8,
+      tests:'which crossings actually happen',
+      prompt:'Put these in order of eventual size, smallest first. Eventual means: once n is large enough that the order stops changing.',
+      items:[
+        { t:'6',        why:'A constant. It never grows, so everything else passes it and nothing ever falls back below it.' },
+        { t:'4n + 6',   why:'Linear. The + 6 is invisible to the ordering, because a constant added to a growing function stops mattering to which is bigger.' },
+        { t:'n²',       why:'Quadratic, and it passes 4n + 6 at n = 5.16. That crossing is where n₀ = 5 comes from: the moment the shape outgrows the terms that were dropped.' },
+        { t:'14n²',     why:'Fourteen times n², so it sits above n² at every n and the ranking is safe. But it never pulls away: 14n² / n² is 14 forever, so these two are the same growth class, ordered here only by size.' },
+        { t:'n³',       why:'Cubic, and it reaches 14n² at exactly n = 14, where both are 2744, then leaves it behind. The constant 14 buys fourteen values of n and not one more.' }
+      ],
+      close:'Two of these, n² and 14n², are the same growth class: a constant separates them and nothing else. n³ and 14n² are not, and that difference is the only one Big-O can see.' },
+
+    // ---------------- tier 2: the same definition, on functions the page never drew ------
+    { tier:2, kind:'multi',
+      tests:'which rewrites are legal',
+      prompt:'Tick every true statement.',
+      options:[
+        { t:'2ⁿ⁺¹ = O(2ⁿ)', ok:true,
+          why:'2ⁿ⁺¹ is 2·2ⁿ, so c = 2 and n₀ = 0 settle it. An offset in the exponent is a constant factor in disguise.' },
+        { t:'2²ⁿ = O(2ⁿ)',
+          why:'2²ⁿ is 4ⁿ, and 4ⁿ / 2ⁿ is 2ⁿ, which passes every fixed c. A factor in the exponent changes the base, and no constant survives that.' },
+        { t:'log(n²) = O(log n)', ok:true,
+          why:'log(n²) = 2 log n, so c = 2 works. This is also why nobody writes the base of a logarithm inside Big-O: changing base only multiplies by a constant.' },
+        { t:'(log n)² = O(log n)',
+          why:'(log n)² / log n is log n, which is unbounded. Squaring the logarithm is not taking the logarithm of a square, and those two sit either side of this line.' },
+        { t:'n! = O(nⁿ)', ok:true,
+          why:'n! is a product of n factors, each at most n, so n! ≤ nⁿ with c = 1 and n₀ = 0.' },
+        { t:'nⁿ = O(n!)',
+          why:'nⁿ / n! passes any constant: it is about 2756 at n = 10 and about 4·10⁷ at n = 20. Which is what makes the statement above it a real, one-directional bound.' }
+      ],
+      close:'Constants are forgiven anywhere they behave like constants. Inside an exponent they do not, which is the one place this intuition breaks.' },
+
+    { tier:2, kind:'choice',
+      tests:'counting a loop whose bound moves',
+      code:'for i in range(n):\n    for j in range(i):\n        step()',
+      prompt:'How many times does step() run, and what is the tightest correct bound?',
+      options:[
+        { t:'n² calls, so O(n²).',
+          why:'The bound is right and the count is not. The inner loop runs i times, not n, so the total is 0 + 1 + ... + (n − 1) = n(n − 1) / 2. The answer survives the miscount because constants do not matter, which is a habit worth distrusting: it works here and hides real errors elsewhere.' },
+        { t:'About n² / 2 calls, so O(n²), and that bound is tight.', ok:true,
+          why:'The count is exactly n(n − 1) / 2. The one half is a constant factor, so it disappears into c: this is Θ(n²), and O(n²) is both correct and tight. Doing half the work does not change the growth class.' },
+        { t:'About n² / 2 calls, so O(n²), but not tight, because the inner loop only runs half the time.',
+          why:'Tightness is not about running fewer iterations, it is about the shape. n(n − 1) / 2 divided by n² settles at one half, a constant, so n² is exactly right. A bound is loose only when that ratio goes to zero, as it would against n³.' },
+        { t:'O(n log n), since the inner loop is shorter each time.',
+          why:'Shorter is not the same as logarithmically shorter. This inner loop shrinks by a fixed amount each pass, which gives an arithmetic series and n². A logarithm appears when the size is divided, not decremented.' }
+      ],
+      close:'Constant factors are invisible to Big-O whether they help you or hurt you, so halving the work leaves the bound exactly where it was.' },
+
+    { tier:2, kind:'choice',
+      tests:'dividing against decrementing',
+      code:'k = n\nwhile k > 1:\n    k = k // 2\n    step()',
+      prompt:'What is the tightest bound on the number of step() calls?',
+      options:[
+        { t:'O(n)',
+          why:'That is the count if k went down by one each pass. Dividing is the whole difference: n = 1000 takes nine passes, not a thousand.' },
+        { t:'O(log₂ n), and the base matters here.',
+          why:'The count really is log₂ n, but inside Big-O the base folds into c, because log₂ n = log n / log 2. Taking thirds instead of halves changes the count by a factor of about 1.58, and no Big-O statement can see a factor.' },
+        { t:'O(log n)', ok:true,
+          why:'Each pass halves k, so after t passes k is about n / 2ᵗ, and the loop ends when that reaches 1. That makes t about log₂ n: nine passes for n = 1000.' },
+        { t:'O(1), since the loop body is a single operation.',
+          why:'The body is O(1). The loop is not. The bound counts how many times the body runs, and that still depends on n, just very slowly.' }
+      ],
+      close:'What a loop does to its counter decides the shape: subtract and you get n, divide and you get log n.' },
+
+    { tier:2, kind:'choice', step:0,
+      tests:'what Big-O is a statement about',
+      prompt:'True or false: Big-O means the worst case.',
+      options:[
+        { t:'True. O is the worst case and Ω is the best case.',
+          why:'This welds together two unrelated distinctions. O and Ω are upper and lower bounds on one chosen function. Worst and best case are different choices of which function to bound. You can put a lower bound on the worst case, and that is exactly what a proof that comparison sorting is Ω(n log n) does.' },
+        { t:'False. Big-O bounds a function, and which function you chose to bound is a separate decision.', ok:true,
+          why:'Worst case, best case and average case are three different functions of n. Each can be bounded above, so quicksort’s worst case is O(n²) and its best case is O(n log n), and both are Big-O statements. Nothing in the definition mentions cases at all.' },
+        { t:'True, because Big-O takes the maximum over all inputs of that size.',
+          why:'The definition contains no maximum and no inputs, only two functions of n. Taking the maximum over inputs of size n is what produces the worst case function, before any bound has been applied to it.' },
+        { t:'False, because Big-O is about the average case.',
+          why:'It is about neither on its own. Big-O is silent on which case you picked, which is why the case has to be stated alongside it.' }
+      ],
+      close:'Two independent choices get collapsed into one all the time: which function you are describing, and which side you are bounding it from.' },
+
+    { tier:2, kind:'number',
+      tests:'how large n₀ is allowed to be',
+      given:'T(n) = 3n² + 100n + 5000,  f(n) = n²,  c = 4',
+      prompt:'The smallest whole c that works here is 4. With c = 4, what is the smallest n₀?',
+      unit:'n₀ =',
+      answer:136,
+      near:[
+        { v:137, why:'That is the first n that works, not n₀. n₀ names the last failure, because the rule reads for every n greater than n₀. At n = 136, 4·18,496 = 73,984 against T(136) = 74,088.' },
+        { v:5,   why:'That is the n₀ from the walkthrough example, and this function is nothing like it. Here 100n + 5000 dominates for a long time: at n = 10, 4n² is 400 against T(10) = 6300.' },
+        { v:0,   why:'Far too early. At small n the lower order part is the whole function: T(1) = 5103 against 4·1 = 4.' }
+      ],
+      why:'4n² ≥ 3n² + 100n + 5000 is n² − 100n − 5000 ≥ 0, whose root is 50 + √7500, about 136.6. So the last failing whole n is 136.',
+      close:'An n₀ of 136 is exactly as valid as an n₀ of 5, and an n₀ of a billion would be too. The definition asks only that one exists, which is the price of a claim that says nothing about small inputs.' },
+
+    { tier:2, kind:'multi',
+      tests:'which way each bound runs',
+      prompt:'Tick every pair where f(n) = O(g(n)).',
+      options:[
+        { t:'f = n²,  g = n² + n', ok:true,
+          why:'With c = 1. Adding a lower order term to the ceiling only raises it.' },
+        { t:'f = n² + n,  g = n²', ok:true,
+          why:'With c = 2 from n = 1 on. Both directions hold for this pair, so these two are Θ of each other: the same function up to a constant.' },
+        { t:'f = n log n,  g = n',
+          why:'(n log n) / n is log n, which is unbounded, so no fixed c can hold.' },
+        { t:'f = n,  g = n log n', ok:true,
+          why:'With c = 1 from n = 2. Only this direction holds, which is what makes n and n log n a real separation rather than a Θ.' },
+        { t:'f = 2ⁿ,  g = n¹⁰⁰',
+          why:'Every exponential eventually beats every polynomial, however large the exponent. n¹⁰⁰ leads until around n = 1000, and Big-O does not look at anything before n₀.' },
+        { t:'f = n¹⁰⁰,  g = 2ⁿ', ok:true,
+          why:'Read the other way round. The crossing is absurdly late, which is exactly as irrelevant as it sounds: the definition asks only that one exists.' }
+      ],
+      close:'f = O(g) is one-directional. When it happens to run both ways the pair is Θ, and when it runs one way only you have found a real difference in growth.' },
+
+    { tier:2, kind:'choice',
+      tests:'adding two bounds against nesting them',
+      prompt:'A routine sorts in O(n log n), then makes a separate O(n²) pass over the result. What is the tightest bound on the whole routine?',
+      options:[
+        { t:'O(n² log n)',
+          why:'That is the answer if the passes were nested, one running inside the other. They run one after the other, so the costs add rather than multiply.' },
+        { t:'O(n log n + n²)',
+          why:'Correct, but not tight, and nobody writes it. n log n is dominated by n², so the sum is Θ(n²) and the first term contributes nothing to the claim.' },
+        { t:'O(n²)', ok:true,
+          why:'A sum is bounded by a constant times its larger part: n log n + n² ≤ 2n² from n = 1 on. This is why the slowest stage names the whole routine, and why speeding up the sort here buys nothing asymptotically.' },
+        { t:'O(n log n), since sorting is the expensive stage.',
+          why:'Reversed. n² passes n log n at n = 2 and the gap only widens. Sorting feels expensive because it usually is the slow stage, which is what makes this the easy one to get backwards.' }
+      ],
+      close:'Sequential stages add and take the larger; nested stages multiply. Which one you are looking at is a fact about the code, not about the bounds.' },
+
+    { tier:2, kind:'order',
+      tests:'the ladder everything gets read against',
+      prompt:'Order these by growth rate, slowest first.',
+      items:[
+        { t:'log n',   why:'Grows without bound, but slower than any positive power of n. Doubling n adds one step.' },
+        { t:'√n',  why:'A power of n, n⁰⋅⁵, so it beats every logarithm and loses to n.' },
+        { t:'n',       why:'Linear. Doubling n doubles the work, which is the baseline everything else is judged against.' },
+        { t:'n log n', why:'Just above linear, and not by much: the log factor is 20 at n = a million. Close enough to n that the difference is often affordable, and far enough to be a real separation.' },
+        { t:'n²',      why:'Quadratic. n log n / n² goes to zero, so this is a genuine step up and not a constant apart.' },
+        { t:'2ⁿ',  why:'Exponential, and it eventually passes every polynomial, including n¹⁰⁰. Where polynomials multiply the work when n doubles, this squares it.' },
+        { t:'n!',      why:'Faster still: n! / 2ⁿ grows without bound, because past n = 4 each new factor is larger than 2.' }
+      ],
+      close:'The gaps here are not the same size. n and n log n are almost neighbours, while n² and 2ⁿ are not on speaking terms, and Big-O flattens both differences into the same word: not equal.' },
+
+    { tier:2, kind:'choice',
+      tests:'what O(1) claims',
+      prompt:'A lookup is O(1). Which is true?',
+      options:[
+        { t:'Its cost stops depending on n. The fixed cost can still be large, and it can still vary from call to call.',
+          ok:true,
+          why:'O(1) says a constant ceiling exists: some c with T(n) ≤ c for all large n. It does not say the cost is one step, that it is the same every time, or that it is small.' },
+        { t:'It takes one step.',
+          why:'O(1) means bounded by a constant, and the constant is never named. A routine that always takes 40,000 steps is O(1).' },
+        { t:'It is faster than any O(log n) operation.',
+          why:'Not on any input you will ever run. An O(1) with a constant of 40,000 loses to an O(log n) with a constant of 1 until log n passes 40,000. Asymptotic claims compare shapes, not runs.' },
+        { t:'It always takes the same amount of time.',
+          why:'A bound is not a measurement. A lookup that takes anywhere between 1 and 500 steps depending on collisions is still O(1), because 500 is a constant.' }
+      ],
+      close:'Every Big-O class has this shape. The class names how the cost responds to n, and says nothing at all about how big the cost is.' }
+  ];
+
+  // step titles, for the jump link. Read off the scenes so the two can never disagree.
+  const stepTitle = k => scenes[k] ? scenes[k].title : '';
+
+  const QP = {
+    tier: 1,
+    at: 0,                      // index within the current tier
+    state: new Map(),           // question -> 'first' | 'after' | 'miss'
+    picked: new Map(),          // question -> the working answer, so Back and Next keep it
+    mode: 'walk',
+    fromQ: null                 // set when a jump link sends the reader to a scene
+  };
+  const tierQs = t => BANK.filter(q => q.tier === t);
+  const curQs = () => tierQs(QP.tier);
+  const curQ = () => curQs()[QP.at];
+
+  // Deterministic scramble, so an ordering question does not open already solved and does
+  // not reshuffle itself every time the reader steps away and comes back.
+  function scrambled(n, seed){
+    const a = [...Array(n).keys()];
+    let s = seed;
+    for(let k = n - 1; k > 0; k--){
+      s = (s * 1103515245 + 12345) & 0x7fffffff;
+      const j = s % (k + 1);
+      [a[k], a[j]] = [a[j], a[k]];
+    }
+    // never hand back the finished order
+    return a.every((v, k) => v === k) ? a.reverse() : a;
+  }
+
+  function el(tag, cls, text){
+    const e = document.createElement(tag);
+    if(cls) e.className = cls;
+    if(text != null) e.textContent = text;
+    return e;
+  }
+  // Answers carry names like 2ⁿ and 14n², so they are written as text, never as markup.
+  function optButton(label, verdictCls, why, verdictWord){
+    const b = el('button', 'opt' + (verdictCls ? ' ' + verdictCls : ''));
+    b.type = 'button';
+    const line = el('span', 'line');
+    line.appendChild(el('span', 'tick', verdictCls === 'right' ? '✓' : verdictCls === 'wrong' ? '✗' : verdictCls === 'missed' ? '✓' : ''));
+    line.appendChild(el('span', 'txt', label));
+    b.appendChild(line);
+    if(why){
+      const p = el('span', 'why');
+      if(verdictWord){ p.appendChild(el('b', 'verdictword', verdictWord + ' ')); }
+      p.appendChild(document.createTextNode(why));
+      b.appendChild(p);
+    }
+    return b;
+  }
+
+  function setVerdict(q, ok, shown){
+    const box = $('q-verdict'), jump = $('q-jump');
+    box.hidden = !shown;
+    if(!shown) return;
+    box.className = 'verdict ' + (ok ? 'ok' : 'no');
+    $('q-verdict-head').textContent = ok ? 'What this was testing' : 'What this is testing';
+    $('q-verdict-body').textContent = q.close;
+    if(q.step != null){
+      jump.hidden = false;
+      jump.textContent = '→ Step ' + (q.step + 1) + ': ' + stepTitle(q.step);
+    } else {
+      jump.hidden = true;
+    }
+  }
+
+  // A question is scored on the first answer only, so reading the other explanations
+  // afterwards costs nothing. Nothing here ever downgrades a score already earned.
+  function score(q, right){
+    const had = QP.state.get(q);
+    if(had === 'first' || had === 'after') return;
+    QP.state.set(q, right ? (had === 'miss' ? 'after' : 'first') : 'miss');
+  }
+
+  function renderChoice(q, host){
+    const pick = QP.picked.get(q) || { seen: [] };
+    QP.picked.set(q, pick);
+    const wrap = el('div', 'qopts');
+    q.options.forEach((o, k) => {
+      const revealed = pick.seen.includes(k);
+      const b = optButton(o.t,
+        revealed ? (o.ok ? 'right' : 'wrong') : '',
+        revealed ? o.why : '',
+        revealed ? (o.ok ? 'Yes.' : 'No.') : '');
+      b.addEventListener('click', () => {
+        if(pick.seen.includes(k)) return;
+        // Every click is scored, but score() never downgrades: a first pick that was right
+        // stays right no matter how many wrong ones are opened afterwards to be read, and a
+        // wrong first pick is upgraded to "after a miss" the moment the right one is found.
+        score(q, !!o.ok);
+        pick.seen.push(k);
+        draw();
+      });
+      wrap.appendChild(b);
+    });
+    host.appendChild(wrap);
+    const answered = pick.seen.length > 0;
+    if(answered){
+      const gotIt = pick.seen.some(k => q.options[k].ok);
+      setVerdict(q, gotIt, true);
+      if(!gotIt) $('q-verdict-body').textContent = 'Keep going: the other options are still open, and each one says what is wrong with it.';
+      else $('q-verdict-body').textContent = q.close;
+    } else {
+      setVerdict(q, false, false);
+    }
+    $('q-check').hidden = true;
+  }
+
+  function renderMulti(q, host){
+    const pick = QP.picked.get(q) || { on: new Set(), checked: false };
+    QP.picked.set(q, pick);
+    const wrap = el('div', 'qopts');
+    q.options.forEach((o, k) => {
+      let cls = '', word = '', why = '';
+      if(pick.checked){
+        const ticked = pick.on.has(k);
+        if(ticked && o.ok){ cls = 'right'; word = 'Yes, and you ticked it.'; }
+        else if(ticked && !o.ok){ cls = 'wrong'; word = 'No, but you ticked it.'; }
+        else if(!ticked && o.ok){ cls = 'missed'; word = 'Yes, and you left it out.'; }
+        else { cls = ''; word = 'No, and you left it out.'; }
+        why = o.why;
+      } else if(pick.on.has(k)){ cls = 'sel'; }
+      const b = optButton(o.t, cls, why, word);
+      if(pick.checked) b.disabled = false;
+      b.addEventListener('click', () => {
+        if(pick.checked) return;
+        pick.on.has(k) ? pick.on.delete(k) : pick.on.add(k);
+        draw();
+      });
+      wrap.appendChild(b);
+    });
+    host.appendChild(wrap);
+    if(pick.checked){
+      const exact = q.options.every((o, k) => !!o.ok === pick.on.has(k));
+      setVerdict(q, exact, true);
+      if(!exact) $('q-verdict-body').textContent = q.close + ' Look at the rows above: dashed green is one you left out, solid red is one that does not belong.';
+    } else {
+      setVerdict(q, false, false);
+    }
+    $('q-check').hidden = pick.checked;
+    $('q-check').disabled = pick.on.size === 0;
+    $('q-retry').hidden = !pick.checked;
+  }
+
+  function renderNumber(q, host){
+    const pick = QP.picked.get(q) || { v: '', checked: false };
+    QP.picked.set(q, pick);
+    const row = el('div', 'qnum');
+    row.appendChild(el('span', 'lead', q.unit));
+    const input = el('input');
+    input.type = 'text';
+    input.inputMode = 'numeric';
+    input.autocomplete = 'off';
+    input.value = pick.v;
+    input.setAttribute('aria-label', q.unit || 'your answer');
+    const right = pick.checked && Number(pick.v) === q.answer;
+    if(pick.checked) row.classList.add(right ? 'right' : 'wrong');
+    input.disabled = pick.checked;
+    input.addEventListener('input', () => { pick.v = input.value; $('q-check').disabled = input.value.trim() === ''; });
+    input.addEventListener('keydown', e => {
+      if(e.key === 'Enter' && input.value.trim() !== ''){ e.preventDefault(); checkNow(); }
+    });
+    row.appendChild(input);
+    host.appendChild(row);
+
+    if(pick.checked){
+      const v = Number(pick.v);
+      const near = (q.near || []).find(h => h.v === v);
+      // A named near miss gets its own reason first, because the reason someone answered
+      // 137 is not the reason someone answered 5, and the working alone addresses neither.
+      const b = optButton(
+        (q.unit ? q.unit + ' ' : 'you answered ') + pick.v,
+        right ? 'right' : 'wrong',
+        right ? q.why : (near ? near.why + ' The working: ' + q.why : q.why),
+        right ? 'Correct.' : 'Not quite.');
+      b.tabIndex = -1;
+      const wrap = el('div', 'qopts');
+      wrap.appendChild(b);
+      host.appendChild(wrap);
+      setVerdict(q, right, true);
+    } else {
+      setVerdict(q, false, false);
+    }
+    $('q-check').hidden = pick.checked;
+    $('q-check').disabled = String(pick.v).trim() === '';
+    $('q-retry').hidden = !pick.checked;
+    if(!pick.checked) setTimeout(() => input.focus(), 0);
+  }
+
+  function renderOrder(q, host){
+    const pick = QP.picked.get(q) || { order: scrambled(q.items.length, 7 + BANK.indexOf(q) * 31), checked: false };
+    QP.picked.set(q, pick);
+    const wrap = el('div', 'qorder');
+    pick.order.forEach((itemIdx, pos) => {
+      const it = q.items[itemIdx];
+      const row = el('div', 'ord' + (pick.checked ? (itemIdx === pos ? ' right' : ' wrong') : ''));
+      row.appendChild(el('span', 'rank', String(pos + 1)));
+      row.appendChild(el('span', 'name', it.t));
+      if(!pick.checked){
+        const mv = el('div', 'mv');
+        const up = el('button', null, '↑'), dn = el('button', null, '↓');
+        up.type = dn.type = 'button';
+        up.disabled = pos === 0; dn.disabled = pos === pick.order.length - 1;
+        up.setAttribute('aria-label', 'Move ' + it.t + ' earlier');
+        dn.setAttribute('aria-label', 'Move ' + it.t + ' later');
+        up.addEventListener('click', () => { const o = pick.order; [o[pos-1], o[pos]] = [o[pos], o[pos-1]]; draw(); });
+        dn.addEventListener('click', () => { const o = pick.order; [o[pos+1], o[pos]] = [o[pos], o[pos+1]]; draw(); });
+        mv.appendChild(up); mv.appendChild(dn);
+        row.appendChild(mv);
+      } else {
+        row.appendChild(el('span', 'mark', itemIdx === pos ? '✓' : '✗'));
+        row.appendChild(el('span', 'why', it.why));
+      }
+      wrap.appendChild(row);
+    });
+    host.appendChild(wrap);
+    if(pick.checked){
+      const exact = pick.order.every((v, k) => v === k);
+      setVerdict(q, exact, true);
+      if(!exact) $('q-verdict-body').textContent = q.close + ' The rows are marked against the right order, and each one says where it belongs.';
+    } else {
+      setVerdict(q, false, false);
+    }
+    $('q-check').hidden = pick.checked;
+    $('q-check').disabled = false;
+    $('q-retry').hidden = !pick.checked;
+  }
+
+  function checkNow(){
+    const q = curQ(), pick = QP.picked.get(q);
+    if(!pick || pick.checked) return;
+    if(q.kind === 'multi'){
+      pick.checked = true;
+      score(q, q.options.every((o, k) => !!o.ok === pick.on.has(k)));
+    } else if(q.kind === 'number'){
+      pick.checked = true;
+      score(q, Number(pick.v) === q.answer);
+    } else if(q.kind === 'order'){
+      pick.checked = true;
+      score(q, pick.order.every((v, k) => v === k));
+    }
+    draw();
+  }
+
+  function retryNow(){
+    const q = curQ();
+    if(q.kind === 'multi') QP.picked.set(q, { on: new Set(), checked: false });
+    if(q.kind === 'number') QP.picked.set(q, { v: '', checked: false });
+    if(q.kind === 'order') QP.picked.set(q, { order: scrambled(q.items.length, 3 + Date.now() % 977), checked: false });
+    draw();
+  }
+
+  function draw(){
+    const qs = curQs(), q = curQ();
+    $('q-tier').textContent = QP.tier === 1 ? 'Tier 1 · the definition' : 'Tier 2 · using it';
+    $('q-count').textContent = 'Question ' + (QP.at + 1) + ' of ' + qs.length;
+    $('q-tests').textContent = 'Testing: ' + q.tests;
+    $('q-prompt').textContent = q.prompt;
+    $('q-given').hidden = !q.given;
+    if(q.given) $('q-given').textContent = q.given;
+    $('q-code').hidden = !q.code;
+    if(q.code) $('q-code').textContent = q.code;
+    const lead = q.kind === 'multi' ? 'Tick every one that applies, then check. Partly right counts as wrong here, which is the point: each row is its own claim.'
+      : q.kind === 'order' ? 'Move them with the arrows, then check.'
+      : q.kind === 'choice' ? 'Pick one. Whichever you pick, it will say why it is right or wrong, and the others stay open to read.'
+      : '';
+    $('q-lead').hidden = !lead;
+    $('q-lead').textContent = lead;
+
+    const host = $('q-field');
+    host.textContent = '';
+    $('q-retry').hidden = true;
+    if(q.kind === 'choice') renderChoice(q, host);
+    if(q.kind === 'multi') renderMulti(q, host);
+    if(q.kind === 'number') renderNumber(q, host);
+    if(q.kind === 'order') renderOrder(q, host);
+
+    $('q-prev').disabled = QP.at === 0;
+    $('q-next').textContent = QP.at === qs.length - 1 ? (QP.tier === 1 ? 'On to tier 2' : 'Back to question 1') : 'Next question';
+    // while an answer is still waiting to be checked, checking it is the main action
+    $('q-next').classList.toggle('ghost', !$('q-check').hidden);
+    $('tier-1').classList.toggle('on', QP.tier === 1);
+    $('tier-2').classList.toggle('on', QP.tier === 2);
+
+    // the map and the tally
+    const map = $('q-map');
+    map.textContent = '';
+    qs.forEach((qq, k) => {
+      const st = QP.state.get(qq);
+      const b = el('button', (st === 'first' ? 'first' : st === 'after' ? 'after' : st === 'miss' ? 'miss' : '') + (k === QP.at ? ' on' : ''), String(k + 1));
+      b.type = 'button';
+      b.setAttribute('aria-label', 'Question ' + (k + 1));
+      b.addEventListener('click', () => { QP.at = k; draw(); $('qwrap').scrollTop = 0; });
+      map.appendChild(b);
+    });
+    const first = qs.filter(qq => QP.state.get(qq) === 'first').length;
+    const after = qs.filter(qq => QP.state.get(qq) === 'after').length;
+    const miss = qs.filter(qq => QP.state.get(qq) === 'miss').length;
+    const untried = qs.length - first - after - miss;
+    const tally = $('q-tally');
+    tally.textContent = '';
+    tally.appendChild(el('b', null, first + ' of ' + qs.length));
+    tally.appendChild(document.createTextNode(' right first time'
+      + (after ? ', ' + after + ' after a miss' : '')
+      + (miss ? ', ' + miss + ' not right yet' : '')
+      + (untried ? ', ' + untried + ' not tried' : '')
+      + '.'));
+  }
+
+  function setMode(m){
+    QP.mode = m;
+    $('stage').hidden = m !== 'walk';
+    $('practice').hidden = m !== 'drill';
+    $('mode-walk').classList.toggle('on', m === 'walk');
+    $('mode-drill').classList.toggle('on', m === 'drill');
+    $('mode-walk').setAttribute('aria-pressed', String(m === 'walk'));
+    $('mode-drill').setAttribute('aria-pressed', String(m === 'drill'));
+    if(m === 'drill') draw();
+  }
+
+  $('mode-walk').addEventListener('click', () => setMode('walk'));
+  $('mode-drill').addEventListener('click', () => setMode('drill'));
+  $('tier-1').addEventListener('click', () => { QP.tier = 1; QP.at = 0; draw(); });
+  $('tier-2').addEventListener('click', () => { QP.tier = 2; QP.at = 0; draw(); });
+  $('q-check').addEventListener('click', checkNow);
+  $('q-retry').addEventListener('click', retryNow);
+  $('q-prev').addEventListener('click', () => { if(QP.at > 0){ QP.at--; draw(); $('qwrap').scrollTop = 0; } });
+  $('q-next').addEventListener('click', () => {
+    const qs = curQs();
+    if(QP.at < qs.length - 1) QP.at++;
+    else if(QP.tier === 1){ QP.tier = 2; QP.at = 0; }
+    else QP.at = 0;
+    draw();
+    $('qwrap').scrollTop = 0;
+  });
+  // The jump link is a round trip, not an exit: the walkthrough remembers which question
+  // sent the reader there, and offers the way back in the same place the note lives.
+  $('q-jump').addEventListener('click', () => {
+    const q = curQ();
+    if(q.step == null) return;
+    QP.fromQ = { tier: QP.tier, at: QP.at };
+    setMode('walk');
+    go(q.step);
+  });
+  $('q-toback').addEventListener('click', () => setMode('walk'));
+
   // ---- stepping ----
   let i = 0;
   const dots = $('dots');
@@ -1600,11 +2447,24 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     [...dots.children].forEach((d, k2) => d.classList.toggle('on', k2 === i));
     $('prev').disabled = i === 0;
     $('next').textContent = i === scenes.length - 1 ? 'Start over' : 'Next scene';
+    // only offered while a question is actually waiting to be returned to
+    $('toq').hidden = !QP.fromQ;
+    if(QP.fromQ) $('toq').textContent = 'Back to question ' + (QP.fromQ.at + 1);
   }
 
   $('next').addEventListener('click', () => go(i === scenes.length - 1 ? 0 : i + 1));
   $('prev').addEventListener('click', () => go(i - 1));
+  $('toq').addEventListener('click', () => {
+    if(!QP.fromQ) return;
+    QP.tier = QP.fromQ.tier; QP.at = QP.fromQ.at; QP.fromQ = null;
+    $('toq').hidden = true;
+    setMode('drill');
+  });
   document.addEventListener('keydown', e => {
+    // the arrows belong to whichever mode is on screen, and never to a text field
+    if(QP.mode !== 'walk') return;
+    const t = e.target;
+    if(t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
     if(e.key === 'ArrowRight') go(i + 1);
     if(e.key === 'ArrowLeft') go(i - 1);
   });

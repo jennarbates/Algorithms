@@ -319,6 +319,115 @@ and not a new object.
 Under `prefers-reduced-motion` the subtraction is skipped and step 6 opens on
 the finished plot.
 
+## Practice
+
+A reader can follow all nine steps and still leave with the wrong general rule.
+The three that survive a good explanation are that Big-O *is* the leading term,
+that lower order terms vanish, and that a bound is a measurement. So the page has
+a second mode, reached by the `Walkthrough / Practice` switch in the header, and
+every question in it is built around one specific wrong belief.
+
+The mode switch swaps the three pane stage for one question panel and a progress
+column. It is the same file, the same tokens and the same panel furniture, which
+matters for a practical reason as well as a visual one: `site/build.sh` publishes
+only each project's `dist/index.html`, so anything that lives in a second file
+never reaches the site.
+
+### Distractors are answers, not filler
+
+Every option carries its own written explanation of the exact misconception it
+encodes, and the explanation appears under the option that was clicked. Clicking
+a wrong one is not punished: it opens that option's reasoning and leaves the
+others available, so a reader can work through all four and find out why three of
+them are wrong rather than only that they were. A question is scored on the first
+answer, and the score is never downgraded afterwards, which is what makes reading
+the rest free.
+
+The distractors are the load-bearing part. `c = 14 works for large enough n` is
+not a wrong answer someone made up, it is what the page's own argument sounds
+like to a reader who took *outgrown* to mean *gone*. Two of them are true
+statements that answer a different question, which is the harder kind to catch:
+`c must exceed the leading coefficient` is true of this `T(n)` and false as a
+rule, since `T(n) = 14n² - 4n` takes `c = 14` with nothing to spare, and
+`O(n log n + n²)` is correct but is not what anyone writes.
+
+Where a question has a step that settles it, the closing note links to that step
+by number and title. Following the link is a round trip: the walkthrough puts a
+`Back to question N` button beside its own controls until the reader takes it.
+
+### Two tiers
+
+**Tier 1** stays on `T(n) = 14n² + 4n + 6`, so it is checking whether the thing
+that was just watched was understood. **Tier 2** takes the same definition to
+functions and code the page never drew, which is the only way to tell
+understanding from recall. Nine questions each.
+
+| Tier 1 asks | The belief it is aimed at |
+| --- | --- |
+| why `c = 14` fails at every `n` | that a fading share is a vanishing quantity |
+| which values of `n₀` work with `c = 15` | that `n₀` is a single number to be found |
+| the smallest `n₀` once `c = 18` | that `c` and `n₀` are independent |
+| which of six claims about `T(n)` hold at once | that a function has one bound |
+| what height means in the drawing | that the roof means one thing throughout |
+| what multiplying by `c` does to a curve | that a large enough constant can outrun a shape |
+| what `T(n) = O(n²)` promises about a run | that a bound is a measurement |
+| why `4n + 6` can be left out of the name | that the definition mentions terms |
+| ordering `6`, `4n + 6`, `n²`, `14n²`, `n³` | that `n²` and `14n²` differ in growth |
+
+| Tier 2 asks | The belief it is aimed at |
+| --- | --- |
+| which of six rewrites are legal | that constants are forgiven in an exponent too |
+| the count for a loop whose inner bound is `i` | that doing half the work loosens the bound |
+| a loop that halves its counter | that a shrinking loop is a logarithmic one |
+| whether Big-O means the worst case | that `O` and `Ω` are worst and best case |
+| the smallest `n₀` for `3n² + 100n + 5000` | that a large `n₀` weakens the claim |
+| which of six pairs have `f = O(g)` | that `f = O(g)` runs both ways |
+| a sort followed by a separate `n²` pass | that sequential stages multiply |
+| ordering the standard ladder | that the gaps in it are the same size |
+| what `O(1)` claims | that `O(1)` means one step, or fast |
+
+### The four formats
+
+Each format exists because some nuance cannot be tested by the others.
+
+- **Multiple choice** reveals one option at a time as it is clicked, so the
+  question keeps teaching after it has been answered. The correct option sits at
+  each of the four positions across the bank, because a reader who notices it is
+  always second stops reading.
+- **Multi-select** is the only way to ask whether `O(n²)`, `O(n³)`, `Θ(n²)` and
+  `O(n² log n)` can all be true of one function. Partly right counts as wrong,
+  which is the point: each row is its own claim. After checking, the rows are
+  marked in four states rather than two, because ticking something false and
+  leaving something true unticked are different mistakes. A solid green row was
+  ticked and belongs, a dashed green one belongs and was left out.
+- **Numeric entry** is checked against the real inequality, and the named near
+  misses answer the specific thing that went wrong. Someone who types 137 for an
+  `n₀` of 136 has the arithmetic right and the strictness of `n > n₀` wrong,
+  which is a different error from typing 5 out of habit, and neither is addressed
+  by showing the working alone.
+- **Ordering** is the only format that can ask about a crossing, because it makes
+  the reader commit to which function wins in the end rather than recognise the
+  answer. Each row's reason names its own crossing: `n³` reaches `14n²` at
+  exactly `n = 14`, where both are 2744.
+
+### What the answer keys were checked against
+
+Every number a question asserts was recomputed rather than reasoned about, and
+the arithmetic behind the two `n₀` questions is worth recording:
+
+| claim | check |
+| --- | --- |
+| `c = 15` needs `n₀ = 5` | `15 * 25 = 375` against `T(5) = 376`, then `540` against `534` |
+| `c = 18` needs `n₀ = 1` | `4n² - 4n - 6 >= 0` from `n = 2`, where it is `2` |
+| `c = 4` needs `n₀ = 136` for `3n² + 100n + 5000` | root of `n² - 100n - 5000` is `50 + sqrt(7500)`, about `136.6` |
+| `T(n) = O(n³)` holds with `c = 1`, `n₀ = 14` | `2744` against `T(14) = 2806`, then `3375` against `3216` |
+
+That last row is a trap the first draft of the question fell into. `n³` reaches
+`14n²` at exactly `n = 14`, where both are `2744`, and it is tempting to read
+that crossing as the answer. It is not: the bound is against `T(n)`, not against
+its leading term, and `n³` is still 62 short at `n = 14`. The crossing that
+matters is one step later.
+
 ## Files
 
 ```
