@@ -611,3 +611,28 @@ function countFree(state: ReturnType<typeof createEngine>): number {
   const receiversFree = Object.values(state.receivers).filter((r) => r.holding === null).length;
   return askersFree + receiversFree;
 }
+
+describe('everything the question needs is on the page with it', () => {
+  it('names a set of lists that exists, wherever it names one', () => {
+    for (const q of QUESTIONS) {
+      if (!q.instanceId) continue;
+      expect(() => presetById(q.instanceId as string), q.id).not.toThrow();
+    }
+  });
+
+  it('prints the lists for every question worked against a run', () => {
+    for (const q of QUESTIONS) {
+      if (q.kind === 'pairing' || q.kind === 'arrangements') {
+        expect(q.instanceId, `${q.id} is worked against a run`).toBeTruthy();
+      }
+    }
+  });
+
+  it('prints the lists for every tier 1 question, since all of them are about one market', () => {
+    for (const q of questionsIn(1)) {
+      expect(q.instanceId, `${q.id} names people the reader cannot otherwise see`).toBe(
+        'worksheet',
+      );
+    }
+  });
+});

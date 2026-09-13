@@ -1226,6 +1226,60 @@ body {
   max-width: 72ch;
 }
 
+/* The lists the question is about. Printed like a worksheet's data block: the
+   given, above the instruction, in a typeface where the orders line up. */
+.qlists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 22px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  max-width: 72ch;
+  background: var(--surface-sunk);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.qlists__cap {
+  margin: 0 0 7px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.qlists__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin: 0 0 3px;
+}
+
+.qlists__who {
+  flex: 0 0 auto;
+  min-width: 8ch;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.qlists__order {
+  font:
+    12.5px/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 620px) {
+  .qlists {
+    grid-template-columns: 1fr;
+  }
+}
+
 .qlead {
   margin: 0 0 12px;
   font-size: 12.5px;

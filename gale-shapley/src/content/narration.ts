@@ -44,8 +44,16 @@ export function narrate(state: EngineState, event: StepEvent): Narration {
   const asker = askerKind(state);
   const receiver = receiverKind(state);
 
-  const A = (id: string): NarrationSegment => ({ kind: 'party', id, party: asker });
-  const R = (id: string): NarrationSegment => ({ kind: 'party', id, party: receiver });
+  const A = (id: string): NarrationSegment => ({
+    kind: 'party',
+    id,
+    party: asker,
+  });
+  const R = (id: string): NarrationSegment => ({
+    kind: 'party',
+    id,
+    party: receiver,
+  });
 
   switch (event.kind) {
     case 'ask':
@@ -91,7 +99,9 @@ export function narrate(state: EngineState, event: StepEvent): Narration {
           A(event.keeping),
           text(', and likes '),
           A(event.keeping),
-          text(' better. '),
+          text(' better than '),
+          A(event.asker),
+          text('. '),
           A(event.asker),
           text(' is turned away.'),
         ],
@@ -149,8 +159,16 @@ export interface PairExplanation {
 }
 
 export function explainPair(verdict: PairVerdict): PairExplanation {
-  const S = (id: string): NarrationSegment => ({ kind: 'party', id, party: 'student' });
-  const C = (id: string): NarrationSegment => ({ kind: 'party', id, party: 'school' });
+  const S = (id: string): NarrationSegment => ({
+    kind: 'party',
+    id,
+    party: 'student',
+  });
+  const C = (id: string): NarrationSegment => ({
+    kind: 'party',
+    id,
+    party: 'school',
+  });
 
   if (verdict.alreadyTogether) {
     return {
@@ -214,7 +232,7 @@ export function explainPair(verdict: PairVerdict): PairExplanation {
     studentDetail,
     schoolDetail,
     outcome: verdict.blocks
-      ? 'Both of them would move. This pairing can still come apart.'
+      ? 'Both of them would move. These two would leave who they have, so the board can still come apart.'
       : 'Nothing happens. It takes two.',
     blocks: verdict.blocks,
     alreadyTogether: false,
@@ -225,7 +243,7 @@ export function explainPair(verdict: PairVerdict): PairExplanation {
 export function challengePrompt(state: EngineState): string {
   return state.phase === 'done'
     ? 'Now try to break it. Find two people who would BOTH rather have each other than what they ended up with.'
-    : 'Test any pair while this is still running. Right now some of them really would come apart.';
+    : 'Test any pair while this is still running. Right now some of the pairings on the board really would come apart.';
 }
 
 /**
@@ -254,7 +272,7 @@ export function actionHint(state: EngineState): string {
         ? 'Nothing has happened yet.'
         : 'Still going. Nothing is final until everyone is settled.';
     case 'resolve':
-      return 'Before you click: what do you think they say?';
+      return 'Before you click: what do you think the answer is?';
     case 'done':
       return 'Every pairing below is final.';
   }
@@ -286,5 +304,5 @@ export function pastStatus(viewed: EngineState, current: EngineState): string {
       ? 'the start, before anything happened'
       : `step ${viewed.stepCount} of ${current.stepCount}`;
   const back = behind === 1 ? 'one click back' : `${behind} clicks back`;
-  return `You are looking at ${where}. That is ${back}. Nothing has changed since.`;
+  return `You are looking at ${where}. That is ${back}. The run is still where you left it, at step ${current.stepCount}.`;
 }

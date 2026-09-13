@@ -65,7 +65,13 @@ function buildInstance(spec: PresetSpec): Instance {
     };
   });
 
-  return { id: spec.id, title: spec.title, teaches: spec.teaches, students, schools };
+  return {
+    id: spec.id,
+    title: spec.title,
+    teaches: spec.teaches,
+    students,
+    schools,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -148,7 +154,7 @@ const everyoneAgrees = buildInstance({
   id: 'everyone-agrees',
   title: 'Everyone wants the same things',
   teaches:
-    'What a market with no disagreement looks like: lots of turning away, nothing tentative.',
+    'What a market with no disagreement looks like: lots of turning away, and nobody ever loses a seat once they have it.',
   studentIds: ['priya', 'sam', 'ravi', 'maya'],
   schoolIds: ['mit', 'berkeley', 'umass', 'northeastern'],
   studentPrefs: [
@@ -210,7 +216,7 @@ const cascade = buildInstance({
 const nothingChanges = buildInstance({
   id: 'nothing-changes',
   title: 'The time it makes no difference',
-  teaches: 'Asking first is only an advantage when more than one stable arrangement exists.',
+  teaches: 'Asking first is only an advantage when more than one arrangement holds.',
   studentIds: ['priya', 'sam', 'ravi', 'maya'],
   schoolIds: ['mit', 'umass', 'nyu', 'berkeley'],
   studentPrefs: [
@@ -317,7 +323,7 @@ const bigOne = buildInstance({
 const worksheet = buildInstance({
   id: 'worksheet',
   title: 'Four students, four seats',
-  teaches: 'An instance to work by hand: two arrangements hold, and only two people differ.',
+  teaches: 'A set of lists to work by hand: two arrangements hold, and only two people differ.',
   studentIds: ['priya', 'sam', 'ravi', 'maya'],
   schoolIds: ['mit', 'umass', 'nyu', 'berkeley'],
   studentPrefs: [
@@ -363,7 +369,7 @@ const worksheet = buildInstance({
 const noMutualFirst = buildInstance({
   id: 'no-mutual-first',
   title: 'Two who want what wants somebody else',
-  teaches: 'An instance where nobody is first on the list of anybody who is first on theirs.',
+  teaches: "A set of lists where everybody's favourite has somebody else as their own favourite.",
   studentIds: ['priya', 'sam'],
   schoolIds: ['mit', 'nyu'],
   studentPrefs: [

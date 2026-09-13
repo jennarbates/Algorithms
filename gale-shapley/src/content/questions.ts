@@ -75,6 +75,16 @@ interface Common {
   readonly tier: Tier;
   /** The belief the question is aimed at, shown above the prompt. */
   readonly tests: string;
+  /**
+   * The set of lists the question is about, printed above it.
+   *
+   * The practice panel replaces the board rather than sitting under it, so
+   * nothing else on screen carries the preferences. A question that asks the
+   * reader to work a run, or that names people out of one, cannot be answered
+   * without them. Absent on the questions that quote their own lists inline and
+   * on the ones about the general case rather than any particular market.
+   */
+  readonly instanceId?: string;
   readonly prompt: string;
   /** Shown in a monospaced block under the prompt, for a statement or an argument. */
   readonly quote?: string;
@@ -126,7 +136,10 @@ export const FORMAL_TERMS: readonly Term[] = [
   { term: 'instance', replaces: 'one complete set of lists to work with' },
   { term: 'matching', replaces: 'an arrangement, who ended up with whom' },
   { term: 'stable', replaces: 'holds, cannot be broken' },
-  { term: 'blocking pair', replaces: 'two people who would both rather have each other' },
+  {
+    term: 'blocking pair',
+    replaces: 'two people who would both rather have each other',
+  },
   { term: 'propose', replaces: 'ask' },
   { term: 'proposer', replaces: 'whoever is doing the asking' },
   { term: 'receiver', replaces: 'whoever is being asked' },
@@ -134,6 +147,26 @@ export const FORMAL_TERMS: readonly Term[] = [
   { term: 'optimal', replaces: 'the best anybody on this side can do here' },
   { term: 'pessimal', replaces: 'the worst anybody on this side can do here' },
   { term: 'algorithm', replaces: 'the process' },
+  {
+    term: 'perfect',
+    replaces: 'nobody is left out, everybody on both sides ends up with somebody',
+  },
+  {
+    term: 'valid partner',
+    replaces: 'somebody you are paired with in at least one arrangement that holds',
+  },
+  {
+    term: 'dominant strategy',
+    replaces: 'the best list to hand in, whatever everybody else hands in',
+  },
+  {
+    term: 'O(n²)',
+    replaces: 'work that grows like n times n, give or take a fixed multiple',
+  },
+  {
+    term: 'NP-hard',
+    replaces: 'one of the problems nobody knows how to solve quickly',
+  },
 ];
 
 /** The statement tier 2 works on, quoted once and referred to throughout. */
@@ -164,7 +197,7 @@ export const QUESTIONS: readonly Question[] = [
       maya: 'Berkeley turns her away: she is last on its list and it is holding Priya. NYU is next and has nobody.',
     },
     close:
-      'Nobody is displaced in this run. Two people are turned away on the spot, which is a different thing: being turned away costs you a name off your own list, being displaced costs somebody else theirs.',
+      'Nobody is displaced in this run. Two people are turned away on the spot, which is a different thing: being turned away costs you one name off your own list and nothing else, while pushing somebody out sends them back to spend more of theirs.',
   },
 
   {
@@ -178,8 +211,8 @@ export const QUESTIONS: readonly Question[] = [
       'Same four people, same lists, but now the schools are asking. Where does everybody end up?',
     rows: {
       priya:
-        'Four schools ask her and she trades up her own list every time: MIT holds her, then NYU takes her, then UMass Amherst, then Berkeley, which is where she wanted to be all along.',
-      sam: 'UMass Amherst asks first and holds him, then MIT asks and he lets UMass go. Berkeley asks after that and he turns it down, because MIT is his first choice and he already has it. MIT is where the other run left him too.',
+        'Four schools ask her and she trades up her own list every time: she holds MIT, then lets it go for NYU, then lets NYU go for UMass Amherst, then lets that go for Berkeley, which is where she wanted to be all along.',
+      sam: 'UMass Amherst asks first and he holds it, then MIT asks and he lets UMass go. Berkeley asks after that and he turns it down, because MIT is his first choice and he already has it. MIT is where the other run left him too.',
       ravi: 'NYU asks him once Priya is gone. Nobody else asks him at all, so he has no say in it beyond yes.',
       maya: "UMass Amherst asks her last, after Sam and Priya are both out of reach. She is nowhere near the top of anybody's list here.",
     },
@@ -229,6 +262,7 @@ export const QUESTIONS: readonly Question[] = [
     id: 'who-is-fixed',
     tier: 1,
     kind: 'choice',
+    instanceId: 'worksheet',
     tests: 'what being in the same seat twice means',
     prompt:
       'Priya ends at Berkeley and Sam at MIT whichever side does the asking. What does that tell you about them?',
@@ -236,7 +270,7 @@ export const QUESTIONS: readonly Question[] = [
       {
         t: 'They are in the same seats in every arrangement that holds here, not only in those two runs.',
         ok: true,
-        why: 'The two runs are the best and the worst any arrangement can do for a given side, so they bracket the rest. Anybody sitting in the same seat at both ends of that range has nowhere else to be.',
+        why: 'The two runs are the best and the worst any arrangement can do for a given side, so they bracket the rest. Anybody sitting in the same seat at both ends of that range has nowhere else to be. That the two runs really are the two ends is proved later, in the textbook tier.',
       },
       {
         t: 'They were lucky with the order the questions happened to be asked in.',
@@ -247,7 +281,7 @@ export const QUESTIONS: readonly Question[] = [
         why: 'There is no ranking of schools here beyond the lists on the page, and nothing settles first. Everything stays provisional until the whole thing stops.',
       },
       {
-        t: 'This instance has exactly one arrangement that holds.',
+        t: 'This set of lists has exactly one arrangement that holds.',
         why: 'It has two, and the second run found the other one. They differ on Ravi and Maya, which is precisely why Priya and Sam standing still is worth noticing.',
       },
     ],
@@ -259,6 +293,7 @@ export const QUESTIONS: readonly Question[] = [
     id: 'another-one',
     tier: 1,
     kind: 'choice',
+    instanceId: 'worksheet',
     tests: 'whether the second answer is a second answer',
     prompt:
       'A worksheet answer runs the process with the students asking, and then answers "find another arrangement that holds" with "have the students be the ones who ask". What is wrong with it?',
@@ -269,7 +304,7 @@ export const QUESTIONS: readonly Question[] = [
       },
       {
         t: 'Flipping which side asks never produces a different arrangement.',
-        why: 'It usually does. On this instance the two runs differ on Ravi and Maya. One of the sets of lists on this page does give the same answer either way, and it does that because there is only one arrangement to be found.',
+        why: 'It usually does. On these lists the two runs differ on Ravi and Maya. One of the sets of lists on this page does give the same answer either way, and it does that because there is only one arrangement to be found.',
       },
       {
         t: 'That is the run it has already done. It hands back the arrangement it started from.',
@@ -278,7 +313,7 @@ export const QUESTIONS: readonly Question[] = [
       },
       {
         t: 'A second arrangement has to be found by hand, because the process only ever produces one.',
-        why: 'The process produces one per direction, so two candidates come for free, and on this instance those two are the only two there are. On an instance with more, the rest do have to be found by hand.',
+        why: 'The process produces one per direction, so two candidates come for free, and on these lists those two are the only two there are. Where there are more, the rest do have to be found by hand.',
       },
     ],
     close:
@@ -289,9 +324,10 @@ export const QUESTIONS: readonly Question[] = [
     id: 'order-free',
     tier: 1,
     kind: 'choice',
+    instanceId: 'worksheet',
     tests: 'whether the route changes the ending',
     prompt:
-      'Two people work the same instance with the same side asking, and pick a different person to ask next at every stage. What happens?',
+      'Two people work the same set of lists with the same side asking, and pick a different person to ask next at every stage. What happens?',
     options: [
       {
         t: 'They get different endings, which is why a worksheet has to fix an order.',
@@ -303,12 +339,12 @@ export const QUESTIONS: readonly Question[] = [
       },
       {
         t: 'They get the same ending only when exactly one arrangement holds.',
-        why: 'The ending is fixed per direction even when several arrangements hold. This instance has two, and the students asking always produce the same one of them.',
+        why: 'The ending is fixed per direction even when several arrangements hold. These lists give two, and the students asking always produce the same one of them.',
       },
       {
         t: 'They get the same ending. Which question comes next changes the story and not the result.',
         ok: true,
-        why: 'Whoever is asking ends up with the best seat available to them in any arrangement that holds, and that is a fact about the lists rather than about the route. There is nothing to break a tie over, so there is nothing for two people to disagree about.',
+        why: 'Whoever is asking ends up with the best seat available to them in any arrangement that holds, and that is a fact about the lists rather than about the route. Nothing about the ending is left to the choices made along the way, so there is nothing for two people to disagree about.',
       },
     ],
     close:
@@ -348,7 +384,7 @@ export const QUESTIONS: readonly Question[] = [
       },
     ],
     close:
-      'A claim that starts "in every instance" is quantifying over inputs, so pinning down what an input is settles what is being claimed before any of the logic starts. The other word to carry across from tier 1: a matching is stable when it has no blocking pair, which is two people who would both rather have each other under its textbook name.',
+      'A claim that starts "in every instance" is quantifying over inputs, so pinning down what an input is settles what is being claimed before any of the logic starts. Two more things to carry across from tier 1. The textbook says colleges where this page says schools, and writes c for a college and s for a student: same two sides, shorter names. And a matching is stable when it has no blocking pair, which is two people who would both rather have each other under its textbook name.',
   },
 
   {
@@ -358,7 +394,7 @@ export const QUESTIONS: readonly Question[] = [
     tests: 'turning English into quantifiers',
     quote: STATEMENT,
     prompt:
-      'Let I be an instance and M a stable matching. Which formula says this? Read first(c, s) as "c is ranked first on the list of s".',
+      'Let I be an instance and M a stable matching. Read first(c, s) as "c is ranked first on the list of s", so it is c that sits at the top, and s whose list it sits at the top of. Three symbols do the work: ∀ means "for every", ∃ means "there is at least one", and ∧ means "and". Which formula says this?',
     options: [
       {
         t: '∀I  ∃M  ∀(c, s) ∈ M :  first(c, s) ∧ first(s, c)',
@@ -388,12 +424,13 @@ export const QUESTIONS: readonly Question[] = [
     kind: 'multi',
     tests: 'negating a statement with three quantifiers',
     quote: 'The statement is  ∀I  ∃M  ∃(c, s) ∈ M :  φ,  where φ is  first(c, s) ∧ first(s, c).',
-    prompt: 'Tick every correct negation. There is more than one.',
+    prompt:
+      'Two more symbols: ¬ means "it is not the case that", and φ is only a name for the long part at the end, so the shape of the sentence is easier to see. Tick every correct negation. There is more than one.',
     options: [
       {
         t: '∃I  ∀M  ¬(∃(c, s) ∈ M :  φ)',
         ok: true,
-        why: 'The negation one line before it is finished: the outer two quantifiers have turned over and the ¬ is still sitting where the last ∃ used to be. Correct as it stands, and one push away from the row below.',
+        why: 'The negation one line before it is finished: the outer two quantifiers have turned over and the ¬ is still sitting where the last ∃ used to be. Correct as it stands, and one push away from the finished form, ∃I ∀M ∀(c, s) ∈ M : ¬φ.',
       },
       {
         t: '∀I  ∃M  ∀(c, s) ∈ M :  ¬φ',
@@ -402,7 +439,7 @@ export const QUESTIONS: readonly Question[] = [
       {
         t: '∃I  ∀M  ∀(c, s) ∈ M :  ¬φ',
         ok: true,
-        why: 'The finished form, and the one to aim for: some instance, every stable matching of it, every pair in that matching. Pushing the ¬ through the last ∃ in the row above turns it into this.',
+        why: 'The finished form, and the one to aim for: some instance, every stable matching of it, every pair in that matching. Pushing the ¬ through the last ∃ in ∃I ∀M ¬(∃(c, s) ∈ M : φ) turns it into this.',
       },
       {
         t: '∃I  ∃M  ∀(c, s) ∈ M :  ¬φ',
@@ -464,7 +501,7 @@ export const QUESTIONS: readonly Question[] = [
       'first choice, so M does not include a pair (c, s) where c is ranked first\n' +
       'on the list of s and s is ranked first on the list of c."',
     prompt:
-      'The instance here is a good one and the conclusion drawn from it is right. What has the argument not shown?',
+      'Remember first(c, s) means c sits at the top of the list belonging to s. The instance here is a good one and the conclusion drawn from it is right. What has the argument not shown?',
     options: [
       {
         t: 'It checked one stable matching. The statement says some stable matching contains such a pair, so refuting it means ruling out every stable matching of the instance, and this one has two.',
@@ -602,7 +639,8 @@ export const QUESTIONS: readonly Question[] = [
     tier: 3,
     kind: 'choice',
     tests: 'the counting argument behind the running time',
-    prompt: 'With n on each side, at most how many questions can the process ask before it stops?',
+    prompt:
+      'With n on each side, what is the ceiling on how many questions the process can ask? Not the exact record, the number you can be sure it never passes.',
     options: [
       {
         t: 'n, because everybody asks once.',
@@ -632,7 +670,7 @@ export const QUESTIONS: readonly Question[] = [
     kind: 'choice',
     tests: 'what an O(n²) bound rests on besides the procedure',
     prompt:
-      'Every ask ends with a receiver comparing two names on its own list. Written the obvious way, with a scan of the list to find each name, the whole run costs O(n³). What brings it down to O(n²)?',
+      'When a receiver is already holding somebody, the ask ends with it comparing two names on its own list. Written the obvious way, it reads down its list each time to find them, and the whole run then costs about n times n times n units of work. Textbooks write that O(n³), and O(n²) for n times n. What brings this run down to O(n²)?',
     options: [
       {
         t: 'Sorting each preference list once at the start.',
@@ -662,7 +700,8 @@ export const QUESTIONS: readonly Question[] = [
     kind: 'proof',
     tests: 'the proof that the asking side does best',
     quote:
-      'Call a receiver r a valid partner of proposer p if some stable matching pairs them.\n' +
+      'Call a receiver r a valid partner of proposer p if there is at least one stable\n' +
+      'matching that puts them together. It need not be the one the process finds.\n' +
       'Claim: no proposer is ever rejected by a valid partner.',
     prompt: 'Build the proof.',
     steps: [
@@ -688,34 +727,34 @@ export const QUESTIONS: readonly Question[] = [
         lead: 'What the rejection gives you',
         options: [
           {
-            t: 'r rejected p because p had already been rejected by everybody above r on p′s list.',
+            t: 'r rejected p because p had already been rejected by everybody above r on p’s list.',
             why: 'That is why p was asking r at all, and it is not what the rejection tells you. What the rejection tells you is about r, not about p.',
           },
           {
-            t: 'r rejected p in favour of some p′ that r prefers, and let M be a stable matching pairing p with r.',
+            t: 'r rejected p in favour of some other proposer q that r prefers, and let M be a stable matching pairing p with r.',
             ok: true,
             why: 'A rejection only ever happens because the receiver holds somebody it likes better, and the definition of valid partner hands over the matching M. Both objects are now on the table.',
           },
           {
-            t: 'r rejected p because r is p′s last choice.',
+            t: 'r rejected p because r is p’s last choice.',
             why: 'Nothing in the process consults how the proposer ranks the receiver at the moment of a rejection. The receiver decides on its own list alone.',
           },
         ],
       },
       {
-        lead: 'What p′ prefers',
+        lead: 'What q prefers',
         options: [
           {
-            t: 'p′ prefers r to their own partner in M, because p′ has not yet been rejected by any valid partner, so every receiver p′ passed over on the way to r was not a valid partner for p′.',
+            t: 'q prefers r to their own partner in M, because q has not yet been rejected by any valid partner, so every receiver q passed over on the way to r was not a valid partner for q.',
             ok: true,
-            why: 'This is where "first" is spent. p′ is at r, so everything above r on their list has already rejected them, and none of those can have been a valid partner, because this is the first time in the whole run that a valid partner rejects anybody. So every valid partner of p′ is r or below it, and their partner in M is one of those.',
+            why: 'This is where "first" is spent. q is at r, so everything above r on their list has already rejected them, and none of those can have been a valid partner, because this is the first time in the whole run that a valid partner rejects anybody. So every valid partner of q is r or below it, and their partner in M is one of those.',
           },
           {
-            t: 'p′ prefers r to their own partner in M, because r is holding p′ and the process only ever improves a proposer′s position.',
-            why: 'The process improves the receiver′s position over time, never the proposer′s: a proposer moves down their own list and never back up. This has the direction of the argument backwards.',
+            t: 'q prefers r to their own partner in M, because r is holding q and the process only ever improves a proposer’s position.',
+            why: 'The process improves the receiver’s position over time, never the proposer’s: a proposer moves down their own list and never back up. This has the direction of the argument backwards.',
           },
           {
-            t: 'p′ prefers r to their own partner in M, because M is stable and stable matchings give everybody their first choice.',
+            t: 'q prefers r to their own partner in M, because M is stable and stable matchings give everybody their first choice.',
             why: 'Stable matchings do not give everybody their first choice. On the very first instance on this page, nobody gets everything they want and the arrangement still holds.',
           },
         ],
@@ -728,11 +767,11 @@ export const QUESTIONS: readonly Question[] = [
             why: 'p and r are matched to each other in M, and a pair that is already together cannot block. The blocking pair is the other one.',
           },
           {
-            t: 'Then M pairs p′ with r, which contradicts M pairing p with r.',
-            why: 'M pairs p′ with whoever it pairs them with; nothing said it pairs p′ with r. The contradiction is about stability, not about M contradicting itself.',
+            t: 'Then M pairs q with r, which contradicts M pairing p with r.',
+            why: 'M pairs q with whoever it pairs them with; nothing said it pairs q with r. The contradiction is about stability, not about M contradicting itself.',
           },
           {
-            t: 'Then p′ and r are a blocking pair in M: r prefers p′ to p, who is r′s partner in M, and p′ prefers r to their own partner in M. So M is not stable.',
+            t: 'Then q and r are a blocking pair in M: r prefers q to p, who is r’s partner in M, and q prefers r to their own partner in M. So M is not stable.',
             ok: true,
             why: 'Both halves of a blocking pair, each established by one of the two previous steps. M was chosen to be stable, so the assumption that started the proof is what has to go.',
           },
@@ -779,7 +818,7 @@ export const QUESTIONS: readonly Question[] = [
         why: 'The number can be exponential in n. Instances are known with roughly 2^(n/2) of them, which is why "find another one" is a different problem from "find one".',
       },
       {
-        t: 'A pair who are first on each other′s lists appears in every stable matching.',
+        t: 'A pair who are first on each other’s lists appears in every stable matching.',
         ok: true,
         why: 'Any matching that separates them is blocked by them: each would rather have the other than anybody, so both would switch. This is the converse of the tier 2 counterexample, which worked precisely because no such pair existed there.',
       },
@@ -798,7 +837,7 @@ export const QUESTIONS: readonly Question[] = [
       },
     ],
     close:
-      'The two runs are the top and the bottom of the whole set of stable matchings, not two samples from it. Everything in between is invisible to the algorithm, and the questions a problem set asks are usually about that in-between.',
+      'The two runs are the two far ends of the whole set of stable matchings: whichever side asks gets its best end, and the other side gets its worst end at the same moment. They are not two samples from the middle. Everything in between is invisible to the algorithm, and the questions a problem set asks are usually about that in-between.',
   },
 
   {
@@ -811,24 +850,24 @@ export const QUESTIONS: readonly Question[] = [
     options: [
       {
         t: 'Yes, by moving a school they are likely to get to the top of the list.',
-        why: 'Where a school sits on your own list only decides when you ask it. You are held or rejected on the school′s ranking, never on how eager you looked, so promoting a school makes you ask it earlier and be rejected earlier.',
+        why: 'Where a school sits on your own list only decides when you ask it. You are held or rejected on the school’s ranking, never on how eager you looked, so promoting a school makes you ask it earlier and be rejected earlier.',
       },
       {
         t: 'No, and the same holds for the schools.',
         why: 'The schools are on the receiving side, and they can gain. A school that truncates its list, refusing anybody below a cut, can end with a student it prefers. Real matching markets worry about the receiving side for exactly this reason.',
       },
       {
-        t: 'No. Submitting the true list is a dominant strategy for whoever proposes, whatever everybody else submits.',
+        t: 'No. Telling the truth is the best list to hand in for whoever proposes, no matter what anybody else hands in. That last part is what makes it a dominant strategy.',
         ok: true,
-        why: 'A theorem in its own right, due to Dubins and Freedman and independently to Roth, and it needs more than the previous question: a misreported list is stable for the profile that was reported rather than for the true one, so the step from there to the true valid partners has to be argued and not quoted. What it buys is dominance, which holds whatever anybody else submits.',
+        why: 'A theorem in its own right, due to Dubins and Freedman and independently to Roth, and it needs more than the previous question. A lie changes the whole problem: the run comes out stable for the lists that were handed in, not for the true ones, so getting from there back to a claim about what people really wanted has to be argued rather than quoted. What it buys is worth the work, because it holds whatever anybody else does.',
       },
       {
         t: 'Yes, but only for a student who knows what everybody else submitted.',
-        why: 'Knowing the other lists buys a proposer nothing here. The guarantee is not an equilibrium that depends on what others do, it is that no report beats the true one against any fixed behaviour of everybody else.',
+        why: 'Knowing the other lists buys a proposer nothing here. The guarantee does not depend on what anybody else does: no other list beats the true one, whatever the others turn out to be.',
       },
     ],
     close:
-      'Truth-telling is dominant for whoever asks and not for whoever is asked, and no stable mechanism makes it dominant for both sides at once. That is a theorem, not a gap in this particular algorithm.',
+      'Telling the truth is the best move for whoever asks and not for whoever is asked, and no process that always ends stable can make it the best move for both sides at once. That is a theorem, not a gap in this particular algorithm.',
   },
 
   {
@@ -858,7 +897,7 @@ export const QUESTIONS: readonly Question[] = [
       },
     ],
     close:
-      'Ties are the harder relaxation, and the next tier takes them seriously: one notion of a blocking pair splits into two, and only one of the two can always be avoided. The kind that can always be avoided is the one that then becomes hard to optimise: with ties and incomplete lists together, matchings with no strongly blocking pair can differ in size, and finding a largest one is NP-hard. Strictness is not a convenience, it is what makes the single clean answer exist.',
+      'Ties are the harder relaxation, and the next tier takes them seriously: one notion of a blocking pair splits into two, and only one of the two can always be avoided. Strictness is not a convenience, it is what makes the single clean answer exist.',
   },
 
   // ---------------------------------------------------------------------------
@@ -874,7 +913,7 @@ export const QUESTIONS: readonly Question[] = [
     kind: 'choice',
     tests: 'choosing the quantity that bounds a loop',
     prompt:
-      'The proof that the process stops needs a quantity that strictly increases at every step and cannot pass a ceiling. Which of these is one?',
+      'The proof that the process stops needs a quantity that goes up by at least one with every question asked, and cannot pass a ceiling. Which of these is one?',
     options: [
       {
         t: 'The number of people who are currently free.',
@@ -891,7 +930,7 @@ export const QUESTIONS: readonly Question[] = [
       },
       {
         t: 'How far down their own list each asker has reached.',
-        why: 'This is n numbers rather than one, and it is the right idea half-finished: add them up and you have exactly the quantity in the option above, since how far the askers have collectively reached is how many questions have been asked. Left as a list of n numbers it bounds nothing, because no single one of them has to move at any given step.',
+        why: 'This is n numbers rather than one, and it is the right idea half-finished: add them up and you have exactly the count of pairs already asked, since how far the askers have collectively reached is how many questions have been asked. Left as a list of n numbers it bounds nothing, because no single one of them has to move when a question is asked.',
       },
     ],
     close:
@@ -916,13 +955,13 @@ export const QUESTIONS: readonly Question[] = [
             why: 'A separate theorem with a separate proof, and this one needs it: stopping and stopping in a good state are different claims, and a process could perfectly well stop with somebody left over.',
           },
           {
-            t: 'That every asker ends matched, so the result is a perfect matching.',
+            t: 'That every asker ends matched, so the result is a perfect matching, the textbook name for one where nobody is left out.',
             ok: true,
             why: 'The whole claim, and what makes it worth proving is that the loop exits when no asker is free, which does not by itself say that nobody ran out of list.',
           },
           {
             t: 'That every asker ends with the best person who did not turn them away.',
-            why: 'They end with the last person they asked, which is the worst of those who did not turn them away. True or false, it is not what perfect means.',
+            why: 'They end with the last person they asked, which is the worst of those who did not turn them away. True or false, it is not what perfect means, which is only that nobody is left out.',
           },
         ],
       },
@@ -1007,11 +1046,11 @@ export const QUESTIONS: readonly Question[] = [
       },
       {
         t: 'Because a good student ranks every good school above every bad one, so they would never accept a bad school.',
-        why: 'Nobody accepts or declines anything in a matching: a matching is a pairing, and stability is the only constraint on it. People end up low on their own list all the time when nobody better wants them.',
+        why: 'A matching is just a list of who is with whom, with nobody asking and nobody answering. The process has accepting and turning away in it; an arrangement on its own does not, and stability is the only test it has to pass. People end up low on their own list all the time when nobody better wants them.',
       },
       {
         t: 'It is false. With k = 1 the single good student can end up with the single bad school.',
-        why: 'Try it. If the one good student had a bad school, the one good school would have a bad student, and those two are each other first choice. The pair blocks, so no such matching is stable.',
+        why: "Try it. If the one good student had a bad school, the one good school would have a bad student, and those two are each other's first choice. The pair blocks, so no such matching is stable.",
       },
     ],
     close:
@@ -1031,7 +1070,7 @@ export const QUESTIONS: readonly Question[] = [
         why: 'Last is still acceptable. A matching that pairs a forbidden couple is not a bad matching, it is not a matching at all, and no ranking can express that difference.',
       },
       {
-        t: 'People can end up matched to nobody, so stability grows three more cases: an unmatched person somebody prefers, on either side, and two unmatched people who are allowed each other.',
+        t: 'People can end up matched to nobody, so stability grows three more cases: a matched student who would rather have some unmatched school than the one they have, a matched school who would rather have some unmatched student, and two people who both ended with nobody and are allowed each other.',
         ok: true,
         why: 'A stable matching no longer has to be perfect, and once it need not be, the definition has to say what an unmatched person can complain about. The process itself changes by one word: keep asking while there is a free asker who has not asked everybody they are allowed to.',
       },
@@ -1065,7 +1104,7 @@ export const QUESTIONS: readonly Question[] = [
         why: 'The students set aside are exactly where the instability would live. One of them may be preferred by a hospital to somebody it took, and the definition has a case for precisely that.',
       },
       {
-        t: 'Each hospital holds its q best askers so far instead of one, and stability gains a case for unmatched students. A stable assignment always exists.',
+        t: 'Students ask, and each hospital with q posts holds its q best askers so far instead of just one. Stability gains a case for students who end with nothing, and a stable assignment always exists.',
         ok: true,
         why: 'A hospital with q posts is q hospitals with one post and the same list, so splitting it turns the variant into the ordinary problem and the ordinary proofs come along unchanged. Holding q at a time is how that is implemented rather than a different algorithm.',
       },
@@ -1108,7 +1147,7 @@ export const QUESTIONS: readonly Question[] = [
       },
     ],
     close:
-      'Ties are the expensive relaxation, and the cost lands on the notion that survives. Matchings with no strongly blocking pair always exist, and once lists may also be incomplete they can differ in size, at which point finding a largest one is NP-hard. The other notion is the opposite: a matching with no weakly blocking pair need not exist at all, and when one does it can be found in polynomial time. That is why every clean statement on this page begins by assuming strict and complete lists.',
+      'Ties are the expensive relaxation, and the cost lands on the notion that survives. Matchings with no strongly blocking pair always exist, and once lists may also be incomplete they can differ in size, at which point finding a largest one is NP-hard, meaning it is one of the problems nobody knows how to solve quickly. The other notion is the opposite: a matching with no weakly blocking pair need not exist at all, and when one does exist it can be found quickly, with the work growing like a power of n rather than doubling with each extra person. That is why every clean statement on this page begins by assuming strict and complete lists.',
   },
 ];
 

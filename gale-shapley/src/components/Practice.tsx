@@ -111,6 +111,44 @@ function breakage(instance: Instance, pairs: Readonly<Record<string, string>>): 
   );
 }
 
+/**
+ * The lists the question is about, printed above it.
+ *
+ * The panel replaces the board rather than sitting under it, which is the right
+ * call for working a run by hand and leaves nothing else on screen carrying the
+ * preferences. Without this, "where does everybody end up" has no answer the
+ * reader could reach: they would be guessing at lists they have never seen.
+ * Read off the instance, so editing a list moves the question and the lists it
+ * prints together.
+ */
+function Lists({ instance }: { readonly instance: Instance }) {
+  const schoolName = (id: string) => instance.schools.find((c) => c.id === id)?.name ?? id;
+  const studentName = (id: string) => instance.students.find((sn) => sn.id === id)?.name ?? id;
+
+  return (
+    <div className="qlists">
+      <div className="qlists__col">
+        <h3 className="qlists__cap">Each student wants, best first</h3>
+        {instance.students.map((student) => (
+          <p className="qlists__row" key={student.id}>
+            <span className="qlists__who">{student.name}</span>
+            <span className="qlists__order">{student.prefs.map(schoolName).join('  >  ')}</span>
+          </p>
+        ))}
+      </div>
+      <div className="qlists__col">
+        <h3 className="qlists__cap">Each school wants, best first</h3>
+        {instance.schools.map((school) => (
+          <p className="qlists__row" key={school.id}>
+            <span className="qlists__who">{school.name}</span>
+            <span className="qlists__order">{school.prefs.map(studentName).join('  >  ')}</span>
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function pairsLine(instance: Instance, pairs: Readonly<Record<string, string>>): string {
   return instance.students
     .map((s) => {
@@ -582,6 +620,7 @@ export function Practice({ onLeave }: PracticeProps) {
           <p className="qtests">Testing: {question.tests}</p>
           <h2 className="qprompt">{question.prompt}</h2>
           {question.quote ? <pre className="qquote">{question.quote}</pre> : null}
+          {question.instanceId ? <Lists instance={presetById(question.instanceId)} /> : null}
           <p className="qlead">{view.lead}</p>
 
           {view.body}
@@ -643,7 +682,7 @@ export function Practice({ onLeave }: PracticeProps) {
 
       <aside className="practice__side">
         <div>
-          <span className="practice__cap">Three tiers</span>
+          <span className="practice__cap">Four tiers</span>
           <div className="tierpick">
             {TIERS.map((t) => (
               <button
@@ -705,7 +744,7 @@ export function Practice({ onLeave }: PracticeProps) {
         ) : null}
 
         <p className="practice__back">
-          {QUESTIONS.length} questions, on instances you can work by hand.
+          {QUESTIONS.length} questions, on lists you can work by hand.
           <button type="button" onClick={onLeave}>
             Back to the walkthrough
           </button>

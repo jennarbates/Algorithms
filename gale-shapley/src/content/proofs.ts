@@ -132,6 +132,10 @@ export const CLAIMS: readonly Claim[] = [
         { term: 'terminates', replaces: 'finishes' },
         { term: 'proposal', replaces: 'a question, an ask' },
         { term: 'proposer', replaces: 'whoever is doing the asking' },
+        {
+          term: 'cursor',
+          replaces: 'how far down their own list they have got',
+        },
         { term: 'monotone', replaces: 'only ever moves one way' },
         { term: 'n', replaces: 'how many people are on each side' },
       ],
@@ -142,7 +146,7 @@ export const CLAIMS: readonly Claim[] = [
     title: 'Nobody is left out',
     plain: {
       claim:
-        'Nobody ever runs out of list, because the only way to run out is to have asked everyone, and everyone who has been asked is holding somebody.',
+        'Nobody ever runs out of list, because the only way to run out is to have asked everyone, everyone who has been asked is holding somebody, and there are not enough people to go round for that to leave anybody over.',
       sketch: (side) => {
         const r = roles(side);
         return `Once a ${r.asked} has been asked by anyone, ${r.itIsA} holding somebody, and ${r.itNeverGoesA} back to holding nobody: the only thing that ever changes is a swap for somebody ${r.itLikesA} better. So if a ${r.asker} had asked every ${r.asked}, every ${r.asked} would be holding somebody. That is as many ${r.askers} held as there are ${r.askeds}, which is as many as there are ${r.askers}. This ${r.asker} would have to be one of them.`;
@@ -166,7 +170,8 @@ export const CLAIMS: readonly Claim[] = [
     id: 'holds',
     title: 'It holds',
     plain: {
-      claim: 'For any two who are not together, at least one of them is happy where they are.',
+      claim:
+        'For any two who are not together, at least one of them would rather stay where they are than go to the other.',
       sketch: (side) => {
         const r = roles(side);
         return `Take any ${r.asker} and any ${r.asked} that did not end up together, where the ${r.asker} would rather have that ${r.asked}. Then the ${r.asker} asked that ${r.asked} at some point, because ${r.they} walked down ${r.their} list past that name to get where ${r.theyAre}. From that first ask on, the ${r.asked} was holding somebody, and only ever swapped for somebody ${r.itLikedA} better. So whoever the ${r.asked} has at the end, ${r.itLikesA} them better than this ${r.asker}. The ${r.asked} does not want them back. It takes two, and there is only one.`;
@@ -179,10 +184,16 @@ export const CLAIMS: readonly Claim[] = [
       terms: [
         { term: 'matching', replaces: 'who ended up with whom' },
         { term: 'stable', replaces: 'holds, cannot be broken' },
-        { term: 'blocking pair', replaces: 'two people who would both rather have each other' },
+        {
+          term: 'blocking pair',
+          replaces: 'two people who would both rather have each other',
+        },
         { term: 'proposer', replaces: 'whoever is doing the asking' },
         { term: 'receiver', replaces: 'whoever is being asked' },
-        { term: 'invariant', replaces: 'something that stays true the whole way through' },
+        {
+          term: 'invariant',
+          replaces: 'something that stays true the whole way through',
+        },
       ],
     },
   },
@@ -283,13 +294,13 @@ export const LEFT_OUT = {
 // ---------------------------------------------------------------------------
 
 export const HOLDS = {
-  pick: 'Pick a student and a school who did not end up together. These are the same pickers as in Try to break it above, and a pick there is a pick here.',
+  pick: 'Pick a student and a school who did not end up together. These are the same pickers as in Try to break it above, so whoever you pick here is picked up there too.',
   empty: 'Pick one of each to replay what happened between them.',
   together: 'These two already have each other. Pick two who do not.',
   /** The asker likes where they ended up at least as much: nothing to replay. */
   askerContent: (asker: string, asked: string, endedWith: string, side: Side) => {
     const r = roles(side);
-    return `${asker} ended up with ${endedWith}, and puts ${endedWith} above ${asked} on ${r.their} own list. So ${asker} does not want ${asked}. That is not a pair that could break anything: it takes two, and this one does not even have one.`;
+    return `${asker} ended up with ${endedWith}, and puts ${endedWith} above ${asked} on ${r.their} own list. So ${asker} does not want ${asked}. That is not a pair that could break anything: it takes two who both want to move, and here neither one does.`;
   },
   /** Beat one: the ask had to happen. */
   beatOneTitle: (asker: string, asked: string) => `${asker} must have asked ${asked}.`,
