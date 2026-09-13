@@ -243,6 +243,32 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .qnum.right input{border-color:var(--roof);background:var(--roof-soft);color:var(--roof)}
 .qnum.wrong input{border-color:var(--fall);background:var(--fall-soft);color:var(--fall)}
 
+/* witness pair. Two boxes rather than one, because the definition hands out two
+   numbers and a reader who has only ever been asked for n0 comes away thinking c
+   was chosen for them. The pair is judged together: neither box is right alone. */
+.qwit{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px;margin-bottom:4px}
+.wcell{display:flex;gap:8px;align-items:center}
+.wcell input{font:inherit;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:16px;
+  font-weight:600;width:96px;padding:8px 12px;border:1px solid var(--line);border-radius:9px;
+  background:var(--paper);color:var(--ink)}
+.wcell input:focus{outline:2px solid var(--brass);outline-offset:1px}
+.qwit.right input{border-color:var(--roof);background:var(--roof-soft);color:var(--roof)}
+.qwit.wrong input{border-color:var(--fall);background:var(--fall-soft);color:var(--fall)}
+.qwit .join{font-size:12.5px;color:var(--ink2)}
+
+/* proof. One block per line of the argument, each with its own candidates, so the
+   reader writes the proof rather than recognising a finished one. The rule reads
+   down the left edge: green where the line holds, red where the argument breaks. */
+.qproof{display:flex;flex-direction:column;gap:15px;max-width:72ch}
+.pstep{border-left:2px solid var(--line);padding-left:13px}
+.pstep.right{border-color:var(--roof)}
+.pstep.wrong{border-color:var(--fall)}
+.phead{display:flex;gap:9px;align-items:baseline;margin-bottom:7px}
+.pnum{font-size:9.5px;letter-spacing:.1em;color:var(--ink2);font-variant-numeric:tabular-nums;flex:0 0 auto}
+.plead{font-size:12.5px;font-weight:600;color:var(--ink2);letter-spacing:.01em}
+.qproof .qopts{max-width:none}
+.qproof .opt .txt{font-size:13.5px}
+
 /* the closing note: what the question was really about, once it has been answered */
 .verdict{margin-top:15px;max-width:68ch;border-left:3px solid var(--line);padding:1px 0 1px 13px}
 .verdict.ok{border-color:var(--roof)} .verdict.no{border-color:var(--fall)}
@@ -256,8 +282,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .qside{display:flex;flex-direction:column;min-height:0;gap:12px}
 .qside .cap{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);
   display:block;margin-bottom:6px}
-.tierpick{display:flex;gap:6px}
-.tierpick button{flex:1 1 0;font-size:12.5px;padding:7px 6px;background:transparent;color:var(--ink);
+.tierpick{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tierpick button{font-size:12.5px;padding:7px 6px;background:transparent;color:var(--ink);
   border:1px solid var(--line);font-weight:600}
 .tierpick button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .qmap{display:flex;flex-wrap:wrap;gap:5px}
@@ -661,10 +687,12 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 
     <aside class="side qside">
       <div>
-        <span class="cap">Two tiers</span>
+        <span class="cap">Four tiers</span>
         <div class="tierpick">
           <button id="tier-1" class="on">1 &middot; the definition</button>
           <button id="tier-2">2 &middot; using it</button>
+          <button id="tier-3">3 &middot; on paper</button>
+          <button id="tier-4">4 &middot; textbook</button>
         </div>
       </div>
       <div>
@@ -1784,6 +1812,70 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 
   const BANK = [
     // ---------------- tier 1: the definition, on the page's own example ----------------
+
+    { tier:1, kind:'choice', step:0,
+      tests:'what a bound promises',
+      prompt:'An algorithm’s running time is T(n) = O(n²). Which of these follows?',
+      options:[
+        { t:'On an input of size 1000 it takes about 1,000,000 steps.',
+          why:'Big-O carries no scale. c is unnamed and could be 0.001 or 5000, and nothing says T(n) gets anywhere near the ceiling: the constant function T(n) = 6 is O(n²) as well.' },
+        { t:'It is slower than an O(n) algorithm on large inputs.',
+          why:'Two faults at once. O(n²) is only a ceiling, so this algorithm might really be O(n) as well. And even with true growth rates, constants decide real inputs: 1000n loses to n² only once n passes 1000.' },
+        { t:'It takes at least some fixed multiple of n² steps.',
+          why:'That is a floor, which is Ω, not O. Big-O bounds from above only. A claim that does both at once is Θ.' },
+        { t:'Past some n₀ its step count stays under a fixed multiple of n². Nothing more.', ok:true,
+          why:'That is the entire content of the claim. Some c exists, some n₀ exists, and past n₀ the ceiling holds. No promise about seconds, none about small inputs, and none that T(n) is close to n².' }
+      ],
+      close:'Big-O is an existence claim about two functions. Everything people usually want from it, speed, tightness, worst case, has to be asked for separately.' },
+
+    { tier:1, kind:'choice', step:7,
+      tests:'what multiplying by c does',
+      prompt:'Multiplying f(n) by a larger constant does what to its curve?',
+      options:[
+        { t:'Shifts it up by c.',
+          why:'That is f(n) + c, not c·f(n). Adding lifts every point by the same amount. Multiplying lifts each point in proportion to how high it already is, which is why the effect grows with n and why it can catch a curve that is pulling away.' },
+        { t:'Stretches it vertically about the n axis. The shape is untouched.', ok:true,
+          why:'That is the whole mechanism of the definition. c is a vertical stretch and nothing else. It cannot bend a curve, move where it is steep, or change which function eventually wins. All it can do is lift the whole thing until it clears T(n) from some point on.' },
+        { t:'Makes it grow faster, so a big enough c can make c·n² overtake n³.',
+          why:'No c does that. c·n² ≥ n³ rearranges to c ≥ n, which fails the moment n passes c. Growth rate belongs to the shape, and constants cannot touch it. That is exactly why Big-O is free to ignore them.' },
+        { t:'Moves it rightward, so the crossing happens later.',
+          why:'Raising c moves the crossing earlier, and it moves nothing sideways. Compare c = 15 with n₀ = 5 against c = 18 with n₀ = 1: more constant, earlier crossing.' }
+      ],
+      close:'The constant is a lift, not an accelerator. Everything Big-O forgives, it forgives because a lift is all c can do.' },
+
+    { tier:1, kind:'choice', step:6,
+      tests:'what height means in the drawing',
+      prompt:'In the opening steps 14n², 4n and 6 all stand level on the roof, even though 14n² dwarfs 6. Later n² is sent to the basement for being too small. What changed?',
+      options:[
+        { t:'Nothing changed. The drawing is inconsistent.',
+          why:'It would be, if the roof meant one thing throughout. It does not, and the page says so rather than leaving you to notice: the meaning switches once, and the switch is what the next option describes.' },
+        { t:'The roof always meant "at or above T(n)", and putting 6 up there was a slip.',
+          why:'Then 4n and 6 would never have been on the roof at all. But the opening steps are about naming the parts of T(n), and 6 is one of them. Membership, not size.' },
+        { t:'n grew, so 6 stopped being a term of T(n).',
+          why:'6 is a term of T(n) at every n. Nothing about T(n) changes when n grows. What changes is only which term dominates the sum, and that is a fact about the sum, not about the terms.' },
+        { t:'Height first meant "is a term of T(n)". Once the chips come back up as c·f(n) it means "is at or above T(n)".',
+          ok:true,
+          why:'Under the first reading n² would belong on the roof, since it is part of the leading term. Under the second it does not, because n² alone is below T(n) at every n. The two readings genuinely contradict each other, which is why naming the switch is not optional.' }
+      ],
+      close:'Two different questions wear the same picture: what is T(n) made of, and what sits above T(n). Keeping them apart is most of what the definition asks you to hold.' },
+
+    { tier:1, kind:'choice', step:3,
+      tests:'why the small terms can be dropped',
+      given:'T(n) = 14n² + 4n + 6',
+      prompt:'Why is it legitimate to leave 4n + 6 out of the name of the bound?',
+      options:[
+        { t:'Because 4n + 6 becomes negligibly small.',
+          why:'It does not become small. At n = 1000 it is 4006, and it grows without limit. What shrinks is its share of T(n), and a small share is not a small number. 14n² alone falls short of T(n) by exactly 4n + 6, at every n, forever.' },
+        { t:'Because Big-O ignores lower order terms by definition.',
+          why:'The definition never mentions terms. It says some c and some n₀ exist with T(n) ≤ c·f(n) past n₀. Dropping lower order terms is something you derive from that, not a rule written into it, and treating it as a rule is exactly what makes c = 14 look reasonable.' },
+        { t:'Because a constant can be raised to cover them: one more unit of c buys a whole n², which outgrows 4n + 6 from n = 6.',
+          ok:true,
+          why:'This is a payment, not a dismissal. The terms are still there and still positive. What makes them droppable from the name is that the constant, which the definition hands you for free, is large enough to absorb them.' },
+        { t:'Because 4n + 6 is smaller than 14n² at every n.',
+          why:'True, and not sufficient. 14n² is also smaller than T(n) at every n, which is precisely why 14n² is not a bound. Being the smaller part of a sum is no licence to delete it.' }
+      ],
+      close:'The terms are outgrown, not killed. What lets you stop naming them is the constant, and that is why c = 15 and not 14.' },
+
     { tier:1, kind:'choice', step:3,
       tests:'what the constant has to cover',
       given:'T(n) = 14n² + 4n + 6,  f(n) = n²',
@@ -1835,6 +1927,18 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       why:'18n² ≥ 14n² + 4n + 6 is 4n² − 4n − 6 ≥ 0, which is true from n = 2 on (at n = 2 it is 16 − 8 − 6 = 2). So the last failing n is 1, and n₀ = 1.',
       close:'c and n₀ trade against each other: 15 needs n₀ = 5, 16 needs 2, 18 needs 1, and c = 50 needs no n₀ at all. Every one of those pairs is an equally good witness that T(n) = O(n²).' },
 
+    { tier:1, kind:'order', step:8,
+      tests:'which crossings actually happen',
+      prompt:'Put these in order of eventual size, smallest first. Eventual means: once n is large enough that the order stops changing.',
+      items:[
+        { t:'6',        why:'A constant. It never grows, so everything else passes it and nothing ever falls back below it.' },
+        { t:'4n + 6',   why:'Linear. The + 6 is invisible to the ordering, because a constant added to a growing function stops mattering to which is bigger.' },
+        { t:'n²',       why:'Quadratic, and it passes 4n + 6 at n = 5.16. That crossing is where n₀ = 5 comes from: the moment the shape outgrows the terms that were dropped.' },
+        { t:'14n²',     why:'Fourteen times n², so it sits above n² at every n and the ranking is safe. But it never pulls away: 14n² / n² is 14 forever, so these two are the same growth class, ordered here only by size.' },
+        { t:'n³',       why:'Cubic, and it reaches 14n² at exactly n = 14, where both are 2744, then leaves it behind. The constant 14 buys fourteen values of n and not one more.' }
+      ],
+      close:'Two of these, n² and 14n², are the same growth class: a constant separates them and nothing else. n³ and 14n² are not, and that difference is the only one Big-O can see.' },
+
     { tier:1, kind:'multi', step:8,
       tests:'how many bounds are true at once',
       given:'T(n) = 14n² + 4n + 6',
@@ -1855,100 +1959,54 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       ],
       close:'Four of these are true at the same time about the same function, because Big-O asks whether a ceiling exists and never which ceiling is lowest.' },
 
-    { tier:1, kind:'choice', step:6,
-      tests:'what height means in the drawing',
-      prompt:'In the opening steps 14n², 4n and 6 all stand level on the roof, even though 14n² dwarfs 6. Later n² is sent to the basement for being too small. What changed?',
-      options:[
-        { t:'Nothing changed. The drawing is inconsistent.',
-          why:'It would be, if the roof meant one thing throughout. It does not, and the page says so rather than leaving you to notice: the meaning switches once, and the switch is what the next option describes.' },
-        { t:'The roof always meant "at or above T(n)", and putting 6 up there was a slip.',
-          why:'Then 4n and 6 would never have been on the roof at all. But the opening steps are about naming the parts of T(n), and 6 is one of them. Membership, not size.' },
-        { t:'n grew, so 6 stopped being a term of T(n).',
-          why:'6 is a term of T(n) at every n. Nothing about T(n) changes when n grows. What changes is only which term dominates the sum, and that is a fact about the sum, not about the terms.' },
-        { t:'Height first meant "is a term of T(n)". Once the chips come back up as c·f(n) it means "is at or above T(n)".',
-          ok:true,
-          why:'Under the first reading n² would belong on the roof, since it is part of the leading term. Under the second it does not, because n² alone is below T(n) at every n. The two readings genuinely contradict each other, which is why naming the switch is not optional.' }
-      ],
-      close:'Two different questions wear the same picture: what is T(n) made of, and what sits above T(n). Keeping them apart is most of what the definition asks you to hold.' },
-
-    { tier:1, kind:'choice', step:7,
-      tests:'what multiplying by c does',
-      prompt:'Multiplying f(n) by a larger constant does what to its curve?',
-      options:[
-        { t:'Shifts it up by c.',
-          why:'That is f(n) + c, not c·f(n). Adding lifts every point by the same amount. Multiplying lifts each point in proportion to how high it already is, which is why the effect grows with n and why it can catch a curve that is pulling away.' },
-        { t:'Stretches it vertically about the n axis. The shape is untouched.', ok:true,
-          why:'That is the whole mechanism of the definition. c is a vertical stretch and nothing else. It cannot bend a curve, move where it is steep, or change which function eventually wins. All it can do is lift the whole thing until it clears T(n) from some point on.' },
-        { t:'Makes it grow faster, so a big enough c can make c·n² overtake n³.',
-          why:'No c does that. c·n² ≥ n³ rearranges to c ≥ n, which fails the moment n passes c. Growth rate belongs to the shape, and constants cannot touch it. That is exactly why Big-O is free to ignore them.' },
-        { t:'Moves it rightward, so the crossing happens later.',
-          why:'Raising c moves the crossing earlier, and it moves nothing sideways. Compare c = 15 with n₀ = 5 against c = 18 with n₀ = 1: more constant, earlier crossing.' }
-      ],
-      close:'The constant is a lift, not an accelerator. Everything Big-O forgives, it forgives because a lift is all c can do.' },
-
-    { tier:1, kind:'choice', step:0,
-      tests:'what a bound promises',
-      prompt:'An algorithm’s running time is T(n) = O(n²). Which of these follows?',
-      options:[
-        { t:'On an input of size 1000 it takes about 1,000,000 steps.',
-          why:'Big-O carries no scale. c is unnamed and could be 0.001 or 5000, and nothing says T(n) gets anywhere near the ceiling: the constant function T(n) = 6 is O(n²) as well.' },
-        { t:'It is slower than an O(n) algorithm on large inputs.',
-          why:'Two faults at once. O(n²) is only a ceiling, so this algorithm might really be O(n) as well. And even with true growth rates, constants decide real inputs: 1000n loses to n² only once n passes 1000.' },
-        { t:'It takes at least some fixed multiple of n² steps.',
-          why:'That is a floor, which is Ω, not O. Big-O bounds from above only. A claim that does both at once is Θ.' },
-        { t:'Past some n₀ its step count stays under a fixed multiple of n². Nothing more.', ok:true,
-          why:'That is the entire content of the claim. Some c exists, some n₀ exists, and past n₀ the ceiling holds. No promise about seconds, none about small inputs, and none that T(n) is close to n².' }
-      ],
-      close:'Big-O is an existence claim about two functions. Everything people usually want from it, speed, tightness, worst case, has to be asked for separately.' },
-
-    { tier:1, kind:'choice', step:3,
-      tests:'why the small terms can be dropped',
-      given:'T(n) = 14n² + 4n + 6',
-      prompt:'Why is it legitimate to leave 4n + 6 out of the name of the bound?',
-      options:[
-        { t:'Because 4n + 6 becomes negligibly small.',
-          why:'It does not become small. At n = 1000 it is 4006, and it grows without limit. What shrinks is its share of T(n), and a small share is not a small number. 14n² alone falls short of T(n) by exactly 4n + 6, at every n, forever.' },
-        { t:'Because Big-O ignores lower order terms by definition.',
-          why:'The definition never mentions terms. It says some c and some n₀ exist with T(n) ≤ c·f(n) past n₀. Dropping lower order terms is something you derive from that, not a rule written into it, and treating it as a rule is exactly what makes c = 14 look reasonable.' },
-        { t:'Because a constant can be raised to cover them: one more unit of c buys a whole n², which outgrows 4n + 6 from n = 6.',
-          ok:true,
-          why:'This is a payment, not a dismissal. The terms are still there and still positive. What makes them droppable from the name is that the constant, which the definition hands you for free, is large enough to absorb them.' },
-        { t:'Because 4n + 6 is smaller than 14n² at every n.',
-          why:'True, and not sufficient. 14n² is also smaller than T(n) at every n, which is precisely why 14n² is not a bound. Being the smaller part of a sum is no licence to delete it.' }
-      ],
-      close:'The terms are outgrown, not killed. What lets you stop naming them is the constant, and that is why c = 15 and not 14.' },
-
-    { tier:1, kind:'order', step:8,
-      tests:'which crossings actually happen',
-      prompt:'Put these in order of eventual size, smallest first. Eventual means: once n is large enough that the order stops changing.',
-      items:[
-        { t:'6',        why:'A constant. It never grows, so everything else passes it and nothing ever falls back below it.' },
-        { t:'4n + 6',   why:'Linear. The + 6 is invisible to the ordering, because a constant added to a growing function stops mattering to which is bigger.' },
-        { t:'n²',       why:'Quadratic, and it passes 4n + 6 at n = 5.16. That crossing is where n₀ = 5 comes from: the moment the shape outgrows the terms that were dropped.' },
-        { t:'14n²',     why:'Fourteen times n², so it sits above n² at every n and the ranking is safe. But it never pulls away: 14n² / n² is 14 forever, so these two are the same growth class, ordered here only by size.' },
-        { t:'n³',       why:'Cubic, and it reaches 14n² at exactly n = 14, where both are 2744, then leaves it behind. The constant 14 buys fourteen values of n and not one more.' }
-      ],
-      close:'Two of these, n² and 14n², are the same growth class: a constant separates them and nothing else. n³ and 14n² are not, and that difference is the only one Big-O can see.' },
-
     // ---------------- tier 2: the same definition, on functions the page never drew ------
-    { tier:2, kind:'multi',
-      tests:'which rewrites are legal',
-      prompt:'Tick every true statement.',
+
+    { tier:2, kind:'choice',
+      tests:'what O(1) claims',
+      prompt:'A lookup is O(1). Which is true?',
       options:[
-        { t:'2ⁿ⁺¹ = O(2ⁿ)', ok:true,
-          why:'2ⁿ⁺¹ is 2·2ⁿ, so c = 2 and n₀ = 0 settle it. An offset in the exponent is a constant factor in disguise.' },
-        { t:'2²ⁿ = O(2ⁿ)',
-          why:'2²ⁿ is 4ⁿ, and 4ⁿ / 2ⁿ is 2ⁿ, which passes every fixed c. A factor in the exponent changes the base, and no constant survives that.' },
-        { t:'log(n²) = O(log n)', ok:true,
-          why:'log(n²) = 2 log n, so c = 2 works. This is also why nobody writes the base of a logarithm inside Big-O: changing base only multiplies by a constant.' },
-        { t:'(log n)² = O(log n)',
-          why:'(log n)² / log n is log n, which is unbounded. Squaring the logarithm is not taking the logarithm of a square, and those two sit either side of this line.' },
-        { t:'n! = O(nⁿ)', ok:true,
-          why:'n! is a product of n factors, each at most n, so n! ≤ nⁿ with c = 1 and n₀ = 0.' },
-        { t:'nⁿ = O(n!)',
-          why:'nⁿ / n! passes any constant: it is about 2756 at n = 10 and about 4·10⁷ at n = 20. Which is what makes the statement above it a real, one-directional bound.' }
+        { t:'Its cost stops depending on n. The fixed cost can still be large, and it can still vary from call to call.',
+          ok:true,
+          why:'O(1) says a constant ceiling exists: some c with T(n) ≤ c for all large n. It does not say the cost is one step, that it is the same every time, or that it is small.' },
+        { t:'It takes one step.',
+          why:'O(1) means bounded by a constant, and the constant is never named. A routine that always takes 40,000 steps is O(1).' },
+        { t:'It is faster than any O(log n) operation.',
+          why:'Not on any input you will ever run. An O(1) with a constant of 40,000 loses to an O(log n) with a constant of 1 until log n passes 40,000. Asymptotic claims compare shapes, not runs.' },
+        { t:'It always takes the same amount of time.',
+          why:'A bound is not a measurement. A lookup that takes anywhere between 1 and 500 steps depending on collisions is still O(1), because 500 is a constant.' }
       ],
-      close:'Constants are forgiven anywhere they behave like constants. Inside an exponent they do not, which is the one place this intuition breaks.' },
+      close:'Every Big-O class has this shape. The class names how the cost responds to n, and says nothing at all about how big the cost is.' },
+
+    { tier:2, kind:'choice', step:0,
+      tests:'what Big-O is a statement about',
+      prompt:'True or false: Big-O means the worst case.',
+      options:[
+        { t:'True. O is the worst case and Ω is the best case.',
+          why:'This welds together two unrelated distinctions. O and Ω are upper and lower bounds on one chosen function. Worst and best case are different choices of which function to bound. You can put a lower bound on the worst case, and that is exactly what a proof that comparison sorting is Ω(n log n) does.' },
+        { t:'False. Big-O bounds a function, and which function you chose to bound is a separate decision.', ok:true,
+          why:'Worst case, best case and average case are three different functions of n. Each can be bounded above, so quicksort’s worst case is O(n²) and its best case is O(n log n), and both are Big-O statements. Nothing in the definition mentions cases at all.' },
+        { t:'True, because Big-O takes the maximum over all inputs of that size.',
+          why:'The definition contains no maximum and no inputs, only two functions of n. Taking the maximum over inputs of size n is what produces the worst case function, before any bound has been applied to it.' },
+        { t:'False, because Big-O is about the average case.',
+          why:'It is about neither on its own. Big-O is silent on which case you picked, which is why the case has to be stated alongside it.' }
+      ],
+      close:'Two independent choices get collapsed into one all the time: which function you are describing, and which side you are bounding it from.' },
+
+    { tier:2, kind:'choice',
+      tests:'dividing against decrementing',
+      code:'k = n\nwhile k > 1:\n    k = k // 2\n    step()',
+      prompt:'What is the tightest bound on the number of step() calls?',
+      options:[
+        { t:'O(n)',
+          why:'That is the count if k went down by one each pass. Dividing is the whole difference: n = 1000 takes nine passes, not a thousand.' },
+        { t:'O(log₂ n), and the base matters here.',
+          why:'The count really is log₂ n, but inside Big-O the base folds into c, because log₂ n = log n / log 2. Taking thirds instead of halves changes the count by a factor of about 1.58, and no Big-O statement can see a factor.' },
+        { t:'O(log n)', ok:true,
+          why:'Each pass halves k, so after t passes k is about n / 2ᵗ, and the loop ends when that reaches 1. That makes t about log₂ n: nine passes for n = 1000.' },
+        { t:'O(1), since the loop body is a single operation.',
+          why:'The body is O(1). The loop is not. The bound counts how many times the body runs, and that still depends on n, just very slowly.' }
+      ],
+      close:'What a loop does to its counter decides the shape: subtract and you get n, divide and you get log n.' },
 
     { tier:2, kind:'choice',
       tests:'counting a loop whose bound moves',
@@ -1967,35 +2025,33 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       close:'Constant factors are invisible to Big-O whether they help you or hurt you, so halving the work leaves the bound exactly where it was.' },
 
     { tier:2, kind:'choice',
-      tests:'dividing against decrementing',
-      code:'k = n\nwhile k > 1:\n    k = k // 2\n    step()',
-      prompt:'What is the tightest bound on the number of step() calls?',
+      tests:'adding two bounds against nesting them',
+      prompt:'A routine sorts in O(n log n), then makes a separate O(n²) pass over the result. What is the tightest bound on the whole routine, in the simplest form that is still correct?',
       options:[
-        { t:'O(n)',
-          why:'That is the count if k went down by one each pass. Dividing is the whole difference: n = 1000 takes nine passes, not a thousand.' },
-        { t:'O(log₂ n), and the base matters here.',
-          why:'The count really is log₂ n, but inside Big-O the base folds into c, because log₂ n = log n / log 2. Taking thirds instead of halves changes the count by a factor of about 1.58, and no Big-O statement can see a factor.' },
-        { t:'O(log n)', ok:true,
-          why:'Each pass halves k, so after t passes k is about n / 2ᵗ, and the loop ends when that reaches 1. That makes t about log₂ n: nine passes for n = 1000.' },
-        { t:'O(1), since the loop body is a single operation.',
-          why:'The body is O(1). The loop is not. The bound counts how many times the body runs, and that still depends on n, just very slowly.' }
+        { t:'O(n² log n)',
+          why:'That is the answer if the passes were nested, one running inside the other. They run one after the other, so the costs add rather than multiply.' },
+        { t:'O(n log n + n²)',
+          why:'True, and it names the same set of functions as O(n²), so it is exactly as tight. What is wrong with it is that it is unsimplified: the first term contributes nothing, and leaving it in hides which stage the bound is about.' },
+        { t:'O(n²)', ok:true,
+          why:'A sum is bounded by a constant times its larger part: n log n + n² ≤ 2n² from n = 1 on. This is why the slowest stage names the whole routine, and why speeding up the sort here buys nothing asymptotically.' },
+        { t:'O(n log n), since sorting is the expensive stage.',
+          why:'Reversed. n² is above n log n at every n from 1 on, since n² ≥ n log n cancels to n ≥ log n, and the gap only widens. Sorting feels expensive because it usually is the slow stage, which is what makes this the easy one to get backwards.' }
       ],
-      close:'What a loop does to its counter decides the shape: subtract and you get n, divide and you get log n.' },
+      close:'Sequential stages add and take the larger; nested stages multiply. Which one you are looking at is a fact about the code, not about the bounds.' },
 
-    { tier:2, kind:'choice', step:0,
-      tests:'what Big-O is a statement about',
-      prompt:'True or false: Big-O means the worst case.',
-      options:[
-        { t:'True. O is the worst case and Ω is the best case.',
-          why:'This welds together two unrelated distinctions. O and Ω are upper and lower bounds on one chosen function. Worst and best case are different choices of which function to bound. You can put a lower bound on the worst case, and that is exactly what a proof that comparison sorting is Ω(n log n) does.' },
-        { t:'False. Big-O bounds a function, and which function you chose to bound is a separate decision.', ok:true,
-          why:'Worst case, best case and average case are three different functions of n. Each can be bounded above, so quicksort’s worst case is O(n²) and its best case is O(n log n), and both are Big-O statements. Nothing in the definition mentions cases at all.' },
-        { t:'True, because Big-O takes the maximum over all inputs of that size.',
-          why:'The definition contains no maximum and no inputs, only two functions of n. Taking the maximum over inputs of size n is what produces the worst case function, before any bound has been applied to it.' },
-        { t:'False, because Big-O is about the average case.',
-          why:'It is about neither on its own. Big-O is silent on which case you picked, which is why the case has to be stated alongside it.' }
+    { tier:2, kind:'order',
+      tests:'the ladder everything gets read against',
+      prompt:'Order these by growth rate, slowest first.',
+      items:[
+        { t:'log n',   why:'Grows without bound, but slower than any positive power of n. Doubling n adds one step.' },
+        { t:'√n',  why:'A power of n, n⁰⋅⁵, so it beats every logarithm and loses to n.' },
+        { t:'n',       why:'Linear. Doubling n doubles the work, which is the baseline everything else is judged against.' },
+        { t:'n log n', why:'Just above linear, and not by much: the log factor is 20 at n = a million. Close enough to n that the difference is often affordable, and far enough to be a real separation.' },
+        { t:'n²',      why:'Quadratic. n log n / n² goes to zero, so this is a genuine step up and not a constant apart.' },
+        { t:'2ⁿ',  why:'Exponential, and it eventually passes every polynomial, including n¹⁰⁰. Where polynomials multiply the work when n doubles, this squares it.' },
+        { t:'n!',      why:'Faster still: n! / 2ⁿ grows without bound, because past n = 4 each new factor is larger than 2.' }
       ],
-      close:'Two independent choices get collapsed into one all the time: which function you are describing, and which side you are bounding it from.' },
+      close:'The gaps here are not the same size. n and n log n are almost neighbours, while n² and 2ⁿ are not on speaking terms, and Big-O flattens both differences into the same word: not equal.' },
 
     { tier:2, kind:'number',
       tests:'how large n₀ is allowed to be',
@@ -2010,6 +2066,25 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       ],
       why:'4n² ≥ 3n² + 100n + 5000 is n² − 100n − 5000 ≥ 0, whose root is 50 + √7500, about 136.6. So the last failing whole n is 136.',
       close:'An n₀ of 136 is exactly as valid as an n₀ of 5, and an n₀ of a billion would be too. The definition asks only that one exists, which is the price of a claim that says nothing about small inputs.' },
+
+    { tier:2, kind:'multi',
+      tests:'which rewrites are legal',
+      prompt:'Tick every true statement.',
+      options:[
+        { t:'2ⁿ⁺¹ = O(2ⁿ)', ok:true,
+          why:'2ⁿ⁺¹ is 2·2ⁿ, so c = 2 and n₀ = 0 settle it. An offset in the exponent is a constant factor in disguise.' },
+        { t:'2²ⁿ = O(2ⁿ)',
+          why:'2²ⁿ is 4ⁿ, and 4ⁿ / 2ⁿ is 2ⁿ, which passes every fixed c. A factor in the exponent changes the base, and no constant survives that.' },
+        { t:'log(n²) = O(log n)', ok:true,
+          why:'log(n²) = 2 log n, so c = 2 works. This is also why nobody writes the base of a logarithm inside Big-O: changing base only multiplies by a constant.' },
+        { t:'(log n)² = O(log n)',
+          why:'(log n)² / log n is log n, which is unbounded. Squaring the logarithm is not taking the logarithm of a square, and those two sit either side of this line.' },
+        { t:'n! = O(nⁿ)', ok:true,
+          why:'n! is a product of n factors, each at most n, so n! ≤ nⁿ with c = 1 and n₀ = 0.' },
+        { t:'nⁿ = O(n!)',
+          why:'nⁿ / n! passes any constant: it is about 2756 at n = 10 and about 4·10⁷ at n = 20. Which is what makes the statement above it a real, one-directional bound.' }
+      ],
+      close:'Constants are forgiven anywhere they behave like constants. Inside an exponent they do not, which is the one place this intuition breaks.' },
 
     { tier:2, kind:'multi',
       tests:'which way each bound runs',
@@ -2030,54 +2105,401 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       ],
       close:'f = O(g) is one-directional. When it happens to run both ways the pair is Θ, and when it runs one way only you have found a real difference in growth.' },
 
-    { tier:2, kind:'choice',
-      tests:'adding two bounds against nesting them',
-      prompt:'A routine sorts in O(n log n), then makes a separate O(n²) pass over the result. What is the tightest bound on the whole routine?',
-      options:[
-        { t:'O(n² log n)',
-          why:'That is the answer if the passes were nested, one running inside the other. They run one after the other, so the costs add rather than multiply.' },
-        { t:'O(n log n + n²)',
-          why:'Correct, but not tight, and nobody writes it. n log n is dominated by n², so the sum is Θ(n²) and the first term contributes nothing to the claim.' },
-        { t:'O(n²)', ok:true,
-          why:'A sum is bounded by a constant times its larger part: n log n + n² ≤ 2n² from n = 1 on. This is why the slowest stage names the whole routine, and why speeding up the sort here buys nothing asymptotically.' },
-        { t:'O(n log n), since sorting is the expensive stage.',
-          why:'Reversed. n² passes n log n at n = 2 and the gap only widens. Sorting feels expensive because it usually is the slow stage, which is what makes this the easy one to get backwards.' }
-      ],
-      close:'Sequential stages add and take the larger; nested stages multiply. Which one you are looking at is a fact about the code, not about the bounds.' },
+    // ---------------- tier 3: the work a problem set actually asks for ------------------
+    // Tiers 1 and 2 ask whether the definition is understood. This one asks the reader to
+    // use it the way a worksheet does: produce a witness, read the quantifiers, negate the
+    // statement, write the contradiction, and find the break in an argument that looks
+    // finished. The running example is f(n) = n² against g(n) = (n − 1)(n − 2) + 1, which
+    // is worth the whole tier for one reason: its failures sit in the middle of the range
+    // rather than at the start, so no habit about small n survives it.
 
-    { tier:2, kind:'order',
-      tests:'the ladder everything gets read against',
-      prompt:'Order these by growth rate, slowest first.',
-      items:[
-        { t:'log n',   why:'Grows without bound, but slower than any positive power of n. Doubling n adds one step.' },
-        { t:'√n',  why:'A power of n, n⁰⋅⁵, so it beats every logarithm and loses to n.' },
-        { t:'n',       why:'Linear. Doubling n doubles the work, which is the baseline everything else is judged against.' },
-        { t:'n log n', why:'Just above linear, and not by much: the log factor is 20 at n = a million. Close enough to n that the difference is often affordable, and far enough to be a real separation.' },
-        { t:'n²',      why:'Quadratic. n log n / n² goes to zero, so this is a genuine step up and not a constant apart.' },
-        { t:'2ⁿ',  why:'Exponential, and it eventually passes every polynomial, including n¹⁰⁰. Where polynomials multiply the work when n doubles, this squares it.' },
-        { t:'n!',      why:'Faster still: n! / 2ⁿ grows without bound, because past n = 4 each new factor is larger than 2.' }
-      ],
-      close:'The gaps here are not the same size. n and n log n are almost neighbours, while n² and 2ⁿ are not on speaking terms, and Big-O flattens both differences into the same word: not equal.' },
-
-    { tier:2, kind:'choice',
-      tests:'what O(1) claims',
-      prompt:'A lookup is O(1). Which is true?',
+    { tier:3, kind:'choice', step:0,
+      tests:'the order of the quantifiers',
+      given:'f and g are positive functions of n',
+      prompt:'Which of these is the definition of f(n) = O(g(n))?',
       options:[
-        { t:'Its cost stops depending on n. The fixed cost can still be large, and it can still vary from call to call.',
+        { t:'∃c > 0  ∃n₀  ∀n > n₀ :  f(n) ≤ c·g(n)', ok:true,
+          why:'c and n₀ are chosen once, and then every n past n₀ has to obey. That order is the whole definition: the constant cannot be adjusted as n grows, which is exactly what makes the claim say anything.' },
+        { t:'∀c > 0  ∃n₀  ∀n > n₀ :  f(n) ≤ c·g(n)',
+          why:'A real statement, and a much stronger one: every constant works eventually, however small. That is what f(n) = o(g(n)) says, and n² is not o(n²) while it certainly is O(n²).' },
+        { t:'∃c > 0  ∀n₀  ∃n > n₀ :  f(n) ≤ c·g(n)',
+          why:'This asks only that the inequality keep happening, not that it keep holding. A function that dips under the ceiling infinitely often and spends the rest of its life above it satisfies this and is not O(g).' },
+        { t:'∃n₀  ∀n > n₀  ∃c > 0 :  f(n) ≤ c·g(n)',
+          why:'Moving ∃c inside ∀n lets the constant be picked after n is known, so a different c is allowed at every n. Every pair of positive functions satisfies that, and a condition nothing can fail is testing nothing.' }
+      ],
+      close:'Quantifiers are not decoration on the inequality, they are the claim. Read left to right, each one is chosen knowing only what stands to its left.' },
+
+    { tier:3, kind:'witness', step:5,
+      tests:'producing a witness rather than recognising one',
+      given:'f(n) = n²,  g(n) = (n − 1)(n − 2) + 1 = n² − 3n + 3',
+      prompt:'Prove f(n) = O(g(n)) straight from the definition: name a constant c and a threshold n₀ that make f(n) ≤ c·g(n) hold for every n > n₀.',
+      f: n => n * n,
+      g: n => (n - 1) * (n - 2) + 1,
+      // A hint is keyed on the verdict as well as the numbers, because the same constant
+      // can be half of a pair that works and half of a pair that does not: c = 2 with
+      // n₀ = 0 fails and c = 2.5 with n₀ = 3 holds, and they must not be told the same thing.
+      near:[
+        { when:(c, n0, ok) => !ok && c > 0 && c <= 1,
+          why:'c = 1 asks n² ≤ n² − 3n + 3, which cancels to 3n ≤ 3. That holds at n = 1 and at no n above it, and the failures never stop, so no n₀ can rescue it. Anything smaller is worse.' },
+        { when:(c, n0, ok) => !ok && c > 1 && c < 4,
+          why:'Every constant strictly between 1 and 4 does work eventually and has to buy a threshold to do it, because 4 is the smallest that survives n = 2, where g(2) = 1 against f(2) = 4. c = 3 needs n₀ = 2, and c = 2 needs n₀ = 4, since it also fails at n = 3 and n = 4.' },
+        { when:(c, n0, ok) => ok && c === 4 && n0 === 0,
+          why:'That is the tightest pair there is, and it needs no threshold at all: 4g(n) − f(n) = 3n² − 12n + 12 = 3(n − 2)², a square. The two curves touch at n = 2 and never cross.' }
+      ],
+      why:'Any c ≥ 4 works with n₀ = 0, because 4g(n) − f(n) = 3(n − 2)² is a square and never negative. Smaller constants work too, with a threshold to pay for them: c = 3 needs n₀ = 2, c = 2 needs n₀ = 4, and c = 1 needs an n₀ that does not exist.',
+      close:'A proof from the definition is two numbers and a check, not a rearrangement. Nothing asks for the smallest c, which is why there is no single answer to compare yours against.' },
+
+    { tier:3, kind:'number', step:4,
+      tests:'which n decides the constant',
+      given:'f(n) = n²,  g(n) = n² − 3n + 3,  n₀ = 0',
+      prompt:'Pin the threshold at n₀ = 0, so the inequality has to hold at every n ≥ 1. What is the smallest c that works?',
+      unit:'c =',
+      answer:4,
+      near:[
+        { v:1, why:'c = 1 is n² ≤ n² − 3n + 3, which cancels to 3n ≤ 3. It holds at n = 1 and nowhere above.' },
+        { v:2, why:'c = 2 fails at n = 2, 3 and 4: at n = 3, 2·g(3) = 6 against f(3) = 9. It works from n = 5, which is a threshold of 4, not 0.' },
+        { v:3, why:'One short, and by one value of n. c = 3 clears every n except n = 2, where g(2) = 1, so 3·g(2) = 3 against f(2) = 4.' },
+        { v:5, why:'c = 5 works, and so does every constant above 4. The question asks for the smallest, and 4 already holds everywhere: 4g(n) − f(n) = 3(n − 2)².' }
+      ],
+      why:'4g(n) − f(n) = 3n² − 12n + 12 = 3(n − 2)², zero at n = 2 and positive at every other n. At n = 2 the two sides are both 4, so c = 4 is exactly tight and nothing below it survives that single point.',
+      close:'The entire difference between c = 3 and c = 4 is one value of n. A constant is not read off the shape of the function, it is paid to the worst point.' },
+
+    { tier:3, kind:'number', step:5,
+      tests:'where the failures actually are',
+      given:'f(n) = n²,  g(n) = n² − 3n + 3,  c = 3',
+      prompt:'With c = 3, what is the smallest n₀ that makes f(n) ≤ 3·g(n) hold for every n > n₀?',
+      unit:'n₀ =',
+      answer:2,
+      near:[
+        { v:0, why:'n₀ = 0 asks about every n ≥ 1. n = 1 is fine at 1 ≤ 3, but n = 2 is not: g(2) = 1, so 3·g(2) = 3 against f(2) = 4.' },
+        { v:1, why:'One short, and for a reason worth seeing: n = 2 is the only n anywhere that fails, and n₀ = 1 asks about n ≥ 2, so it asks about exactly the bad one.' },
+        { v:3, why:'n = 3 is the first n that works after the failure, not the last that fails. n₀ names the last failure, because the rule reads for every n greater than n₀.' },
+        { v:5, why:'That works, and so would 100. The question asks for the smallest, which is the last n that fails and not a safe distance past it.' }
+      ],
+      why:'3g(n) − f(n) = 2n² − 9n + 9 = (2n − 3)(n − 3), negative only strictly between n = 1.5 and n = 3. The only whole number in that gap is n = 2, so n = 2 is the single failure and n₀ = 2.',
+      close:'The values that fail are not always the small ones. Here n = 0 and n = 1 hold, n = 2 fails, and everything above holds: n₀ is the last failure, not the start of the good stretch.' },
+
+    { tier:3, kind:'choice', step:8,
+      tests:'whether an argument proves what it says it proves',
+      given:'f(n) = n²,  g(n) = n² − 3n + 3,  s(n) = −3n + 3, so g = f + s',
+      prompt:'An answer reads: f is O(n²), and s is O(n²), so by additivity g = f + s is O(n²). Therefore f is O(g). Where does it break?',
+      options:[
+        { t:'Both f and g being O(n²) does not make either one O of the other.', ok:true,
+          why:'A shared ceiling relates each function to the ceiling and to nothing else. n² and n are both O(n²), and n² is not O(n). The conclusion still needs its own witness, some c and n₀ with n² ≤ c·g(n), and the argument never produces one.' },
+        { t:'Nothing is wrong. Both steps are standard.',
+          why:'The first step is standard and true. The second does not follow from it: additivity gives a statement about g and n², and the conclusion is a statement about f and g. No step in between relates them.' },
+        { t:'The additivity step is wrong: O(n²) plus O(n²) is O(n⁴).',
+          why:'Additivity is fine. Two functions under c₁·n² and c₂·n² have a sum under (c₁ + c₂)·n², and one more constant is always affordable. Multiplying the functions is what raises the exponent.' },
+        { t:'s(n) = −3n + 3 goes negative, so it has no Big-O bound at all.',
+          why:'It does go negative, and Big-O is normally set up for functions that do not, so the wording is loose. But that is not the break: replace s by its absolute value and the final step still does not follow.' }
+      ],
+      close:'Transitivity runs in one direction: f = O(g) and g = O(h) give f = O(h). Two functions sharing a ceiling is not transitivity, and mistaking it for transitivity is the usual way a proof of f = O(g) ends up proving something else.' },
+
+    { tier:3, kind:'choice',
+      tests:'how general a proof by contradiction is',
+      code:'Claim: n log₂ n is not O(n).\n\n"Assume it is. Then n log₂ n ≤ n for all n > n₀.\n Dividing by n gives log₂ n ≤ 0 for all n > n₀.\n But log₂ n ≤ 0 only at n = 1, so no such n₀ exists.\n Contradiction."',
+      prompt:'Every line of arithmetic here is right and the conclusion is true. What has the argument not established?',
+      options:[
+        { t:'It rules out c = 1 and nothing else. The assumption hands over some constant, not that one.', ok:true,
+          why:'Each constant has to be broken by this argument, and the proof only broke one. Written properly the constant stays as c all the way to the witness, which is then built out of c, so that one page covers all of them at once.' },
+        { t:'Nothing. Taking c = 1 is without loss of generality, since a larger c can be absorbed into n₀.',
+          why:'It cannot, and that is the content of the claim. n log₂ n ≤ 10n holds for every n up to 1024 and fails after; n log₂ n ≤ c·n holds up to 2^c for any c. Each constant buys a longer stretch, so there is no single threshold covering them all, and the c = 1 argument, which fails from n = 2, is a different argument.' },
+        { t:'The division by n is not allowed, because n could be 0.',
+          why:'n is greater than n₀ and n₀ is at least 0, so n ≥ 1 and the division is fine. Nothing is asserted at n = 0 anyway.' },
+        { t:'The contradiction is with log₂ n ≤ 0, which is a fact about logarithms rather than about T(n).',
+          why:'That is how a proof by contradiction works. The assumption is pushed until it says something plainly false, and where the falsehood lands is not the issue.' }
+      ],
+      close:'A proof by contradiction is only ever as general as what it assumed. Fixing the constant on the first line is how a correct-looking page ends up proving a special case.' },
+
+    { tier:3, kind:'multi', step:8,
+      tests:'both directions at once',
+      given:'f(n) = n²,  g(n) = n² − 3n + 3',
+      prompt:'Tick every true statement.',
+      options:[
+        { t:'f(n) = O(g(n))', ok:true,
+          why:'c = 4 and n₀ = 0, since 4g(n) − f(n) = 3(n − 2)² is never negative.' },
+        { t:'g(n) = O(f(n))', ok:true,
+          why:'c = 1 and n₀ = 0. g(n) ≤ n² is 3 ≤ 3n, true from n = 1 on, and n₀ = 0 asks only about n ≥ 1. The one n where g is the larger is n = 0, which the threshold excludes.' },
+        { t:'f(n) = Θ(g(n))', ok:true,
+          why:'Both bounds above hold at once, which is what Θ is. Neither function pulls away: g(n) / f(n) goes to 1.' },
+        { t:'f(n) − g(n) = O(1)',
+          why:'f − g is 3n − 3, which is O(n) and not O(1). The two are the same growth class and still drift apart without limit, the same lesson as 14n² and 4n + 6 on the walkthrough.' },
+        { t:'g(n) = O(n)',
+          why:'g grows like n². For any c the line c·n is passed and stays passed: g(100) = 9703 needs c of at least 98, and g(1000) = 997,003 needs 998.' },
+        { t:'f(n) ≤ 3·g(n) fails at n = 2, so f(n) = O(g(n)) fails at n = 2',
+          why:'The first half is true and the second half is not something anybody can evaluate. f(n) = O(g(n)) is a claim about a pair of functions, never about a value of n, and the n₀ inside it exists precisely so that finitely many bad points cost nothing. One failing n cannot make the claim fail, because the claim was never made there.' }
+      ],
+      close:'Same class, both directions, and a gap between them that grows forever. Θ pins the shape and never the distance.' },
+
+    { tier:3, kind:'multi',
+      tests:'negating a statement with four quantifiers in it',
+      given:'f(n) = O(g(n))  is  ∃c > 0  ∃n₀  ∀n > n₀ :  f(n) ≤ c·g(n)',
+      prompt:'Tick every correct negation. There is more than one.',
+      options:[
+        { t:'∀c > 0  ∀n₀  ∃n > n₀ :  f(n) > c·g(n)', ok:true,
+          why:'Each ∃ becomes ∀, the ∀ becomes ∃, the order is kept and the inequality flips. This is the one to write: whatever c and n₀ someone offers, there is an n past n₀ that breaks them.' },
+        { t:'∀c > 0  ∀n₀  ¬(∀n > n₀ :  f(n) ≤ c·g(n))', ok:true,
+          why:'The same statement one step earlier in the working. Pushing ¬ through the last ∀ turns this into the row above, so both are correct and a question that accepts only one of them is marking handwriting.' },
+        { t:'∀n₀  ∀c > 0  ∃n > n₀ :  f(n) > c·g(n)', ok:true,
+          why:'Two ∀ standing next to each other can be swapped without changing the meaning, because neither depends on the other. Order matters across a change of quantifier, not within a run of the same one.' },
+        { t:'∃c > 0  ∃n₀  ∀n > n₀ :  f(n) > c·g(n)',
+          why:'Only the inequality was negated and the quantifiers were left alone. What this says is that f eventually stays above some fixed multiple of g, which is a lower bound, and lower bounds and upper bounds can both hold at once.' },
+        { t:'∀c > 0  ∃n₀  ∀n > n₀ :  f(n) > c·g(n)',
+          why:'Every quantifier flipped except the middle one, which was left as ∃. The result says f eventually beats every multiple of g and stays there, far stronger than merely failing to be O(g).' },
+        { t:'∃c > 0  ∀n₀  ∃n > n₀ :  f(n) > c·g(n)',
+          why:'This follows from the negation and is not equal to it. f(n) = 2g(n) breaks the ceiling c = 1 at every n and is still O(g) with c = 2. A consequence of a statement is not the statement.' }
+      ],
+      close:'Negation walks along the line: every quantifier turns into the other kind, nothing changes places, and the relation at the end flips. What survives untouched is the order.' },
+
+    { tier:3, kind:'proof',
+      tests:'writing the contradiction, not recognising it',
+      given:'T(n) = n log₂ n',
+      prompt:'Build the proof by contradiction that T(n) is not O(n).',
+      steps:[
+        { lead:'The assumption',
+          options:[
+            { t:'Suppose T(n) = O(n). Then there are some c > 0 and some n₀ with n log₂ n ≤ c·n for every n > n₀.', ok:true,
+              why:'The definition, written out. c and n₀ exist but are not ours to choose, and everything after this has to work for whichever ones they turn out to be.' },
+            { t:'Suppose T(n) = O(n). Then n log₂ n ≤ n for every n > n₀.',
+              why:'This is the assumption with c quietly set to 1. Nothing in the definition says the constant is 1, so a contradiction from here rules out c = 1 and leaves every other constant standing.' },
+            { t:'Suppose T(n) = O(n). Then for every c > 0 there is an n₀ with n log₂ n ≤ c·n for every n > n₀.',
+              why:'The quantifiers are swapped. As written this assumes T(n) = o(n), which is stronger, and contradicting a stronger assumption tells you nothing about the weaker one you meant.' }
+          ] },
+        { lead:'The rearrangement',
+          options:[
+            { t:'Divide both sides by n:  log₂ n ≤ 0 for every n > n₀.',
+              why:'That is the division carried out on the c = 1 version. With a general c on the right, dividing by n leaves c behind, not 0.' },
+            { t:'Subtract n from both sides:  n log₂ n − n ≤ 0, so n(log₂ n − 1) ≤ 0.',
+              why:'Correct algebra going nowhere. n is still in it, so the contradiction would have to come from the size of n rather than from the constant, which is the long way round for no gain.' },
+            { t:'Divide both sides by n, positive for every n > n₀ ≥ 0:  log₂ n ≤ c for every n > n₀.', ok:true,
+              why:'Dividing by something positive keeps the direction of the inequality, and it strips the proof down to the one thing in dispute: whether a logarithm can be held under a constant.' }
+          ] },
+        { lead:'The witness',
+          options:[
+            { t:'Take n = 2^(c+1), or n₀ + 1 if that is larger. Then n > n₀ and log₂ n ≥ c + 1.', ok:true,
+              why:'The one step doing real work. It has to clear n₀, because nothing was ever claimed below it, and it has to clear c by a margin, because ≤ is what is being broken.' },
+            { t:'Take n = 2^c. Then log₂ n = c.',
+              why:'log₂ n = c satisfies log₂ n ≤ c. Reaching the ceiling exactly is not breaking it, and this n might also sit below n₀, where nothing was claimed.' },
+            { t:'Take n = n₀ + 1. Then log₂ n > c.',
+              why:'Nothing licenses that. n₀ could be 3 while c is 1000, and log₂ 4 = 2 is comfortably under. The witness has to be built out of c, not out of the threshold.' }
+          ] },
+        { lead:'The conclusion',
+          options:[
+            { t:'So c = 1 does not work. Since no constant works, n log₂ n is not O(n).',
+              why:'The second sentence is the claim, asserted rather than shown. One constant failing is one constant failing, and the proof was arranged so that they never have to be checked one at a time.' },
+            { t:'This n is greater than n₀ and has log₂ n > c, contradicting log₂ n ≤ c. So no such c and n₀ exist, and n log₂ n is not O(n).', ok:true,
+              why:'The contradiction is with the assumed pair, whatever it was, so what falls is the existence of any such pair. That is precisely the negation of the definition.' },
+            { t:'So log₂ n ≤ c is false, and therefore n log₂ n = Ω(n log n).',
+              why:'True about T(n), and an answer to a different question. No lower bound follows from this argument, and the thing being proved was that an upper bound fails.' }
+          ] }
+      ],
+      close:'Everything that goes wrong in a disproof by contradiction goes wrong in the same place: the assumption hands you a constant, and the argument has to survive whichever one it was.' },
+
+    // ---------------- tier 4: the chapter, not the page ---------------------------------
+    // Tiers 1 to 3 are about one definition. This one is about the family it belongs to.
+    // O on its own is half a vocabulary: without Ω there is no way to say a bound is a
+    // floor, without Θ no way to say it is tight, and without o and ω no way to say one
+    // function genuinely outgrows another rather than merely sitting above it. The
+    // questions here are the ones a textbook chapter ends on, and several are lifted
+    // from the exercises and problems of CLRS chapter 3, which is where a reader who
+    // finishes this page goes next.
+    //
+    // Two of them lean on facts this page never draws: lg(n!) = Θ(n lg n), and the
+    // existence of pairs of functions that cannot be compared at all. Both are checked
+    // in check.mjs rather than asserted here.
+
+    { tier:4, kind:'choice',
+      tests:'that a bound has a direction',
+      given:'"The running time of algorithm A is at least O(n²)."',
+      prompt:'A textbook exercise asks why that sentence is meaningless. Why is it?',
+      options:[
+        { t:'It is fine, and is just an informal way of writing Ω(n²).',
+          why:'It is not a loose way of saying Ω(n²), it is a sentence with no content, and the two come apart on exactly the algorithms anyone cares about: an O(n) algorithm satisfies "at least O(n²)" under this reading and is certainly not Ω(n²).' },
+        { t:'O(n²) is already a ceiling, so "at least" puts a floor word in front of it and rules nothing out.',
           ok:true,
-          why:'O(1) says a constant ceiling exists: some c with T(n) ≤ c for all large n. It does not say the cost is one step, that it is the same every time, or that it is small.' },
-        { t:'It takes one step.',
-          why:'O(1) means bounded by a constant, and the constant is never named. A routine that always takes 40,000 steps is O(1).' },
-        { t:'It is faster than any O(log n) operation.',
-          why:'Not on any input you will ever run. An O(1) with a constant of 40,000 loses to an O(log n) with a constant of 1 until log n passes 40,000. Asymptotic claims compare shapes, not runs.' },
-        { t:'It always takes the same amount of time.',
-          why:'A bound is not a measurement. A lookup that takes anywhere between 1 and 500 steps depending on collisions is still O(1), because 500 is a constant.' }
+          why:'Take any running time at all. The constant function 6 is O(n²), and every algorithm that does anything takes at least 6 steps, so the sentence is satisfied by everything. A claim satisfied by everything is not a weak claim, it is an empty one.' },
+        { t:'Running times are functions, and "at least" cannot be applied to a function.',
+          why:'It applies perfectly well: T(n) ≥ g(n) is a fine statement about two functions. The trouble is what stands on the right, which is not a function but a whole collection of them, and one bounded from above at that.' },
+        { t:'Because O-notation describes worst-case running time, and "at least" belongs to the best case.',
+          why:'O-notation applies to whatever function it is pointed at: worst case, best case, average case, the number of comparisons. Which running time is being bounded is a separate thing to say, and saying it would not rescue this sentence.' }
       ],
-      close:'Every Big-O class has this shape. The class names how the cost responds to n, and says nothing at all about how big the cost is.' }
+      close:'O is a ceiling and Ω is a floor. Sentences that mix the two are the most common way a statement about running time ends up asserting nothing at all.' },
+
+    { tier:4, kind:'choice',
+      tests:'reading a relation from the other side',
+      given:'f and g are asymptotically positive',
+      prompt:'f(n) = o(g(n)) says the same thing as which of these?',
+      options:[
+        { t:'g(n) = o(f(n))',
+          why:'The same relation pointed the other way, which is the opposite claim. o behaves like <, and swapping the two sides of a < does not leave it alone.' },
+        { t:'g(n) = Ω(f(n))',
+          why:'That is the transpose of f = O(g), and it is weaker: it allows the two to grow at the same rate. o says f falls behind g by any constant factor you care to name, so its transpose has to say the matching thing.' },
+        { t:'g(n) = ω(f(n))', ok:true,
+          why:'Transpose symmetry. Reading the same relation from the other side turns o into ω exactly as it turns O into Ω, so f asymptotically smaller than g is g asymptotically larger than f.' },
+        { t:'f(n) = O(g(n)) and f(n) ≠ Θ(g(n))',
+          why:'True of the functions that usually come up and not equivalent in general. Let f be n at even n and 1 at odd n, against g = n: f is O(g), f is not Θ(g), and f is not o(g) either, because the ratio keeps returning to 1.' }
+      ],
+      close:'The five relations pair up: O with Ω, o with ω, and Θ with itself. Θ being its own transpose is why it is the one that reads like equality.' },
+
+    { tier:4, kind:'choice',
+      tests:'what notation inside an equation means',
+      given:'2n² + Θ(n) = Θ(n²)',
+      prompt:'Asymptotic notation is allowed to appear in the middle of a formula, standing for a function nobody names. What does the equation above claim?',
+      options:[
+        { t:'Both sides denote the same collection of functions.',
+          why:'They do not. 2n² + Θ(n) is a far smaller collection than Θ(n²), which contains 7n² and n²/100. The equation is deliberately one-way, and the right-hand side is the coarser of the two.' },
+        { t:'However the unnamed function on the left is chosen from Θ(n), some function in Θ(n²) can be chosen to make the two sides equal.',
+          ok:true,
+          why:'Notation on the left is read as "for every", notation on the right as "there is". That is what makes each step of a chain like 2n² + 3n + 1 = 2n² + Θ(n) = Θ(n²) safe to read on its own.' },
+        { t:'There is a function in Θ(n) and a function in Θ(n²) making the two sides equal.',
+          why:'One lucky pair proves nothing, and almost any equation would satisfy this. The left is chosen against you; the right is chosen afterwards, knowing what the left turned out to be.' },
+        { t:'It is an abuse of notation with no agreed meaning, written for brevity.',
+          why:'It has a precise agreed meaning, which is exactly why the rule is worth stating. Without it, T(n) = 2T(n/2) + Θ(n) would be a shorthand rather than a statement.' }
+      ],
+      close:'Each equals sign in a chain like this points one way: every step is allowed to lose detail and no step is allowed to invent it.' },
+
+    { tier:4, kind:'multi',
+      tests:'the standard facts a chapter leaves you with',
+      prompt:'Tick every true statement. c and k are constants with c > 1 and k ≥ 1, and ε is any constant greater than 0.',
+      options:[
+        { t:'2ⁿ⁺¹ = Θ(2ⁿ)', ok:true,
+          why:'2ⁿ⁺¹ is 2·2ⁿ, a constant factor, so it is bounded on both sides at once. An offset in the exponent is a constant factor in disguise.' },
+        { t:'2²ⁿ = Θ(2ⁿ)',
+          why:'2²ⁿ is 4ⁿ, and 4ⁿ / 2ⁿ is 2ⁿ, which passes every constant. A factor in the exponent changes the base, and no constant survives that.' },
+        { t:'lg(n!) = Θ(n lg n)', ok:true,
+          why:'Upper: n! is a product of n factors, none above n, so n! ≤ nⁿ and lg(n!) ≤ n lg n. Lower: the top half of the factors are each at least n/2, so n! ≥ (n/2)^(n/2) and lg(n!) ≥ (n/2)(lg n − 1). Stirling sharpens both and neither is needed for the class.' },
+        { t:'n^(1/lg n) = Θ(1)', ok:true,
+          why:'n^(1/lg n) = 2^(lg n · 1/lg n) = 2, at every n above 1. Not merely bounded: it is the constant 2, which is why it sits at the very bottom of any ranking by growth.' },
+        { t:'lgᵏ n = o(nᵋ)', ok:true,
+          why:'Substitute lg n for n in "every exponential with base above 1 beats every polynomial" and this falls out. Any positive power of n beats any power of lg n, however lopsided the two constants are.' },
+        { t:'nᵏ = ω(cⁿ)',
+          why:'Backwards. nᵏ / cⁿ goes to zero, so nᵏ = o(cⁿ) and the exponential wins. It is the same fact as the row above, before the substitution.' }
+      ],
+      close:'Four of these six are the facts everything else gets compared against. The two that fail, fail in the same place: something moved into an exponent, where constants stop being affordable.' },
+
+    { tier:4, kind:'order',
+      tests:'ranking functions nobody has drawn for you',
+      prompt:'Put these in order of growth, slowest first. Each is a real entry from a textbook problem that asks for thirty of them at once.',
+      items:[
+        { t:'n^(1/lg n)', why:'Equal to 2 at every n above 1, so it is a constant wearing a complicated hat. Nothing grows more slowly than a constant.' },
+        { t:'lg*(n)',     why:'How many times you can take a logarithm before reaching 1. It is 5 at 2^65536 and there is no n anybody will ever write down where it is 6.' },
+        { t:'lg lg n',    why:'Two logarithms, which is unimaginably slow and still faster than lg*: lg* inverts a whole tower of exponentials, lg lg inverts two.' },
+        { t:'√(lg n)',    why:'Half a logarithm, in the sense that squaring it gives one back. It beats lg lg n because lg n outgrows (lg lg n)².' },
+        { t:'lg² n',      why:'A logarithm squared. Polylogarithmic, and therefore beaten by every positive power of n however small that power is.' },
+        { t:'2^√(2 lg n)', why:'The awkward one, and the reason the ladder is not just powers and logarithms. Its logarithm is √(2 lg n), which outgrows any multiple of lg lg n, so it passes every lgᵏ n. But it equals n^√(2/lg n), whose exponent goes to zero, so it stays under every nᵋ. It lives in the gap between polylogarithmic and polynomial.' },
+        { t:'n lg n',     why:'Linear with a logarithm on it, past everything above, and the cost of sorting by comparisons.' }
+      ],
+      close:'The middle of this list is where intuition runs out. Between "a power of a logarithm" and "a power of n" there is a whole range of functions, and 2^√(2 lg n) is one of them.' },
+
+    { tier:4, kind:'choice',
+      tests:'whether any two functions can be compared at all',
+      given:'For real numbers, exactly one of a < b, a = b, a > b holds.',
+      prompt:'O, Ω, Θ, o and ω read like ≤, ≥, =, < and >. Which part of that analogy breaks?',
+      options:[
+        { t:'None of it. o, Θ and ω take the three roles and the analogy is exact.',
+          why:'They line up with <, = and > and they do not cover every pair. n against n^(1 + sin n) is none of the three, because the exponent keeps moving.' },
+        { t:'It breaks once both functions are polynomials.',
+          why:'Polynomials are the easy case: two of them are always comparable, because their degrees are. The trouble starts as soon as an exponent is allowed to move.' },
+        { t:'Trichotomy breaks: there are f and g with neither f = O(g) nor f = Ω(g).',
+          ok:true,
+          why:'n and n^(1 + sin n) are such a pair. The exponent swings between 0 and 2 forever, so the ratio is unbounded above and below and never settles. Nothing in the definitions requires two functions to be comparable.' },
+        { t:'It breaks, and the repair is to compare the limit of f(n) / g(n) instead.',
+          why:'That fails on the same pair for the same reason: n^(sin n) has no limit. The limit forms of o and ω are a convenience where the limit exists, not a more general definition.' }
+      ],
+      close:'Any two numbers can be compared. Any two functions cannot, and that is the one place where reading these five symbols as inequalities will mislead you.' },
+
+    { tier:4, kind:'multi',
+      tests:'which of the plausible conjectures survive',
+      given:'f and g are asymptotically positive',
+      prompt:'A textbook problem gives a list like this and asks you to prove or disprove each. Tick the ones that are true.',
+      options:[
+        { t:'f = O(g) implies g = O(f)',
+          why:'n = O(n²) and n² is not O(n). O is a ceiling: being underneath somebody says nothing about them being underneath you.' },
+        { t:'f = O(g) implies g = Ω(f)', ok:true,
+          why:'Transpose symmetry, straight out of the definitions: the single inequality f(n) ≤ c·g(n) read from the other side is g(n) ≥ (1/c)·f(n).' },
+        { t:'f = O(g) implies 2^f = O(2^g)',
+          why:'2n = O(n), and 2^(2n) = 4ⁿ is not O(2ⁿ). Exponentiating turns a constant factor in the exponent into a change of base, and no constant pays for that.' },
+        { t:'f = O(g) implies lg f = O(lg g), where lg g ≥ 1 and f ≥ 1 for all large n', ok:true,
+          why:'f ≤ c·g gives lg f ≤ lg c + lg g, and lg c is a constant while lg g is at least 1, so lg f ≤ (1 + lg c)·lg g. The two side conditions are exactly what stop lg g from being zero or negative underneath.' },
+        { t:'f = O(f²)',
+          why:'Take f(n) = 1/n, which is asymptotically positive. Then f / f² is n, which passes every constant. Squaring only helps a function that is at least 1, and asymptotically positive does not say that.' },
+        { t:'f + o(f) = Θ(f)', ok:true,
+          why:'Anything in o(f) is eventually below f, so the sum sits between f and 2f from that point: c₁ = 1 and c₂ = 2. This is "lower order terms do not change the class", stated so that it can be checked.' }
+      ],
+      close:'Three of six. Every false one here is a plausible-sounding rule that somebody has written in an exam, and each is killed by one small counterexample rather than by a subtlety.' },
+
+    { tier:4, kind:'witness',
+      tests:'a witness for a bound the page never drew',
+      given:'f(n) = lg(n!) = lg 1 + lg 2 + ⋯ + lg n,   g(n) = n lg n',
+      prompt:'Give a c and an n₀ witnessing lg(n!) = O(n lg n). The two sides are evaluated for real, so any pair that holds counts.',
+      f: (() => { const acc = [0]; return n => { for(let k = acc.length; k <= n; k++) acc[k] = acc[k-1] + Math.log2(k); return acc[n]; }; })(),
+      g: n => n * Math.log2(n),
+      near:[
+        { when:(c, n0, ok) => ok && c === 1 && n0 === 0,
+          why:'The tightest pair there is, and it needs no threshold: n! is a product of n factors none of which exceeds n, so n! ≤ nⁿ, and taking logarithms of both sides is the whole proof. The two sides are equal at n = 1, where both are 0.' },
+        { when:(c, n0, ok) => !ok && c > 0 && c < 1,
+          why:'A constant below 1 cannot work, however large n₀ is. lg(n!) is n lg n − n lg e + O(lg n) by Stirling, so the ratio lg(n!) / (n lg n) climbs back towards 1 and passes any constant below it.' }
+      ],
+      why:'c = 1 and n₀ = 0 work, because n! ≤ nⁿ. The bound is also tight in the Θ sense: the largest half of the factors are each at least n/2, so n! ≥ (n/2)^(n/2) and lg(n!) ≥ (n/2)(lg n − 1), which is Ω(n lg n).',
+      close:'lg(n!) = Θ(n lg n) is the fact underneath the lower bound for comparison sorting: n! possible orderings need about lg(n!) yes-or-no questions to tell apart, and that is n lg n up to a constant.' },
+
+    { tier:4, kind:'proof',
+      tests:'proving a two-sided bound',
+      given:'f and g are asymptotically nonnegative',
+      prompt:'Build the proof that max(f(n), g(n)) = Θ(f(n) + g(n)).',
+      steps:[
+        { lead:'What has to be produced',
+          options:[
+            { t:'Constants c₁, c₂ > 0 and an n₀ with c₁(f(n) + g(n)) ≤ max(f(n), g(n)) ≤ c₂(f(n) + g(n)) for every n > n₀.', ok:true,
+              why:'The definition of Θ, written out. Two constants and one threshold, and the whole proof is finding them.' },
+            { t:'A proof that max(f, g) is whichever of f and g is the larger.',
+              why:'True, and it is what max means rather than something to prove. No amount of restating it produces a constant.' },
+            { t:'A single c and an n₀ with max(f, g) ≤ c(f + g).',
+              why:'That is O, which is half the job. Θ is an upper bound and a lower bound holding together, and the lower one is where the thinking is.' }
+          ] },
+        { lead:'The upper bound',
+          options:[
+            { t:'max(f, g) ≤ f·g, so c₂ = 1 against the product.',
+              why:'Not in general, and not the right quantity either. With f and g both equal to 1/2 past some n, the product is smaller than either one.' },
+            { t:'max(f, g) ≤ f + g, since neither is negative past some n₀. So c₂ = 1.', ok:true,
+              why:'Adding a nonnegative quantity to the larger of the two cannot make it smaller. Nothing about the shape of either function is used, only that neither goes below zero.' },
+            { t:'max(f, g) ≤ f + g, provided f and g are both increasing.',
+              why:'The hypothesis is unnecessary, and adding one you do not need weakens the result for no reason. Nonnegative is the whole requirement.' }
+          ] },
+        { lead:'The lower bound',
+          options:[
+            { t:'max(f, g) ≥ (f + g) / 2, because the larger of two numbers is at least their average. So c₁ = 1/2.', ok:true,
+              why:'The step that carries the proof. It is the only one that relates max to the sum rather than to one of the two functions, which is what the claim is about.' },
+            { t:'max(f, g) ≥ f, so c₁ = 1.',
+              why:'True, and it bounds max below in terms of f rather than in terms of f + g. With g far larger than f it says nothing about the sum.' },
+            { t:'max(f, g) ≥ min(f, g), so c₁ = 1.',
+              why:'A true inequality between the wrong two quantities. min tells you nothing about how large f + g is.' }
+          ] },
+        { lead:'Putting it together',
+          options:[
+            { t:'So max(f, g) = O(f + g), and since O and Ω are transposes, Θ follows.',
+              why:'Transpose symmetry turns f = O(g) into g = Ω(f), which is a statement about the other function. It never upgrades a one-sided bound into a two-sided one; only having both bounds on the same pair does that.' },
+            { t:'So max(f, g) and f + g are never more than a factor of 2 apart, hence they are equal.',
+              why:'Equal is what Θ reads like and not what it says. Take f = g = n: the max is n, the sum is 2n, and they are different functions in the same class.' },
+            { t:'So (1/2)(f + g) ≤ max(f, g) ≤ 1·(f + g) past the n₀ where both are nonnegative, which is Θ(f + g) with c₁ = 1/2 and c₂ = 1.', ok:true,
+              why:'Both bounds, one threshold, two named constants. Nothing asks for the constants to be the best possible ones.' }
+          ] }
+      ],
+      close:'Every Θ proof has this shape: an upper bound, a lower bound, and one threshold past which both hold. What makes this one instructive is that the lower bound is the half that needs an idea, and the idea is as small as "the larger of two numbers is at least their average".' }
   ];
 
   // step titles, for the jump link. Read off the scenes so the two can never disagree.
   const stepTitle = k => scenes[k] ? scenes[k].title : '';
+
+  // The tiers, in the order the reader meets them. Kept as data rather than as three
+  // branches so that adding one means adding a row here and a button, and never means
+  // hunting down a third place that still believes there are two.
+  const TIERS = [
+    { n:1, label:'Tier 1 · the definition' },
+    { n:2, label:'Tier 2 · using it' },
+    { n:3, label:'Tier 3 · on paper' },
+    { n:4, label:'Tier 4 · textbook' }
+  ];
 
   const QP = {
     tier: 1,
@@ -2305,10 +2727,150 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     $('q-retry').hidden = !pick.checked;
   }
 
+  // A proof is not a list of true sentences, it is one argument, so every line is
+  // offered with the wrong lines that a reader who half-remembers the definition
+  // actually writes: a fixed c instead of an arbitrary one, a witness that reaches
+  // equality instead of passing it, a conclusion drawn about the single c tried.
+  // The whole proof is scored as one answer, because a proof with a broken line
+  // proves nothing, and after checking every candidate says why it stands or falls.
+  function renderProof(q, host){
+    const pick = QP.picked.get(q) || { on: new Map(), checked: false };
+    QP.picked.set(q, pick);
+    const wrap = el('div', 'qproof');
+
+    q.steps.forEach((st, si) => {
+      const chosen = pick.on.get(si);
+      const correct = st.options.findIndex(o => o.ok);
+      const block = el('div', 'pstep' + (pick.checked ? (chosen === correct ? ' right' : ' wrong') : ''));
+      const head = el('div', 'phead');
+      head.appendChild(el('span', 'pnum', String(si + 1)));
+      head.appendChild(el('span', 'plead', st.lead));
+      block.appendChild(head);
+
+      const opts = el('div', 'qopts');
+      st.options.forEach((o, oi) => {
+        let cls = '', word = '', why = '';
+        if(pick.checked){
+          const took = chosen === oi;
+          if(took && o.ok){ cls = 'right'; word = 'Yes, and you took it.'; }
+          else if(took && !o.ok){ cls = 'wrong'; word = 'No, and you took it.'; }
+          else if(!took && o.ok){ cls = 'missed'; word = 'This is the line that belongs.'; }
+          else { cls = ''; word = 'No, and you left it.'; }
+          why = o.why;
+        } else if(chosen === oi){ cls = 'sel'; }
+        const b = optButton(o.t, cls, why, word);
+        b.addEventListener('click', () => {
+          if(pick.checked) return;
+          pick.on.set(si, oi);
+          draw();
+        });
+        opts.appendChild(b);
+      });
+      block.appendChild(opts);
+      wrap.appendChild(block);
+    });
+    host.appendChild(wrap);
+
+    const complete = q.steps.every((_, si) => pick.on.has(si));
+    if(pick.checked){
+      const whole = q.steps.every((st, si) => !!st.options[pick.on.get(si)] && !!st.options[pick.on.get(si)].ok);
+      setVerdict(q, whole, true);
+      if(!whole) $('q-verdict-body').textContent = q.close + ' The line that belongs is marked in each step you did not take it in.';
+    } else {
+      setVerdict(q, false, false);
+    }
+    $('q-check').hidden = pick.checked;
+    $('q-check').disabled = !complete;
+    $('q-retry').hidden = !pick.checked;
+  }
+
+  // The definition hands out two numbers, and a reader who is only ever asked for n₀
+  // comes away believing c was chosen for them. So this format asks for the pair, and
+  // judges it by running the inequality rather than by comparing against one stored
+  // answer: any c and n₀ that hold are correct, which is the thing being taught.
+  const WITNESS_SPAN = 20000;   // how far past n₀ the check looks before it is satisfied
+
+  function witnessVerdict(q, c, n0){
+    if(!(c > 0)) return { ok:false, snag:'c has to be a positive constant. A ceiling of zero or below is not a ceiling.' };
+    if(!Number.isFinite(n0) || n0 < 0 || !Number.isInteger(n0)) return { ok:false, snag:'n₀ has to be a whole number, zero or more. It names the last n the claim is allowed to skip.' };
+    for(let n = n0 + 1; n <= n0 + WITNESS_SPAN; n++){
+      if(q.f(n) > c * q.g(n)) return { ok:false, at:n };
+    }
+    return { ok:true };
+  }
+
+  function renderWitness(q, host){
+    const pick = QP.picked.get(q) || { c:'', n0:'', checked:false };
+    QP.picked.set(q, pick);
+    const ready = () => String(pick.c).trim() !== '' && String(pick.n0).trim() !== '';
+
+    const row = el('div', 'qwit');
+    const boxes = [];
+    [['c', q.labels && q.labels[0] || 'c ='], ['n0', q.labels && q.labels[1] || 'n₀ =']].forEach(([key, label], k) => {
+      const cell = el('label', 'wcell');
+      cell.appendChild(el('span', 'lead', label));
+      const input = el('input');
+      input.type = 'text';
+      input.inputMode = 'decimal';
+      input.autocomplete = 'off';
+      input.value = pick[key];
+      input.disabled = pick.checked;
+      input.setAttribute('aria-label', label.replace(/\s*=\s*$/, ''));
+      input.addEventListener('input', () => { pick[key] = input.value; $('q-check').disabled = !ready(); });
+      input.addEventListener('keydown', e => {
+        if(e.key === 'Enter' && ready()){ e.preventDefault(); checkNow(); }
+      });
+      cell.appendChild(input);
+      boxes.push(input);
+      row.appendChild(cell);
+      if(k === 0) row.appendChild(el('span', 'join', 'and'));
+    });
+    host.appendChild(row);
+
+    if(pick.checked){
+      const c = Number(pick.c), n0 = Number(pick.n0);
+      const v = witnessVerdict(q, c, n0);
+      row.classList.add(v.ok ? 'right' : 'wrong');
+      const named = (q.near || []).find(h => h.when(c, n0, v.ok));
+      // The first n that breaks the pair is the most useful sentence there is here,
+      // so it is always said, ahead of whatever else the question has to add.
+      // Not every f and g here lands on whole numbers, so the two sides are shown
+      // to two places when they do not, and exactly when they do.
+      const num = x => Number.isInteger(x) ? String(x) : x.toFixed(2);
+      const broke = v.at != null
+        ? 'It first fails at n = ' + v.at + ', where f(' + v.at + ') = ' + num(q.f(v.at))
+          + ' and ' + pick.c + '·g(' + v.at + ') = ' + num(c * q.g(v.at)) + '. '
+        : (v.snag ? v.snag + ' ' : '');
+      const b = optButton(
+        'c = ' + pick.c + ' and n₀ = ' + pick.n0,
+        v.ok ? 'right' : 'wrong',
+        v.ok ? (named ? named.why + ' ' : '') + q.why
+             : broke + (named ? named.why : ''),
+        v.ok ? 'That pair works.' : 'That pair does not hold.');
+      b.tabIndex = -1;
+      const wrap = el('div', 'qopts');
+      wrap.appendChild(b);
+      host.appendChild(wrap);
+      setVerdict(q, v.ok, true);
+    } else {
+      setVerdict(q, false, false);
+    }
+    $('q-check').hidden = pick.checked;
+    $('q-check').disabled = !ready();
+    $('q-retry').hidden = !pick.checked;
+    if(!pick.checked) setTimeout(() => boxes[0] && boxes[0].focus(), 0);
+  }
+
   function checkNow(){
     const q = curQ(), pick = QP.picked.get(q);
     if(!pick || pick.checked) return;
-    if(q.kind === 'multi'){
+    if(q.kind === 'proof'){
+      pick.checked = true;
+      score(q, q.steps.every((st, si) => !!st.options[pick.on.get(si)] && !!st.options[pick.on.get(si)].ok));
+    } else if(q.kind === 'witness'){
+      pick.checked = true;
+      score(q, witnessVerdict(q, Number(pick.c), Number(pick.n0)).ok);
+    } else if(q.kind === 'multi'){
       pick.checked = true;
       score(q, q.options.every((o, k) => !!o.ok === pick.on.has(k)));
     } else if(q.kind === 'number'){
@@ -2326,12 +2888,15 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     if(q.kind === 'multi') QP.picked.set(q, { on: new Set(), checked: false });
     if(q.kind === 'number') QP.picked.set(q, { v: '', checked: false });
     if(q.kind === 'order') QP.picked.set(q, { order: scrambled(q.items.length, 3 + Date.now() % 977), checked: false });
+    if(q.kind === 'proof') QP.picked.set(q, { on: new Map(), checked: false });
+    if(q.kind === 'witness') QP.picked.set(q, { c:'', n0:'', checked: false });
     draw();
   }
 
   function draw(){
     const qs = curQs(), q = curQ();
-    $('q-tier').textContent = QP.tier === 1 ? 'Tier 1 · the definition' : 'Tier 2 · using it';
+    const tierRow = TIERS.find(t => t.n === QP.tier);
+    $('q-tier').textContent = tierRow ? tierRow.label : 'Tier ' + QP.tier;
     $('q-count').textContent = 'Question ' + (QP.at + 1) + ' of ' + qs.length;
     $('q-tests').textContent = 'Testing: ' + q.tests;
     $('q-prompt').textContent = q.prompt;
@@ -2342,6 +2907,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     const lead = q.kind === 'multi' ? 'Tick every one that applies, then check. Partly right counts as wrong here, which is the point: each row is its own claim.'
       : q.kind === 'order' ? 'Move them with the arrows, then check.'
       : q.kind === 'choice' ? 'Pick one. Whichever you pick, it will say why it is right or wrong, and the others stay open to read.'
+      : q.kind === 'proof' ? 'Pick one line for each step, then check. The argument is judged as a whole: a proof with one broken line proves nothing.'
+      : q.kind === 'witness' ? 'Any pair that works counts, and there are many. Yours is checked against the inequality itself, not against a stored answer.'
       : '';
     $('q-lead').hidden = !lead;
     $('q-lead').textContent = lead;
@@ -2353,13 +2920,17 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     if(q.kind === 'multi') renderMulti(q, host);
     if(q.kind === 'number') renderNumber(q, host);
     if(q.kind === 'order') renderOrder(q, host);
+    if(q.kind === 'proof') renderProof(q, host);
+    if(q.kind === 'witness') renderWitness(q, host);
 
     $('q-prev').disabled = QP.at === 0;
-    $('q-next').textContent = QP.at === qs.length - 1 ? (QP.tier === 1 ? 'On to tier 2' : 'Back to question 1') : 'Next question';
+    const lastTier = TIERS[TIERS.length - 1].n;
+    $('q-next').textContent = QP.at === qs.length - 1
+      ? (QP.tier === lastTier ? 'Back to question 1' : 'On to tier ' + (QP.tier + 1))
+      : 'Next question';
     // while an answer is still waiting to be checked, checking it is the main action
     $('q-next').classList.toggle('ghost', !$('q-check').hidden);
-    $('tier-1').classList.toggle('on', QP.tier === 1);
-    $('tier-2').classList.toggle('on', QP.tier === 2);
+    TIERS.forEach(t => $('tier-' + t.n).classList.toggle('on', QP.tier === t.n));
 
     // the map and the tally
     const map = $('q-map');
@@ -2399,15 +2970,14 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 
   $('mode-walk').addEventListener('click', () => setMode('walk'));
   $('mode-drill').addEventListener('click', () => setMode('drill'));
-  $('tier-1').addEventListener('click', () => { QP.tier = 1; QP.at = 0; draw(); });
-  $('tier-2').addEventListener('click', () => { QP.tier = 2; QP.at = 0; draw(); });
+  TIERS.forEach(t => $('tier-' + t.n).addEventListener('click', () => { QP.tier = t.n; QP.at = 0; draw(); }));
   $('q-check').addEventListener('click', checkNow);
   $('q-retry').addEventListener('click', retryNow);
   $('q-prev').addEventListener('click', () => { if(QP.at > 0){ QP.at--; draw(); $('qwrap').scrollTop = 0; } });
   $('q-next').addEventListener('click', () => {
     const qs = curQs();
     if(QP.at < qs.length - 1) QP.at++;
-    else if(QP.tier === 1){ QP.tier = 2; QP.at = 0; }
+    else if(QP.tier < TIERS[TIERS.length - 1].n){ QP.tier++; QP.at = 0; }
     else QP.at = 0;
     draw();
     $('qwrap').scrollTop = 0;

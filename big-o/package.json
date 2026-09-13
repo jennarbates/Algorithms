@@ -6,6 +6,7 @@
   "description": "The definition of Big-O told as a seven step building: the leading term grows until it shoves the lower order terms off the roof, what is left sinks below the line, and c is the one lever that lifts it back.",
   "scripts": {
     "build": "node build.mjs",
+    "check": "node check.mjs",
     "preview": "python3 -m http.server --directory dist 8000"
   }
 }

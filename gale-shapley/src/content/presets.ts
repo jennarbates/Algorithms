@@ -2,7 +2,8 @@ import { schoolIdentity, studentIdentity } from './cast';
 import type { Instance, School, Student } from '../core/types';
 
 /**
- * The six instances the page ships with.
+ * The eight instances the page ships with: six the walkthrough can animate, and
+ * two the practice section works on paper.
  *
  * Every claim made about these ("this one has exactly one stable arrangement",
  * "flipping the sides changes nothing here") is asserted in `tests/presets.test.ts`
@@ -300,6 +301,89 @@ const bigOne = buildInstance({
   ],
 });
 
+// ---------------------------------------------------------------------------
+// G. The worksheet
+//
+// The four-by-four instance from the CMPSCI 311 discussion sheet, with the
+// colleges and students given names so that it reads like the rest of the page.
+// It is here for the practice section rather than the walkthrough.
+//
+// It has exactly two stable arrangements, which is what makes it a good exercise
+// instance: "find another one" has an answer, and the answer is not "run it the
+// other way round and see", because two of the four people are in the same place
+// in both. Only Ravi and Maya move.
+// ---------------------------------------------------------------------------
+
+const worksheet = buildInstance({
+  id: 'worksheet',
+  title: 'Four students, four seats',
+  teaches: 'An instance to work by hand: two arrangements hold, and only two people differ.',
+  studentIds: ['priya', 'sam', 'ravi', 'maya'],
+  schoolIds: ['mit', 'umass', 'nyu', 'berkeley'],
+  studentPrefs: [
+    [3, 1, 2, 0],
+    [0, 3, 1, 2],
+    [0, 1, 2, 3],
+    [3, 2, 0, 1],
+  ],
+  schoolPrefs: [
+    [0, 1, 2, 3],
+    [1, 0, 3, 2],
+    [0, 2, 1, 3],
+    [1, 0, 2, 3],
+  ],
+  reasons: {
+    priya:
+      'Set on Berkeley for one particular professor. MIT is the one place she would rather not go.',
+    sam: 'MIT or nothing, really. After that he is ranking by how much fieldwork each one offers.',
+    ravi: 'Ranking strictly by distance from home in Massachusetts, nearest first.',
+    maya: 'Wants a city and a coast, in that order.',
+  },
+  notes: {
+    mit: 'Weighting research experience above everything else.',
+    umass: 'Looking for students who have already published something.',
+    nyu: 'Leadership and portfolio work.',
+    berkeley: 'Weighting maths preparation above everything else.',
+  },
+});
+
+// ---------------------------------------------------------------------------
+// H. Nobody's first choice is anybody's first choice
+//
+// Two and two, arranged in a cycle: each school's top name belongs to a student
+// whose own top name is the other school. So no pair anywhere is first on both
+// lists, and both of the arrangements that hold are missing one.
+//
+// This is the counterexample to "every instance has an arrangement holding a
+// pair who are each other's first choice", and the practice section uses it
+// twice: once for an argument that reaches that conclusion the wrong way, and
+// once for the argument that reaches it properly.
+// ---------------------------------------------------------------------------
+
+const noMutualFirst = buildInstance({
+  id: 'no-mutual-first',
+  title: 'Two who want what wants somebody else',
+  teaches: 'An instance where nobody is first on the list of anybody who is first on theirs.',
+  studentIds: ['priya', 'sam'],
+  schoolIds: ['mit', 'nyu'],
+  studentPrefs: [
+    [1, 0],
+    [0, 1],
+  ],
+  schoolPrefs: [
+    [0, 1],
+    [1, 0],
+  ],
+  reasons: {
+    priya: 'New York, and she has said so to everyone who asked.',
+    sam: 'MIT, for the lab.',
+  },
+  notes: {
+    mit: 'Priya is their standout applicant this round.',
+    nyu: 'Sam is exactly who they are looking for.',
+  },
+});
+
 export const PRESETS: readonly Instance[] = [
   opener,
   headOn,
@@ -307,6 +391,8 @@ export const PRESETS: readonly Instance[] = [
   cascade,
   nothingChanges,
   bigOne,
+  worksheet,
+  noMutualFirst,
 ];
 
 export const DEFAULT_PRESET_ID = opener.id;

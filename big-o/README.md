@@ -355,12 +355,32 @@ Where a question has a step that settles it, the closing note links to that step
 by number and title. Following the link is a round trip: the walkthrough puts a
 `Back to question N` button beside its own controls until the reader takes it.
 
-### Two tiers
+### Four tiers, and a ramp inside each one
 
 **Tier 1** stays on `T(n) = 14n² + 4n + 6`, so it is checking whether the thing
 that was just watched was understood. **Tier 2** takes the same definition to
 functions and code the page never drew, which is the only way to tell
-understanding from recall. Nine questions each.
+understanding from recall. **Tier 3** asks for the work itself: produce a
+witness, read the quantifiers, negate the statement, write the contradiction,
+and find the break in an argument that looks finished. **Tier 4** is the rest of
+the chapter: `Ω`, `Θ`, `o` and `ω`, what a bound inside an equation means, which
+plausible-sounding rules about `O` are actually false, and a ladder of functions
+to rank that includes several nobody has drawn for you. Nine questions each.
+
+The order inside a tier is a ramp too, and the bank is stored in the order it is
+read: tier 1 opens on what a bound promises and closes on four bounds holding at
+once; tier 4 opens on why one English sentence is empty and closes on a
+two-sided proof. `check.mjs` fails if the bank is ever left out of tier order,
+because the panel walks it straight through and nothing sorts it on the way to
+the screen.
+
+Tier 4 is where the page stops being about one definition and starts being about
+the family it belongs to. `O` on its own is half a vocabulary: without `Ω` there
+is no way to say a bound is a floor, without `Θ` no way to say it is tight, and
+without `o` and `ω` no way to say one function genuinely outgrows another rather
+than merely sitting above it. Several of its questions are lifted from the
+exercises and problems of CLRS chapter 3, which is where a reader who finishes
+this page goes next.
 
 | Tier 1 asks | The belief it is aimed at |
 | --- | --- |
@@ -386,7 +406,53 @@ understanding from recall. Nine questions each.
 | ordering the standard ladder | that the gaps in it are the same size |
 | what `O(1)` claims | that `O(1)` means one step, or fast |
 
-### The four formats
+| Tier 3 asks | The belief it is aimed at |
+| --- | --- |
+| for any `c` and `n₀` witnessing `n² = O(n² - 3n + 3)` | that a proof from the definition is a rearrangement |
+| where `f, g` both `O(n²)`, therefore `f = O(g)` breaks | that a shared ceiling is transitivity |
+| the smallest `c` once `n₀` is pinned at `0` | that a constant is read off the shape |
+| which formula is the definition | that the order of the quantifiers is notation |
+| which of six formulas negate it | that negating the inequality negates the claim |
+| the four lines of the contradiction, assembled | that the proof may choose its own `c` |
+| what a correct-looking disproof failed to show | that one constant stands for all of them |
+| which of six claims about `f` and `g` hold | that the same growth class means a bounded gap |
+| the smallest `n₀` when `c = 3` | that the values which fail are the small ones |
+
+Tier 3's running example is `f(n) = n²` against `g(n) = (n - 1)(n - 2) + 1`,
+which earns the whole tier on one property: its failures sit in the middle of
+the range rather than at the start. With `c = 3` the inequality holds at `n = 0`
+and `n = 1`, fails at `n = 2`, and holds at every `n` above, so `n₀ = 2` even
+though two smaller values were fine. No habit about small `n` survives that, and
+neither does the idea that `n₀` marks the start of a good stretch: it marks the
+last failure, wherever the last failure happens to be.
+
+The tier's target throughout is the gap between an answer that reaches the right
+conclusion and an answer that establishes it. The disproof it critiques sets
+`c = 1` on the first line, divides through, and derives a contradiction with
+perfectly correct arithmetic, and what it has shown is that `c = 1` fails. The
+same slip is what the proof format's first step is built around.
+
+| Tier 4 asks | The belief it is aimed at |
+| --- | --- |
+| why "at least `O(n²)`" is an empty sentence | that `O` and `Ω` are stylistic choices |
+| what `f = o(g)` says from the other side | that transpose symmetry pairs `o` with `Ω` |
+| what `2n² + Θ(n) = Θ(n²)` claims | that notation in an equation is shorthand |
+| six standard facts, including `lg(n!) = Θ(n lg n)` | that a moved exponent is still a constant |
+| ranking seven functions including `2^√(2 lg n)` | that everything is a power or a logarithm |
+| which half of the `≤ ≥ = < >` analogy breaks | that any two functions can be compared |
+| six prove-or-disprove conjectures about `O` | that `O` behaves like `≤` in every respect |
+| a witness for `lg(n!) = O(n lg n)` | that a witness needs a formula you were given |
+| the four lines of a `Θ` proof, assembled | that `Θ` is `O` with a stronger word |
+
+The ordering question in tier 4 is the one that catches people out, and it caught
+this file out first. Two of its pairs cross late: `lg*(n)` only falls behind
+`lg lg n` past about `2^32`, and `lg² n` only falls behind `2^√(2 lg n)` past
+about `2^100`. An early draft of `check.mjs` verified the ladder at `n = 2^20`
+and failed, correctly. It now checks from `2^128` up to `2^1000`, which is the
+last size a double can hold, and the question asks for order of growth rather
+than order at any particular `n` for exactly this reason.
+
+### The six formats
 
 Each format exists because some nuance cannot be tested by the others.
 
@@ -409,11 +475,27 @@ Each format exists because some nuance cannot be tested by the others.
   the reader commit to which function wins in the end rather than recognise the
   answer. Each row's reason names its own crossing: `n³` reaches `14n²` at
   exactly `n = 14`, where both are 2744.
+- **Witness entry** asks for `c` and `n₀` together and judges the pair by running
+  the inequality, not by comparing against a stored answer. Every pair that holds
+  is accepted, which is the thing being taught: the definition is an existence
+  claim and there is nothing to match. A pair that fails is answered with the
+  first `n` that breaks it and both sides evaluated there, since that single line
+  settles more than any amount of working. Asking only for `n₀`, which is what
+  the other numeric questions do, leaves a reader believing `c` was chosen for
+  them.
+- **Proof assembly** offers each line of an argument with the wrong lines a
+  reader who half-remembers the definition actually writes: a fixed `c` instead
+  of an arbitrary one, a witness that reaches the ceiling instead of passing it,
+  a conclusion drawn about the single constant that was tried. It is scored as
+  one answer, because a proof with a broken line proves nothing, and it is the
+  only format that can ask whether someone can produce an argument rather than
+  recognise a finished one. After checking, the rule down the left of each step
+  turns green or red and every candidate says why it stands or falls.
 
 ### What the answer keys were checked against
 
-Every number a question asserts was recomputed rather than reasoned about, and
-the arithmetic behind the two `n₀` questions is worth recording:
+Every number a question asserts was recomputed rather than reasoned about. The
+arithmetic behind the `n₀` questions is worth recording:
 
 | claim | check |
 | --- | --- |
@@ -421,6 +503,38 @@ the arithmetic behind the two `n₀` questions is worth recording:
 | `c = 18` needs `n₀ = 1` | `4n² - 4n - 6 >= 0` from `n = 2`, where it is `2` |
 | `c = 4` needs `n₀ = 136` for `3n² + 100n + 5000` | root of `n² - 100n - 5000` is `50 + sqrt(7500)`, about `136.6` |
 | `T(n) = O(n³)` holds with `c = 1`, `n₀ = 14` | `2744` against `T(14) = 2806`, then `3375` against `3216` |
+| `c = 4`, `n₀ = 0` witnesses `n² = O(n² - 3n + 3)` | `4g(n) - f(n) = 3n² - 12n + 12 = 3(n - 2)²`, a square |
+| `4` is the smallest such `c` | at `n = 2` both sides are `4`, so nothing below `4` survives that point |
+| `c = 3` needs `n₀ = 2` | `3g(n) - f(n) = (2n - 3)(n - 3)`, negative only between `1.5` and `3` |
+| `c = 2` needs `n₀ = 4` | `2g(n) - f(n) = n² - 6n + 6`, negative only between `3 - sqrt 3` and `3 + sqrt 3` |
+| `c = 1` needs an `n₀` that does not exist | it cancels to `3n <= 3`, which holds only at `n = 1` |
+| `g(n) = O(f(n))` too, with `c = 1`, `n₀ = 0` | `g(n) <= n²` is `3 <= 3n`, true from `n = 1`, and `n = 0` is excluded |
+| `lg(n!) <= n lg n` with `c = 1`, `n₀ = 0` | the sum of logarithms against `n lg n`, every `n` to 50,000 |
+| `lg(n!) >= (n/2)(lg n - 1)` | the same sum, from `n = 4` up |
+| no `c < 1` works for `lg(n!)` | the ratio climbs monotonically and is past `0.9` by `n = 200,000` |
+| `n^(1/lg n) = 2` | evaluated at sizes from `2` to `10^12` |
+| `lg*(2^65536) = 5` | through `lg*(2^x) = 1 + lg*(x)`, since the number itself is past a double |
+| `n` and `n^(1+sin n)` are incomparable | the ratio passes `1000` and drops below `0.001`, both infinitely often |
+
+The witness questions are not checked against a table at all. The page evaluates
+whichever pair the reader types, over every `n` from `n₀ + 1` to `n₀ + 20000`,
+and reports the first failure if there is one. The table above is the working
+the page shows afterwards.
+
+None of this is left as a claim in a README. `check.mjs` lifts the question bank
+straight out of `index.html`, evaluates it, and recomputes every row above, along
+with the shape of each question: one right answer per multiple choice, one right
+line per proof step, a reason on every option, and no near miss that quietly
+names the answer. There is no second copy of the bank for it to fall out of step
+with.
+
+```bash
+npm run check
+```
+
+`npm run check` runs the `check` script from `package.json`, which is
+`node check.mjs`. It prints nothing but a count unless something fails, and exits
+non-zero if anything does.
 
 That last row is a trap the first draft of the question fell into. `n³` reaches
 `14n²` at exactly `n = 14`, where both are `2744`, and it is tempting to read
@@ -432,8 +546,9 @@ matters is one step later.
 
 ```
 index.html   the whole page: markup, styles and script, nothing external
+check.mjs    lifts the question bank out of index.html and recomputes its arithmetic
 build.mjs    copies index.html to dist/index.html so site/build.sh can publish it
-package.json the build and preview scripts the site build looks for
+package.json the build, check and preview scripts the site build looks for
 ```
 
 ## Running it

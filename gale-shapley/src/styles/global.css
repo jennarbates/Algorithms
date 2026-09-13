@@ -1156,3 +1156,514 @@ body {
   border-color: var(--bad);
   background: color-mix(in srgb, var(--bad) 14%, transparent);
 }
+
+/* --- practice ------------------------------------------------------------ */
+/* The questions borrow the page's own vocabulary of colour rather than adding
+   one: accent is "this holds", bad is "this breaks", live is "you picked this".
+   A reader who has watched the run already knows what each one means. */
+
+.practice {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 280px);
+  align-items: start;
+  margin-bottom: 34px;
+}
+
+.practice__panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.practice__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-sunk);
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.practice__body {
+  padding: 16px 18px 20px;
+}
+
+.qtests {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.qprompt {
+  margin: 7px 0 12px;
+  font-size: 20px;
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  max-width: 60ch;
+}
+
+.qquote {
+  margin: 0 0 14px;
+  padding: 11px 14px;
+  background: var(--surface-sunk);
+  border-left: 3px solid var(--border-strong);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font:
+    13px/1.6 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-width: 72ch;
+}
+
+.qlead {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  max-width: 62ch;
+}
+
+/* One answer. A button, so the whole row is the target and the keyboard gets it free. */
+.qopts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 70ch;
+}
+
+.qopt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.qopt:disabled {
+  cursor: default;
+}
+
+.qopt:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+.qopt__line {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 10px 13px;
+}
+
+.qopt__tick {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: transparent;
+}
+
+.qopt__text {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.qopt__why {
+  display: block;
+  padding: 0 14px 11px 45px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.qopt--picked {
+  border-color: var(--live);
+}
+
+.qopt--picked .qopt__tick {
+  border-color: var(--live);
+  background: color-mix(in srgb, var(--live) 22%, transparent);
+}
+
+.qopt--right {
+  border-color: var(--good);
+  background: color-mix(in srgb, var(--good) 12%, transparent);
+}
+
+.qopt--right .qopt__tick {
+  border-color: var(--good);
+  background: var(--good);
+  color: var(--surface);
+}
+
+.qopt--right .qopt__why b {
+  color: var(--good);
+}
+
+.qopt--wrong {
+  border-color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 12%, transparent);
+}
+
+.qopt--wrong .qopt__tick {
+  border-color: var(--bad);
+  background: var(--bad);
+  color: var(--surface);
+}
+
+.qopt--wrong .qopt__why b {
+  color: var(--bad);
+}
+
+/* Belongs, and was left out. Dashed rather than solid, because ticking something
+   false and missing something true are different mistakes. */
+.qopt--missed {
+  border-color: var(--good);
+  border-style: dashed;
+}
+
+.qopt--missed .qopt__tick {
+  border-color: var(--good);
+  color: var(--good);
+}
+
+.qopt--missed .qopt__why b {
+  color: var(--good);
+}
+
+/* Working a run: one row per person, one button per seat. */
+.qpair {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 70ch;
+}
+
+.qrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 9px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.qrow--right {
+  border-color: var(--good);
+  background: color-mix(in srgb, var(--good) 12%, transparent);
+}
+
+.qrow--wrong {
+  border-color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 12%, transparent);
+}
+
+.qrow__who {
+  flex: 0 0 auto;
+  min-width: 62px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.qrow__seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.qseat {
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 4px 11px;
+  cursor: pointer;
+}
+
+.qseat:disabled {
+  cursor: default;
+}
+
+.qseat--on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+/* Where the person actually ends up, once the row has been checked. */
+.qseat--truth {
+  border-color: var(--good);
+  border-width: 2px;
+  color: var(--good);
+  background: transparent;
+}
+
+.qrow__why {
+  flex: 1 1 100%;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+/* Assembling an argument: one block per line, with the rule down the left edge. */
+.qproof {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 72ch;
+}
+
+.qstep {
+  border-left: 2px solid var(--border);
+  padding-left: 13px;
+}
+
+.qstep--right {
+  border-color: var(--good);
+}
+
+.qstep--wrong {
+  border-color: var(--bad);
+}
+
+.qstep__lead {
+  display: flex;
+  gap: 9px;
+  align-items: baseline;
+  margin: 0 0 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.qstep__num {
+  font-size: 10px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* What the question was really about, once it has been answered. */
+.qverdict {
+  margin-top: 16px;
+  max-width: 68ch;
+  border-left: 3px solid var(--border);
+  padding-left: 13px;
+}
+
+.qverdict--ok {
+  border-color: var(--good);
+}
+
+.qverdict--no {
+  border-color: var(--bad);
+}
+
+.qverdict h3 {
+  margin: 0 0 5px;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.qverdict p {
+  margin: 0 0 7px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.practice__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-sunk);
+}
+
+.practice__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.practice__cap {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.tierpick {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tierpick button {
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+  padding: 7px 11px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.tierpick .tierpick__on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+.qmap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.qmap button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.qmap button.qmap__at {
+  outline: 2px solid var(--live);
+  outline-offset: 1px;
+}
+
+.qmap button.qmap__first {
+  background: var(--good);
+  border-color: var(--good);
+  color: var(--surface);
+}
+
+.qmap button.qmap__after {
+  background: color-mix(in srgb, var(--good) 20%, transparent);
+  border-color: var(--good);
+  color: var(--good);
+}
+
+.qmap button.qmap__miss {
+  background: color-mix(in srgb, var(--bad) 16%, transparent);
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+.qtally {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.qtally b {
+  display: block;
+  color: var(--ink);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The words tier 2 borrows from the textbook, each with the phrase it replaces. */
+.glossary {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.glossary div {
+  margin-bottom: 5px;
+}
+
+.glossary dt {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.glossary dd {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.practice__back {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--ink-faint);
+  line-height: 1.6;
+}
+
+.practice__back button {
+  display: block;
+  margin-top: 4px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.practice__back button:hover {
+  text-decoration: underline;
+}
+
+/* The question is the whole screen on a narrow one, and the progress column follows it. */
+@media (max-width: 780px) {
+  .practice {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .qprompt {
+    font-size: 18px;
+  }
+
+  .tierpick {
+    flex-direction: row;
+  }
+
+  .tierpick button {
+    flex: 1 1 0;
+  }
+}

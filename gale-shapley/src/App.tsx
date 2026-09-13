@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import type { Dispatch, RefObject, SetStateAction } from 'react';
 import { presetById } from './content/presets';
 import { boardStatus, pastStatus } from './content/narration';
 import { ActionBar } from './components/ActionBar';
@@ -10,9 +11,11 @@ import { AskerPanel } from './components/AskerPanel';
 import { MatchLines } from './components/MatchLines';
 import { NarrationLog } from './components/NarrationLog';
 import { PairChallenge } from './components/PairChallenge';
+import { Practice } from './components/Practice';
 import { ReceiverPanel } from './components/ReceiverPanel';
 import { WhyItWorks } from './components/WhyItWorks';
 import { useRun } from './hooks/useRun';
+import type { Run } from './hooks/useRun';
 
 /**
  * Phase 2: the stepping view.
@@ -29,28 +32,35 @@ import { useRun } from './hooks/useRun';
  * The whole run is kept, not just the latest moment, and the page can look at
  * any step of it. The board, the headline and the log all draw from whichever
  * moment is being looked at; only the step button cares about the latest.
+ *
+ * The page has a second mode. Watching a run is not the same as being able to
+ * work one, and the gap between them is where a problem set lives, so the
+ * practice section takes the whole page over rather than sitting underneath the
+ * board: a reader who can still see the answer cannot be asked for it.
  */
 
 const INSTANCE = presetById('opener');
 
+type Ghost = { asker: string; receiver: string } | null;
+
 export function App() {
   const run = useRun(INSTANCE, 'students');
   const boardRef = useRef<HTMLDivElement>(null);
+  const [mode, setMode] = useState<'walk' | 'practice'>('walk');
 
-  const { state, askingSide, viewingPast } = run;
-  const settled = state.phase === 'done';
+  const settled = run.state.phase === 'done';
 
   // The pair under test, shared between the challenge and the third claim,
   // and the would-be pairing the claim draws on the board while replaying.
   const [pair, setPair] = useState<Pair>({ student: null, school: null });
-  const [ghost, setGhost] = useState<{ asker: string; receiver: string } | null>(null);
+  const [ghost, setGhost] = useState<Ghost>(null);
   const pick = useCallback((kind: 'student' | 'school', id: string) => {
     setPair((p) => (kind === 'student' ? { ...p, student: id } : { ...p, school: id }));
     setGhost(null);
   }, []);
 
   return (
-    <main className={settled ? 'page stage-settled' : 'page'}>
+    <main className={settled && mode === 'walk' ? 'page stage-settled' : 'page'}>
       <header className="masthead">
         <h1>Who gets in, and why</h1>
         <p className="lede">
@@ -58,26 +68,82 @@ export function App() {
           happens, and at the end try to find two people who would rather have each other.
         </p>
 
-        <div className="sidepicker" role="group" aria-label="Which side does the asking">
-          <span className="sidepicker__label">Who does the asking?</span>
+        <div className="sidepicker" role="group" aria-label="Watch or work">
+          <span className="sidepicker__label">What do you want to do?</span>
           <button
             type="button"
-            className={askingSide === 'students' ? 'pill pill--on' : 'pill'}
-            onClick={() => run.switchSide('students')}
-            aria-pressed={askingSide === 'students'}
+            className={mode === 'walk' ? 'pill pill--on' : 'pill'}
+            onClick={() => setMode('walk')}
+            aria-pressed={mode === 'walk'}
           >
-            Students
+            Watch it happen
           </button>
           <button
             type="button"
-            className={askingSide === 'schools' ? 'pill pill--on' : 'pill'}
-            onClick={() => run.switchSide('schools')}
-            aria-pressed={askingSide === 'schools'}
+            className={mode === 'practice' ? 'pill pill--on' : 'pill'}
+            onClick={() => setMode('practice')}
+            aria-pressed={mode === 'practice'}
           >
-            Schools
+            Work it yourself
           </button>
         </div>
       </header>
+
+      {mode === 'practice' ? (
+        <Practice onLeave={() => setMode('walk')} />
+      ) : (
+        <Walkthrough
+          run={run}
+          boardRef={boardRef}
+          pair={pair}
+          ghost={ghost}
+          onPick={pick}
+          onGhost={setGhost}
+        />
+      )}
+
+      <p className="footnote">
+        Real schools, real school colours, invented preferences. The marks are our own and no
+        institutional logo is reproduced. Nobody here is a real applicant.
+      </p>
+    </main>
+  );
+}
+
+interface WalkthroughProps {
+  readonly run: Run;
+  readonly boardRef: RefObject<HTMLDivElement | null>;
+  readonly pair: Pair;
+  readonly ghost: Ghost;
+  readonly onPick: (kind: 'student' | 'school', id: string) => void;
+  readonly onGhost: Dispatch<SetStateAction<Ghost>>;
+}
+
+function Walkthrough({ run, boardRef, pair, ghost, onPick, onGhost }: WalkthroughProps) {
+  const { state, askingSide, viewingPast } = run;
+  const settled = state.phase === 'done';
+
+  return (
+    <>
+      <div className="sidepicker" role="group" aria-label="Which side does the asking">
+        <span className="sidepicker__label">Who does the asking?</span>
+        <button
+          type="button"
+          className={askingSide === 'students' ? 'pill pill--on' : 'pill'}
+          onClick={() => run.switchSide('students')}
+          aria-pressed={askingSide === 'students'}
+        >
+          Students
+        </button>
+        <button
+          type="button"
+          className={askingSide === 'schools' ? 'pill pill--on' : 'pill'}
+          onClick={() => run.switchSide('schools')}
+          aria-pressed={askingSide === 'schools'}
+        >
+          Schools
+        </button>
+      </div>
 
       <ActionBar state={state} locked={viewingPast} onStep={run.step} onReset={run.reset} />
 
@@ -100,7 +166,13 @@ export function App() {
         <MatchLines state={state} boardRef={boardRef} ghost={viewingPast ? ghost : null} />
       </div>
 
-      <PairChallenge key={run.runId} instance={INSTANCE} state={state} pair={pair} onPick={pick} />
+      <PairChallenge
+        key={run.runId}
+        instance={INSTANCE}
+        state={state}
+        pair={pair}
+        onPick={onPick}
+      />
 
       <WhyItWorks
         run={run}
@@ -108,18 +180,19 @@ export function App() {
           finishes: <FinishesBody run={run} />,
           'nobody-left-out': <LeftOutBody run={run} />,
           holds: (
-            <HoldsBody run={run} instance={INSTANCE} pair={pair} onPick={pick} onGhost={setGhost} />
+            <HoldsBody
+              run={run}
+              instance={INSTANCE}
+              pair={pair}
+              onPick={onPick}
+              onGhost={onGhost}
+            />
           ),
         }}
       />
 
       <h2 className="section-title">What has happened so far</h2>
       <NarrationLog state={run.current} viewStep={run.viewStep} onView={run.viewAt} />
-
-      <p className="footnote">
-        Real schools, real school colours, invented preferences. The marks are our own and no
-        institutional logo is reproduced. Nobody here is a real applicant.
-      </p>
-    </main>
+    </>
   );
 }
