@@ -3,13 +3,28 @@
 An animated, step-through explanation of the definition of Big-O:
 
 ```
-T(n) <= c * f(n)   for all n > n0
+T(n) <= c * f(n)   for all n >= n0
 ```
+
+One convention, stated once because every numeric answer on the page depends on
+it. The threshold is inclusive, `for all n >= n0`, which is how both Kleinberg
+and Tardos §2.2 and CLRS §3.2 write it, so `n0` names the **first** `n` the
+claim covers. Some books and courses write `for all n > n0` instead, making `n0`
+the last `n` that is allowed to fail. The two say exactly the same thing, since
+either witness converts to the other by adding or subtracting one, but every
+"smallest `n0`" answer moves by one between them: `c = 15` gives `n0 = 6` here
+and 5 under the strict reading, and `c = 4` on `3n^2 + 100n + 5000` gives 137
+here and 136 there. The page names the difference twice, once in the opening
+step and once in the tier 3 quantifier question, because a reader who meets the
+other convention on a problem set should recognise it rather than think one of
+the two is wrong. `check.mjs` enforces it: `firstFailure` scans from `n0`
+itself, and a guard fails the build if `n > n0` appears anywhere in the bank
+except where the two conventions are being contrasted.
 
 The page opens by stating what the notation claims, before the metaphor starts:
 Big-O is a ceiling. `T(n) = O(f(n))` says there exists a constant `c` and a
-starting point `n0` such that `c * f(n)` never drops below `T(n)` once `n` is
-past `n0`. It is an upper bound, not a measurement, and the last step comes back
+starting point `n0` such that `c * f(n)` never drops below `T(n)` at `n0` or
+at any `n` after it. It is an upper bound, not a measurement, and the last step comes back
 to what that does and does not promise.
 
 In between it is told as a building. `T(n)` starts on the roof, every term of it
@@ -23,7 +38,7 @@ basement, because without `c` it is smaller than `T(n)`. Bring `c` along and it
 goes straight back to the roof.
 
 The worked example throughout is `T(n) = 14n^2 + 4n + 6`, with `f(n) = n^2`,
-`c = 15` and `n0 = 5`. Note that `c = 14` never works, for any `n`, since
+`c = 15` and `n0 = 6`. Note that `c = 14` never works, for any `n`, since
 `4n + 6` is always positive; anything above 14 works eventually, and
 `15n^2 >= 14n^2 + 4n + 6` holds from `n = 6` on. A plot of the real curves sits
 beside the building so the metaphor never says something the numbers cannot
@@ -69,8 +84,9 @@ the roof is exactly `n0`. The page uses this three times on the one fact:
 
 One more thing the plot says and the building cannot: `n` counts input size, so
 it is a whole number. The gap curve turns positive at `n = 5.162`, which is why
-`n > n0` with `n0 = 5` is the right phrasing and `n >= 5` would be wrong
-(`15 * 25 = 375`, just under `T(5) = 376`).
+`n0 = 6` and not 5: at `n = 5` the ceiling is still short (`15 * 25 = 375`,
+just under `T(5) = 376`), and `n = 6` is the first whole number past the
+crossing.
 
 ### The bound does not have to be tight
 
@@ -118,9 +134,10 @@ asymptotic notation known in advance. Concretely that means:
   centred on a whole `n` too. The only fractional values on the page are places
   where two curves cross, `n = 5.16`, and those are named as crossings rather
   than as inputs.
-- the `n0 = 5` versus `from n = 6 on` gap is the easiest thing on the page to
+- the crossing at `n = 5.16` versus `n0 = 6` is the easiest thing on the page to
   trip over, so step 6 shows both sides of it, 25 against 26 and 36 against 30,
-  and then says why the rule reads `for every n greater than n0`.
+  and then says why the rule reads `for every n at or above n0`, which makes the
+  first whole `n` past the crossing the answer.
 
 ## Layout and motion
 
@@ -240,8 +257,8 @@ above it, the red band is `4n + 6` and is positive everywhere, `n^2` is under
 `T(n)` at every `n`. The gap markers and probe dots stay, because the marker
 is a pointer rather than a measurement, but they no longer carry a number.
 
-Three kinds of value survive on the plot, because they are answers rather than
-samples: `n0 = 5`, the constant read-out counting up to `c = 15`, the crossing
+Four kinds of value survive on the plot, because they are answers rather than
+samples: `n0 = 6`, the constant read-out counting up to `c = 15`, the crossing
 at `n = 5.16`, and `n^3` holding from `n = 15`. The worked arithmetic that
 checks all of this still exists, in the caption and in the `NUMBERS` line
 beside it, where a reader who wants the sum can find it without the picture
@@ -255,7 +272,7 @@ being made of sums.
 | 4 | n 0 to 12 | the same picture with that sliver magnified eight times, see below |
 | 5 | n 0 to 12 | `T(n)` and `15n^2` at full height, with the distance between them marked twice: once early where `15n^2` is underneath, once later where it is on top and staying there |
 | 6 | the gap, y from -20 to 100 | `15n^2 - T(n)`, which is `n^2 - 4n - 6`, red below zero and green above. At this scale the sign change at `n = 5.16` is obvious, where on the raw curves it is a couple of pixels. This one subtracts on screen, see below |
-| 7 | n 0 to 12, y to 620 | `n^2` large enough to see at last, with `T(n)` climbing out of the top of the frame and the distance between the two marked. `4n + 6` is drawn in too, low in the frame, with a dot where `n^2` overtakes it at `n = 5.16`, which is `n0` |
+| 7 | n 0 to 12, y to 620 | `n^2` large enough to see at last, with `T(n)` climbing out of the top of the frame and the distance between the two marked. `4n + 6` is drawn in too, low in the frame, with a dot where `n^2` overtakes it at `n = 5.16`, the crossing `n0 = 6` is read off |
 | 8 | n 0 to 12 | the same `n^2` curve scaled vertically from `c = 1` to `c = 15`, with a live readout of `c`, landing on the dashed target above `T(n)` |
 | 9 | n 0 to 30 | `T(n)`, `15n^2` and `n^3`, far enough out that the loose bound has visibly pulled away from the tight one |
 
@@ -355,7 +372,7 @@ Where a question has a step that settles it, the closing note links to that step
 by number and title. Following the link is a round trip: the walkthrough puts a
 `Back to question N` button beside its own controls until the reader takes it.
 
-### Four tiers, and a ramp inside each one
+### Five tiers, and a ramp inside each one
 
 **Tier 1** stays on `T(n) = 14n² + 4n + 6`, so it is checking whether the thing
 that was just watched was understood. **Tier 2** takes the same definition to
@@ -379,8 +396,15 @@ the family it belongs to. `O` on its own is half a vocabulary: without `Ω` ther
 is no way to say a bound is a floor, without `Θ` no way to say it is tight, and
 without `o` and `ω` no way to say one function genuinely outgrows another rather
 than merely sitting above it. Several of its questions are lifted from the
-exercises and problems of CLRS chapter 3, which is where a reader who finishes
-this page goes next.
+exercises and problems of CLRS chapter 3.
+
+**Tier 5** is the other half of the story, and it follows Kleinberg and Tardos
+chapter 2 rather than CLRS: worst case against average case, brute-force search
+as the benchmark, polynomial time as the working definition of efficient, and
+the handful of running times that keep turning up together with where in the
+code each one comes from. It is last because it is the part that only makes
+sense once the definition is solid: a reader who cannot say what `O(n²)` claims
+cannot argue about whether `n^100` deserves to count as efficient.
 
 | Tier 1 asks | The belief it is aimed at |
 | --- | --- |
@@ -410,7 +434,7 @@ this page goes next.
 | --- | --- |
 | for any `c` and `n₀` witnessing `n² = O(n² - 3n + 3)` | that a proof from the definition is a rearrangement |
 | where `f, g` both `O(n²)`, therefore `f = O(g)` breaks | that a shared ceiling is transitivity |
-| the smallest `c` once `n₀` is pinned at `0` | that a constant is read off the shape |
+| the smallest `c` once `n₀` is pinned at `1` | that a constant is read off the shape |
 | which formula is the definition | that the order of the quantifiers is notation |
 | which of six formulas negate it | that negating the inequality negates the claim |
 | the four lines of the contradiction, assembled | that the proof may choose its own `c` |
@@ -421,10 +445,10 @@ this page goes next.
 Tier 3's running example is `f(n) = n²` against `g(n) = (n - 1)(n - 2) + 1`,
 which earns the whole tier on one property: its failures sit in the middle of
 the range rather than at the start. With `c = 3` the inequality holds at `n = 0`
-and `n = 1`, fails at `n = 2`, and holds at every `n` above, so `n₀ = 2` even
+and `n = 1`, fails at `n = 2`, and holds at every `n` above, so `n₀ = 3` even
 though two smaller values were fine. No habit about small `n` survives that, and
-neither does the idea that `n₀` marks the start of a good stretch: it marks the
-last failure, wherever the last failure happens to be.
+neither does the idea that a good stretch starts at the beginning: `n₀` marks
+where the good stretch starts, wherever that happens to be.
 
 The tier's target throughout is the gap between an answer that reaches the right
 conclusion and an answer that establishes it. The disproof it critiques sets
@@ -444,13 +468,31 @@ same slip is what the proof format's first step is built around.
 | a witness for `lg(n!) = O(n lg n)` | that a witness needs a formula you were given |
 | the four lines of a `Θ` proof, assembled | that `Θ` is `O` with a stronger word |
 
+| Tier 5 asks | The belief it is aimed at |
+| --- | --- |
+| why the worst case is the one analysed | that the worst case is what usually happens |
+| what polynomial time is a definition of | that it is a definition of fast |
+| the factor by which `cN³` grows when `N` doubles | that the scaling factor depends on `N` |
+| which of six bounds are polynomial | that polynomial means an integer power of `n` |
+| why a degree-`d` polynomial is `Θ(nᵈ)` whatever the signs of the lower-order coefficients | that the leading term is the largest at every `n` |
+| where `O(n log n)` comes from | that it means sorting and nothing else |
+| ordering the costs of eight brute-force searches | that the landscape is bigger than it is |
+| why a missing log base is fine and a missing exponential base is not | that Big-O forgives every base |
+| what an `n!` space solved in `n²` steps is an instance of | that the search space predicts the difficulty |
+
+The tier's running example is the page's own subject seen from outside: a stable
+matching instance has `n!` perfect matchings and is solved in `n²` steps, and
+that gap, rather than any particular speed, is what an algorithm is for.
+
 The ordering question in tier 4 is the one that catches people out, and it caught
 this file out first. Two of its pairs cross late: `lg*(n)` only falls behind
 `lg lg n` past about `2^32`, and `lg² n` only falls behind `2^√(2 lg n)` past
-about `2^100`. An early draft of `check.mjs` verified the ladder at `n = 2^20`
-and failed, correctly. It now checks from `2^128` up to `2^1000`, which is the
-last size a double can hold, and the question asks for order of growth rather
-than order at any particular `n` for exactly this reason.
+about `2^80`, where writing `x = lg n` puts the crossing of `x²` and `2^√(2x)`
+between `x = 79` and `x = 80`. An early draft of `check.mjs` verified the ladder
+at `n = 2^20` and failed, correctly. It now checks from `2^128` up to `2^1000`,
+which is the largest round size available before doubles overflow just past
+`2^1024`, and the question asks for order of growth rather than order at any
+particular `n` for exactly this reason.
 
 ### The six formats
 
@@ -467,9 +509,9 @@ Each format exists because some nuance cannot be tested by the others.
   leaving something true unticked are different mistakes. A solid green row was
   ticked and belongs, a dashed green one belongs and was left out.
 - **Numeric entry** is checked against the real inequality, and the named near
-  misses answer the specific thing that went wrong. Someone who types 137 for an
-  `n₀` of 136 has the arithmetic right and the strictness of `n > n₀` wrong,
-  which is a different error from typing 5 out of habit, and neither is addressed
+  misses answer the specific thing that went wrong. Someone who types 136 for an
+  `n₀` of 137 has the arithmetic right and the inclusiveness of `n >= n₀` wrong,
+  which is a different error from typing 6 out of habit, and neither is addressed
   by showing the working alone.
 - **Ordering** is the only format that can ask about a crossing, because it makes
   the reader commit to which function wins in the end rather than recognise the
@@ -499,25 +541,31 @@ arithmetic behind the `n₀` questions is worth recording:
 
 | claim | check |
 | --- | --- |
-| `c = 15` needs `n₀ = 5` | `15 * 25 = 375` against `T(5) = 376`, then `540` against `534` |
-| `c = 18` needs `n₀ = 1` | `4n² - 4n - 6 >= 0` from `n = 2`, where it is `2` |
-| `c = 4` needs `n₀ = 136` for `3n² + 100n + 5000` | root of `n² - 100n - 5000` is `50 + sqrt(7500)`, about `136.6` |
-| `T(n) = O(n³)` holds with `c = 1`, `n₀ = 14` | `2744` against `T(14) = 2806`, then `3375` against `3216` |
-| `c = 4`, `n₀ = 0` witnesses `n² = O(n² - 3n + 3)` | `4g(n) - f(n) = 3n² - 12n + 12 = 3(n - 2)²`, a square |
+| `c = 15` needs `n₀ = 6` | `15 * 25 = 375` against `T(5) = 376`, then `540` against `534` |
+| `c = 18` needs `n₀ = 2` | `4n² - 4n - 6 >= 0` from `n = 2`, where it is `2` |
+| `c = 4` needs `n₀ = 137` for `3n² + 100n + 5000` | root of `n² - 100n - 5000` is `50 + sqrt(7500)`, about `136.6` |
+| `T(n) = O(n³)` holds with `c = 1`, `n₀ = 15` | `2744` against `T(14) = 2806`, then `3375` against `3216` |
+| `c = 4`, `n₀ = 1` witnesses `n² = O(n² - 3n + 3)` | `4g(n) - f(n) = 3n² - 12n + 12 = 3(n - 2)²`, a square |
 | `4` is the smallest such `c` | at `n = 2` both sides are `4`, so nothing below `4` survives that point |
-| `c = 3` needs `n₀ = 2` | `3g(n) - f(n) = (2n - 3)(n - 3)`, negative only between `1.5` and `3` |
-| `c = 2` needs `n₀ = 4` | `2g(n) - f(n) = n² - 6n + 6`, negative only between `3 - sqrt 3` and `3 + sqrt 3` |
-| `c = 1` needs an `n₀` that does not exist | it cancels to `3n <= 3`, which holds only at `n = 1` |
-| `g(n) = O(f(n))` too, with `c = 1`, `n₀ = 0` | `g(n) <= n²` is `3 <= 3n`, true from `n = 1`, and `n = 0` is excluded |
-| `lg(n!) <= n lg n` with `c = 1`, `n₀ = 0` | the sum of logarithms against `n lg n`, every `n` to 50,000 |
+| `c = 3` needs `n₀ = 3` | `3g(n) - f(n) = (2n - 3)(n - 3)`, negative only between `1.5` and `3` |
+| `c = 2` needs `n₀ = 5` | `2g(n) - f(n) = n² - 6n + 6`, negative only between `3 - sqrt 3` and `3 + sqrt 3` |
+| `c = 1` needs an `n₀` that does not exist | it cancels to `3n <= 3`, which holds at `n = 1` and fails at every `n` above it |
+| `g(n) = O(f(n))` too, with `c = 1`, `n₀ = 1` | `g(n) <= n²` is `3 <= 3n`, true from `n = 1`, and `n = 0` is excluded |
+| `lg(n!) <= n lg n` with `c = 1`, `n₀ = 1` | the sum of logarithms against `n lg n`, every `n` to 50,000 |
 | `lg(n!) >= (n/2)(lg n - 1)` | the same sum, from `n = 4` up |
 | no `c < 1` works for `lg(n!)` | the ratio climbs monotonically and is past `0.9` by `n = 200,000` |
 | `n^(1/lg n) = 2` | evaluated at sizes from `2` to `10^12` |
 | `lg*(2^65536) = 5` | through `lg*(2^x) = 1 + lg*(x)`, since the number itself is past a double |
 | `n` and `n^(1+sin n)` are incomparable | the ratio passes `1000` and drops below `0.001`, both infinitely often |
+| `2^50` is about 36 years at a million steps a second | `2^50 / 10^6 / (365 * 24 * 3600)` |
+| `1.5^50` is about 11 minutes at the same rate | the same arithmetic, and `(2/1.5)^50 > 10^6` |
+| doubling `N` multiplies `cN^d` by `2^d` | evaluated for `d = 1, 2, 3, 5` at three sizes |
+| `n log n <= n^2` from `n = 1` | every `n` to 100,000, which is why `O(n log n)` is polynomial |
+| `n^(1 + 0.02 lg n)` is not polynomial | its exponent passes 2, 5 and 100 at sizes the file names |
+| in `n^2 - 100n + 5000`, which term leads changes twice | the crossings are at `n = 50` and `n = 100` |
 
 The witness questions are not checked against a table at all. The page evaluates
-whichever pair the reader types, over every `n` from `n₀ + 1` to `n₀ + 20000`,
+whichever pair the reader types, over every `n` from `n₀` to `n₀ + 20000`,
 and reports the first failure if there is one. The table above is the working
 the page shows afterwards.
 

@@ -46,7 +46,7 @@ import type { Term } from './proofs';
  * relation and left the quantifiers alone.
  */
 
-export type Tier = 1 | 2 | 3;
+export type Tier = 1 | 2 | 3 | 4;
 
 /** One option in a written question, with the reason it stands or falls. */
 export interface Option {
@@ -858,7 +858,257 @@ export const QUESTIONS: readonly Question[] = [
       },
     ],
     close:
-      'Ties are the harder relaxation to allow. With ties, one definition of stable splits into three, and finding the largest matching that is stable under the weakest of them becomes NP-hard. Strictness is not a convenience, it is what makes the single clean answer exist.',
+      'Ties are the harder relaxation, and the next tier takes them seriously: one notion of a blocking pair splits into two, and only one of the two can always be avoided. The kind that can always be avoided is the one that then becomes hard to optimise: with ties and incomplete lists together, matchings with no strongly blocking pair can differ in size, and finding a largest one is NP-hard. Strictness is not a convenience, it is what makes the single clean answer exist.',
+  },
+
+  // ---------------------------------------------------------------------------
+  // Tier 4. The chapter's own exercises. Everything up to here has been about one
+  // problem with one set of assumptions; these are the questions that ask what the
+  // assumptions were doing, and they are where the algorithm turns out to be more
+  // robust than the problem statement suggests.
+  // ---------------------------------------------------------------------------
+
+  {
+    id: 'measure-of-progress',
+    tier: 4,
+    kind: 'choice',
+    tests: 'choosing the quantity that bounds a loop',
+    prompt:
+      'The proof that the process stops needs a quantity that strictly increases at every step and cannot pass a ceiling. Which of these is one?',
+    options: [
+      {
+        t: 'The number of people who are currently free.',
+        why: 'It can stay where it is from one step to the next: a displacement frees the person let go and settles the person asking, leaving the count exactly where it was, and a turn-away changes nothing at all. A quantity that is allowed to stand still bounds nothing. It never rises either, which is worth noticing and does not rescue it.',
+      },
+      {
+        t: 'The number of pairs currently held.',
+        why: 'A displacement swaps one held pair for another and leaves it exactly where it was, and so does a turn-away. Two of the three things that can happen do not move it.',
+      },
+      {
+        t: 'The number of pairs (asker, asked) such that the asker has already asked that person.',
+        ok: true,
+        why: 'Every step adds exactly one, because nobody asks the same person twice, and it can never exceed n². So there are at most n² steps. That is the entire proof, and it is a counting argument rather than anything about what the steps do.',
+      },
+      {
+        t: 'How far down their own list each asker has reached.',
+        why: 'This is n numbers rather than one, and it is the right idea half-finished: add them up and you have exactly the quantity in the option above, since how far the askers have collectively reached is how many questions have been asked. Left as a list of n numbers it bounds nothing, because no single one of them has to move at any given step.',
+      },
+    ],
+    close:
+      'Finding a measure of progress is the standard way to bound a loop, and all the art is in the choice. Two of the quantities here are allowed to stand still, which disqualifies them, and one is the right idea left as n separate numbers instead of added into one.',
+  },
+
+  {
+    id: 'nobody-left-out',
+    tier: 4,
+    kind: 'proof',
+    tests: 'the claim that is easiest to assume',
+    quote:
+      'Claim: when the process stops, every person on both sides is matched.\n' +
+      'The lists are strict and complete, and the sides are the same size.',
+    prompt: 'Build the proof.',
+    steps: [
+      {
+        lead: 'What is being claimed',
+        options: [
+          {
+            t: 'That the process stops.',
+            why: 'A separate theorem with a separate proof, and this one needs it: stopping and stopping in a good state are different claims, and a process could perfectly well stop with somebody left over.',
+          },
+          {
+            t: 'That every asker ends matched, so the result is a perfect matching.',
+            ok: true,
+            why: 'The whole claim, and what makes it worth proving is that the loop exits when no asker is free, which does not by itself say that nobody ran out of list.',
+          },
+          {
+            t: 'That every asker ends with the best person who did not turn them away.',
+            why: 'They end with the last person they asked, which is the worst of those who did not turn them away. True or false, it is not what perfect means.',
+          },
+        ],
+      },
+      {
+        lead: 'The step to prove first',
+        options: [
+          {
+            t: 'If an asker is free at some point, there is somebody they have not yet asked.',
+            ok: true,
+            why: 'This is the load-bearing step. With it, the loop can only exit for the right reason, since the exit condition is that no free asker has anybody left to ask.',
+          },
+          {
+            t: 'If an asker is free at some point, somebody has turned them away.',
+            why: 'True once they have asked anybody at all, and no use here. What is needed is that they still have somebody left, not that somebody has already refused.',
+          },
+          {
+            t: 'Anybody who has been asked is holding somebody from then on.',
+            why: 'True, and it is the ingredient rather than the step: it gets used inside the proof of the step above. On its own it says nothing about the askers.',
+          },
+        ],
+      },
+      {
+        lead: 'The argument for it',
+        options: [
+          {
+            t: 'Suppose an asker is free and has asked everybody. Then every person on the other side has been asked, so every one of them is holding somebody, so n askers are held. This one is not, and there are only n.',
+            ok: true,
+            why: 'Counting, and nothing else. The held pairs form a matching, so n people held means n distinct askers held, which uses up everybody and leaves no room for the free one.',
+          },
+          {
+            t: 'Suppose an asker is free and has asked everybody. Then everybody turned them away, so they are last on every list, which cannot happen to more than one person.',
+            why: 'Being turned away puts you below whoever was being held at that moment, not last. And being last on every list is perfectly possible for one person anyway.',
+          },
+          {
+            t: 'Suppose an asker is free and has asked everybody. Then n² questions have been asked and the process has to stop.',
+            why: 'That is the other theorem arriving early. Running out of steps says the process ends; it says nothing about who is matched when it does.',
+          },
+        ],
+      },
+      {
+        lead: 'Finishing',
+        options: [
+          {
+            t: 'So every asker is matched, and by symmetry so is everybody on the other side.',
+            why: 'Symmetry is not available here: the two sides do not play the same role, and the whole page is about how differently they come out. What settles the other side is counting, since the held pairs are a matching between equal-sized sides.',
+          },
+          {
+            t: 'So the loop can only exit with no free asker, and the held pairs are then a matching covering everybody.',
+            ok: true,
+            why: 'The exit condition is that no free asker has anybody left to ask. The step just proved says a free asker always does have somebody left, so the loop can only exit with nobody free.',
+          },
+          {
+            t: 'So there are at most n² steps and the result covers everybody.',
+            why: 'The step count is true and is not what was just shown. Two theorems that get run together is exactly the mistake this question exists for.',
+          },
+        ],
+      },
+    ],
+    close:
+      'It finishes and nobody is left out are two theorems, not one, and the second is the one people assume. What carries it is a counting argument in the middle: everybody asked is holding somebody, and there are only so many people to hold.',
+  },
+
+  {
+    id: 'good-and-bad',
+    tier: 4,
+    kind: 'choice',
+    tests: 'proving something about every stable matching at once',
+    quote:
+      'Everybody is either good or bad, and there are k good students and k good schools.\n' +
+      'Every list ranks every good person on the other side above every bad one.',
+    prompt:
+      'In every stable matching, every good student is matched to a good school. What is the argument?',
+    options: [
+      {
+        t: 'Because the process settles the good people first, and by the time it reaches the bad ones the good ones are taken.',
+        why: 'The process has no notion of good and bad, and a good person can be displaced very late. The claim is about every stable matching, including ones no run ever produces, so no argument about the order of asks can reach it.',
+      },
+      {
+        t: 'Suppose a good student had a bad school. Then at most k − 1 of the k good schools have good students, so some good school has a bad student, and those two would both switch.',
+        ok: true,
+        why: 'Counting, then one blocking pair. The misplaced good student uses up a good school without occupying it, so some good school is left with a bad student, and that good student and that good school each prefer the other to what they have.',
+      },
+      {
+        t: 'Because a good student ranks every good school above every bad one, so they would never accept a bad school.',
+        why: 'Nobody accepts or declines anything in a matching: a matching is a pairing, and stability is the only constraint on it. People end up low on their own list all the time when nobody better wants them.',
+      },
+      {
+        t: 'It is false. With k = 1 the single good student can end up with the single bad school.',
+        why: 'Try it. If the one good student had a bad school, the one good school would have a bad student, and those two are each other first choice. The pair blocks, so no such matching is stable.',
+      },
+    ],
+    close:
+      'This is the shape of most claims about every stable matching: assume one is wrong, count until two people are provably misplaced, and show they block. No algorithm appears anywhere in it.',
+  },
+
+  {
+    id: 'forbidden-pairs',
+    tier: 4,
+    kind: 'choice',
+    tests: 'which part a variant actually changes',
+    prompt:
+      'Some pairs are forbidden outright, so a student is ranked only by the schools they could actually attend. What does that change?',
+    options: [
+      {
+        t: 'Nothing. A forbidden pair is the same as being ranked last.',
+        why: 'Last is still acceptable. A matching that pairs a forbidden couple is not a bad matching, it is not a matching at all, and no ranking can express that difference.',
+      },
+      {
+        t: 'People can end up matched to nobody, so stability grows three more cases: an unmatched person somebody prefers, on either side, and two unmatched people who are allowed each other.',
+        ok: true,
+        why: 'A stable matching no longer has to be perfect, and once it need not be, the definition has to say what an unmatched person can complain about. The process itself changes by one word: keep asking while there is a free asker who has not asked everybody they are allowed to.',
+      },
+      {
+        t: 'A stable matching need not exist any more, so the question becomes which instances have one.',
+        why: 'One always exists, by the same process on the shortened lists. What changes is the definition of stable, not whether anything satisfies it.',
+      },
+      {
+        t: 'The process stops finishing, because an asker can run out of list.',
+        why: 'Running out of list is exactly what now happens, and it is fine: that person is unmatched and asks no more. The counting argument is untouched, since the lists got shorter rather than longer.',
+      },
+    ],
+    close:
+      'The algorithm survives most variations with one change to the loop. Where the work moves is the definition of what it means to hold, and a definition with four cases instead of one is a definition somebody had to get right.',
+  },
+
+  {
+    id: 'hospitals-and-residents',
+    tier: 4,
+    kind: 'choice',
+    tests: 'unequal sides and more than one seat',
+    prompt:
+      'Hospitals have several posts each, there are more graduating students than posts, and every post has to be filled. How does the algorithm handle it?',
+    options: [
+      {
+        t: 'It cannot: with unequal numbers no stable assignment exists.',
+        why: 'One always exists. Some students end with nothing, by arithmetic, and the definition of stable is extended to cover them: an unmatched student and a hospital that would rather have them than somebody it has is an instability.',
+      },
+      {
+        t: 'Run the ordinary process on as many students as there are posts, and set the rest aside.',
+        why: 'The students set aside are exactly where the instability would live. One of them may be preferred by a hospital to somebody it took, and the definition has a case for precisely that.',
+      },
+      {
+        t: 'Each hospital holds its q best askers so far instead of one, and stability gains a case for unmatched students. A stable assignment always exists.',
+        ok: true,
+        why: 'A hospital with q posts is q hospitals with one post and the same list, so splitting it turns the variant into the ordinary problem and the ordinary proofs come along unchanged. Holding q at a time is how that is implemented rather than a different algorithm.',
+      },
+      {
+        t: 'Assign every student to the hospital that ranks them highest, then fix the hospitals that end up over their limit.',
+        why: 'Fixing the over-subscribed hospitals is the entire problem rather than a tidying step, and nothing about this start makes the fixing easier.',
+      },
+    ],
+    close:
+      'This variant came first. The National Resident Matching Program had been running a version of this algorithm for ten years when Gale and Shapley published in 1962, and the generalisation costs one line, because a hospital with q posts is q hospitals with one.',
+  },
+
+  {
+    id: 'ties',
+    tier: 4,
+    kind: 'choice',
+    tests: 'what indifference costs',
+    quote:
+      'Allow ties, so a school can be indifferent between two students.\n' +
+      'A pair blocks STRONGLY if each strictly prefers the other to their partner.\n' +
+      'A pair blocks WEAKLY if one strictly prefers the other, and the other is indifferent or also strictly prefers.',
+    prompt: 'Which of these is true?',
+    options: [
+      {
+        t: 'Both always exist, because the ties can be broken arbitrarily first.',
+        why: 'Tie-breaking buys the strong notion and not the weak one. Breaking a tie in favour of one person stops the other from blocking in the strict instance, and they are still blocking weakly in the original.',
+      },
+      {
+        t: 'Neither need exist, because with ties the process can loop.',
+        why: 'The process cannot loop: break the ties any way at all and it is the ordinary process on strict lists, which stops in at most n² asks.',
+      },
+      {
+        t: 'A matching with no strongly blocking pair always exists; one with no weakly blocking pair need not.',
+        ok: true,
+        why: 'For the first, break the ties arbitrarily and run the process: a pair who both strictly prefer each other in the original also do so after any tie-break, so no strongly blocking pair survives. For the second, take two students who both rank MIT above NYU, with both schools indifferent between them. Whichever way they are paired, the student at NYU strictly prefers MIT and MIT is indifferent, so every matching has a weakly blocking pair.',
+      },
+      {
+        t: 'Both need not exist, and which one you get depends on how the ties are broken.',
+        why: 'The strong one always exists, whichever way the ties are broken. And the counterexample for the weak one defeats every matching of that instance, so no tie-break can rescue it either.',
+      },
+    ],
+    close:
+      'Ties are the expensive relaxation, and the cost lands on the notion that survives. Matchings with no strongly blocking pair always exist, and once lists may also be incomplete they can differ in size, at which point finding a largest one is NP-hard. The other notion is the opposite: a matching with no weakly blocking pair need not exist at all, and when one does it can be found in polynomial time. That is why every clean statement on this page begins by assuming strict and complete lists.',
   },
 ];
 
@@ -870,6 +1120,7 @@ export const TIER_LABELS: Readonly<Record<Tier, string>> = {
   1: 'Tier 1 · the run',
   2: 'Tier 2 · on paper',
   3: 'Tier 3 · textbook',
+  4: 'Tier 4 · variants',
 };
 
-export const TIERS: readonly Tier[] = [1, 2, 3];
+export const TIERS: readonly Tier[] = [1, 2, 3, 4];

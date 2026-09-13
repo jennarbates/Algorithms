@@ -7,8 +7,8 @@ self-contained in its own folder with its own tooling.
 
 | Folder | What it is | Status |
 | --- | --- | --- |
-| [`gale-shapley/`](./gale-shapley) | Stable matching, as an interactive page that explains itself to someone with no maths background, plus three tiers of practice | In progress |
-| [`big-o/`](./big-o) | The definition of Big-O, told as a building: small terms jump off the roof, and f(n) needs c to get back up, plus four tiers of practice | Live |
+| [`gale-shapley/`](./gale-shapley) | Stable matching, as an interactive page that explains itself to someone with no maths background, plus four tiers of practice | In progress |
+| [`big-o/`](./big-o) | The definition of Big-O, told as a building: small terms jump off the roof, and f(n) needs c to get back up, plus five tiers of practice | Live |
 
 ## Conventions
 

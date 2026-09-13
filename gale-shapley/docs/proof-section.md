@@ -145,7 +145,8 @@ Body: pick any student. Suppose they had run out. The body dims every school
 they asked, then scrubs to the step each of those schools was first asked and
 shows its "nobody yet" chip vanishing, with a marker that it never comes back.
 At the end it counts: all n schools holding somebody, only n students, so this
-student is one of them.
+student is one of them, which is the contradiction, because the supposition was
+that they were the one left free.
 
 Sketch: the same, said once in general.
 

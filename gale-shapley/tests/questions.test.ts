@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { matchingOf, run } from '../src/core/engine';
+import { createEngine, matchingOf, run, step } from '../src/core/engine';
 import { MAX_ENUMERABLE_SIZE, allStableMatchings, sameMatching } from '../src/core/enumerate';
 import { blockingPairs, isPerfect, isStable } from '../src/core/stability';
 import { PRESETS, presetById } from '../src/content/presets';
@@ -136,7 +136,7 @@ describe('the vocabulary rule', () => {
 
   it('introduces every textbook word the formal tiers lean on', () => {
     const introduced = FORMAL_TERMS.map((t) => t.term.toLowerCase());
-    for (const q of [...questionsIn(2), ...questionsIn(3)]) {
+    for (const q of [...questionsIn(2), ...questionsIn(3), ...questionsIn(4)]) {
       const text = wordsOf(q).join(' ').toLowerCase();
       for (const banned of BANNED) {
         if (!text.includes(banned)) continue;
@@ -147,7 +147,10 @@ describe('the vocabulary rule', () => {
   });
 
   it('uses every word it introduces, and gives each one a plain phrase', () => {
-    const text = [...questionsIn(2), ...questionsIn(3)].flatMap(wordsOf).join(' ').toLowerCase();
+    const text = [...questionsIn(2), ...questionsIn(3), ...questionsIn(4)]
+      .flatMap(wordsOf)
+      .join(' ')
+      .toLowerCase();
     for (const { term, replaces } of FORMAL_TERMS) {
       expect(text, `"${term}" is introduced and never used`).toContain(term.toLowerCase());
       expect(replaces.trim().length, term).toBeGreaterThan(0);
@@ -422,3 +425,189 @@ describe('the direction of the asymmetry', () => {
     }
   });
 });
+
+/**
+ * The three tier 4 claims that can be settled by computation rather than by
+ * reading. Each one is an answer the bank marks correct, so each one is checked.
+ */
+describe('the variants tier 4 asserts', () => {
+  // --- ties: strong always avoidable, weak not -------------------------------
+  //
+  // Two students both rank MIT above NYU; both schools are indifferent between
+  // the two students. The question says every matching here has a weakly blocking
+  // pair, and that a matching with no strongly blocking pair exists.
+  type Tiers = readonly (readonly string[])[];
+  const rank = (tiers: Tiers, who: string) => tiers.findIndex((t) => t.includes(who));
+
+  const studentPrefs: Record<string, Tiers> = {
+    priya: [['mit'], ['nyu']],
+    sam: [['mit'], ['nyu']],
+  };
+  const schoolPrefs: Record<string, Tiers> = {
+    mit: [['priya', 'sam']],
+    nyu: [['priya', 'sam']],
+  };
+  const everyPairing = [
+    { priya: 'mit', sam: 'nyu' },
+    { priya: 'nyu', sam: 'mit' },
+  ];
+
+  function blocks(pairing: Record<string, string>, kind: 'strong' | 'weak') {
+    const holder: Record<string, string> = {};
+    for (const [s, c] of Object.entries(pairing)) holder[c] = s;
+    for (const s of Object.keys(studentPrefs)) {
+      for (const c of Object.keys(schoolPrefs)) {
+        if (pairing[s] === c) continue;
+        const sTiers = studentPrefs[s] as Tiers;
+        const cTiers = schoolPrefs[c] as Tiers;
+        const sHas = pairing[s] as string;
+        const cHas = holder[c] as string;
+        const sStrict = rank(sTiers, c) < rank(sTiers, sHas);
+        const sSame = rank(sTiers, c) === rank(sTiers, sHas);
+        const cStrict = rank(cTiers, s) < rank(cTiers, cHas);
+        const cSame = rank(cTiers, s) === rank(cTiers, cHas);
+        if (kind === 'strong' && sStrict && cStrict) return [s, c];
+        if (kind === 'weak' && ((sStrict && (cStrict || cSame)) || (cStrict && (sStrict || sSame))))
+          return [s, c];
+      }
+    }
+    return null;
+  }
+
+  it('leaves no matching of the tie instance free of a weakly blocking pair', () => {
+    for (const pairing of everyPairing) {
+      expect(blocks(pairing, 'weak'), JSON.stringify(pairing)).not.toBeNull();
+    }
+  });
+
+  it('and leaves at least one free of a strongly blocking pair', () => {
+    const clean = everyPairing.filter((p) => blocks(p, 'strong') === null);
+    expect(clean.length).toBeGreaterThan(0);
+    // both of them, in fact, which is what breaking the ties either way produces
+    expect(clean).toHaveLength(2);
+  });
+
+  // --- good and bad people ---------------------------------------------------
+  //
+  // Every list ranks every good person above every bad one. The question says
+  // every good student is with a good school in every stable matching.
+  it('keeps every good student with a good school in every stable matching', () => {
+    // priya and sam are good, ravi and maya are bad; mit and umass are the good
+    // schools, nyu and berkeley the bad ones. Orders inside each block vary.
+    const good = buildGoodBad();
+    for (const matching of allStableMatchings(good)) {
+      for (const student of ['priya', 'sam']) {
+        expect(['mit', 'umass'], `${student} in ${JSON.stringify(matching)}`).toContain(
+          matching[student],
+        );
+      }
+    }
+  });
+
+  // --- hospitals and residents ----------------------------------------------
+  //
+  // A hospital with q posts is q hospitals with one post and the same list. The
+  // question says splitting turns the variant into the ordinary problem, so the
+  // result has to be stable under the hospitals-and-residents definition, which
+  // has a case for the students who end up with nothing.
+  it('gets a stable assignment out of the splitting trick, surplus students and all', () => {
+    // 4 students, 2 hospitals, 3 posts: mercy has two, chest has one.
+    const capacity = { mercy: 2, chest: 1 };
+    const hospitalPrefs: Record<string, readonly string[]> = {
+      mercy: ['priya', 'ravi', 'sam', 'maya'],
+      chest: ['sam', 'priya', 'maya', 'ravi'],
+    };
+    const studentRanking: Record<string, readonly string[]> = {
+      priya: ['chest', 'mercy'],
+      sam: ['mercy', 'chest'],
+      ravi: ['chest', 'mercy'],
+      maya: ['mercy', 'chest'],
+    };
+
+    // Run the split instance by hand: three posts, each asking down mercy's or
+    // chest's list, students holding the best post asked so far.
+    const posts = ['mercy#1', 'mercy#2', 'chest#1'];
+    const owner = (post: string) => post.split('#')[0] as string;
+    const held: Record<string, string> = {}; // student -> post
+    const next: Record<string, number> = { 'mercy#1': 0, 'mercy#2': 0, 'chest#1': 0 };
+    const free = [...posts];
+    let guard = 0;
+    while (free.length > 0 && guard < 100) {
+      guard += 1;
+      const post = free.shift() as string;
+      const list = hospitalPrefs[owner(post)] as readonly string[];
+      const student = list[next[post] as number] as string;
+      next[post] = (next[post] as number) + 1;
+      const current = held[student];
+      const mine = studentRanking[student] as readonly string[];
+      if (current === undefined) held[student] = post;
+      else if (mine.indexOf(owner(post)) < mine.indexOf(owner(current))) {
+        held[student] = post;
+        free.push(current);
+      } else free.push(post);
+    }
+    expect(guard).toBeLessThan(100);
+
+    const assigned: Record<string, string> = {}; // student -> hospital
+    for (const [student, post] of Object.entries(held)) assigned[student] = owner(post);
+    // every post filled
+    const filled: Record<string, number> = {};
+    for (const h of Object.values(assigned)) filled[h] = (filled[h] ?? 0) + 1;
+    expect(filled).toEqual(capacity);
+
+    // and no instability of either kind
+    const students = Object.keys(studentRanking);
+    for (const s of students) {
+      for (const h of Object.keys(capacity)) {
+        const hList = hospitalPrefs[h] as readonly string[];
+        const mine = studentRanking[s] as readonly string[];
+        const theirs = assigned[s];
+        const wantsH = theirs === undefined || mine.indexOf(h) < mine.indexOf(theirs);
+        if (!wantsH) continue;
+        // h would have to prefer s to somebody it took
+        const taken = students.filter((x) => assigned[x] === h);
+        const worst = taken.reduce((a, b) => (hList.indexOf(a) > hList.indexOf(b) ? a : b));
+        expect(hList.indexOf(s) > hList.indexOf(worst), `${s} and ${h} form an instability`).toBe(
+          true,
+        );
+      }
+    }
+  });
+});
+
+/** Good people above bad people on every list, with the blocks internally shuffled. */
+function buildGoodBad() {
+  return presetById('good-and-bad');
+}
+
+/**
+ * One more claim from tier 4, this time about the shape of a run rather than
+ * about an instance: the number of free people is allowed to stand still, which
+ * is what disqualifies it as a measure of progress, and it never rises.
+ */
+describe('the quantity that does not bound the loop', () => {
+  it('never lets the number of free people rise, and lets it stand still', () => {
+    let stoodStill = false;
+    for (const preset of PRESETS) {
+      for (const side of ['students', 'schools'] as const) {
+        let state = createEngine(preset, side);
+        let free = countFree(state);
+        while (state.phase !== 'done') {
+          state = step(state);
+          const now = countFree(state);
+          expect(now, `${preset.id}/${side}`).toBeLessThanOrEqual(free);
+          if (now === free) stoodStill = true;
+          free = now;
+        }
+      }
+    }
+    expect(stoodStill).toBe(true);
+  });
+});
+
+function countFree(state: ReturnType<typeof createEngine>): number {
+  // Free means holding nobody and being held by nobody, counted across both sides.
+  const askersFree = Object.values(state.askers).filter((a) => a.heldBy === null).length;
+  const receiversFree = Object.values(state.receivers).filter((r) => r.holding === null).length;
+  return askersFree + receiversFree;
+}

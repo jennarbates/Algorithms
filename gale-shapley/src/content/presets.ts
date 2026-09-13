@@ -2,8 +2,8 @@ import { schoolIdentity, studentIdentity } from './cast';
 import type { Instance, School, Student } from '../core/types';
 
 /**
- * The eight instances the page ships with: six the walkthrough can animate, and
- * two the practice section works on paper.
+ * The nine instances the page ships with: six the walkthrough can animate, and
+ * three the practice section works on paper.
  *
  * Every claim made about these ("this one has exactly one stable arrangement",
  * "flipping the sides changes nothing here") is asserted in `tests/presets.test.ts`
@@ -384,6 +384,40 @@ const noMutualFirst = buildInstance({
   },
 });
 
+// ---------------------------------------------------------------------------
+// I. Good people and bad people
+//
+// Everybody is either good or bad, with two of each on each side, and every list
+// ranks both good people on the other side above both bad ones. The orders inside
+// each block differ, so the instance is not trivially everybody-agrees.
+//
+// The claim the practice section makes about it, that every good student is with a
+// good school in every arrangement that holds, is checked by exhaustive search in
+// tests/questions.test.ts rather than taken on trust.
+// ---------------------------------------------------------------------------
+
+const goodAndBad = buildInstance({
+  id: 'good-and-bad',
+  title: 'Two who everybody wants, two who nobody does',
+  teaches:
+    'Why some pairings are forced in every arrangement that holds, whatever the process does.',
+  studentIds: ['priya', 'sam', 'ravi', 'maya'],
+  schoolIds: ['mit', 'umass', 'nyu', 'berkeley'],
+  // schools 0 and 1 are the good ones, 2 and 3 the bad; students 0 and 1 good, 2 and 3 bad
+  studentPrefs: [
+    [0, 1, 2, 3],
+    [1, 0, 3, 2],
+    [0, 1, 3, 2],
+    [1, 0, 2, 3],
+  ],
+  schoolPrefs: [
+    [1, 0, 2, 3],
+    [0, 1, 3, 2],
+    [0, 1, 2, 3],
+    [1, 0, 3, 2],
+  ],
+});
+
 export const PRESETS: readonly Instance[] = [
   opener,
   headOn,
@@ -393,6 +427,7 @@ export const PRESETS: readonly Instance[] = [
   bigOne,
   worksheet,
   noMutualFirst,
+  goodAndBad,
 ];
 
 export const DEFAULT_PRESET_ID = opener.id;

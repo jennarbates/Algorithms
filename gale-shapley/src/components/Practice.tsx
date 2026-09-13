@@ -705,7 +705,7 @@ export function Practice({ onLeave }: PracticeProps) {
         ) : null}
 
         <p className="practice__back">
-          {QUESTIONS.length} questions, all of them on instances you can work by hand.
+          {QUESTIONS.length} questions, on instances you can work by hand.
           <button type="button" onClick={onLeave}>
             Back to the walkthrough
           </button>
