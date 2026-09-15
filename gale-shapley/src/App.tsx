@@ -37,6 +37,11 @@ import type { Run } from './hooks/useRun';
  * work one, and the gap between them is where a problem set lives, so the
  * practice section takes the whole page over rather than sitting underneath the
  * board: a reader who can still see the answer cannot be asked for it.
+ *
+ * What this file owns is the shell: a header that holds still, a footnote that
+ * holds still, and one growing area between them that is handed the rest of the
+ * height. The page is locked to a single screen, so nothing a reader has to act
+ * on can end up below a fold. See the README for the rules that keeps.
  */
 
 const INSTANCE = presetById('opener');
@@ -60,47 +65,50 @@ export function App() {
   }, []);
 
   return (
-    <main className={settled && mode === 'walk' ? 'page stage-settled' : 'page'}>
+    <main className={settled && mode === 'walk' ? 'page page--settled' : 'page'}>
       <header className="masthead">
-        <h1>Who gets in, and why</h1>
-        <p className="lede">
-          Everyone here has ranked the other side. Nobody can be talked into anything. Watch what
-          happens, and at the end try to find two people who would rather have each other.
-        </p>
+        <div className="masthead__left">
+          <a className="masthead__back" href="../">
+            &larr; All visuals
+          </a>
+          <h1>Who gets in, and why</h1>
 
-        <div className="sidepicker" role="group" aria-label="Watch or work">
-          <span className="sidepicker__label">What do you want to do?</span>
-          <button
-            type="button"
-            className={mode === 'walk' ? 'pill pill--on' : 'pill'}
-            onClick={() => setMode('walk')}
-            aria-pressed={mode === 'walk'}
-          >
-            Watch it happen
-          </button>
-          <button
-            type="button"
-            className={mode === 'practice' ? 'pill pill--on' : 'pill'}
-            onClick={() => setMode('practice')}
-            aria-pressed={mode === 'practice'}
-          >
-            Work it yourself
-          </button>
+          <span className="modes" role="group" aria-label="Walkthrough or practice">
+            <button type="button" onClick={() => setMode('walk')} aria-pressed={mode === 'walk'}>
+              Walkthrough
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('practice')}
+              aria-pressed={mode === 'practice'}
+            >
+              Practice
+            </button>
+          </span>
+        </div>
+
+        <div className="masthead__rule">
+          <span className="masthead__rule-label">What we want</span>
+          <span className="masthead__rule-text">
+            No two people who would both rather have each other
+          </span>
         </div>
       </header>
 
-      {mode === 'practice' ? (
-        <Practice onLeave={() => setMode('walk')} />
-      ) : (
-        <Walkthrough
-          run={run}
-          boardRef={boardRef}
-          pair={pair}
-          ghost={ghost}
-          onPick={pick}
-          onGhost={setGhost}
-        />
-      )}
+      <div className="deck">
+        {mode === 'practice' ? (
+          <Practice onLeave={() => setMode('walk')} />
+        ) : (
+          <Walkthrough
+            run={run}
+            boardRef={boardRef}
+            pair={pair}
+            ghost={ghost}
+            onPick={pick}
+            onGhost={setGhost}
+          />
+        )}
+      </div>
 
       <p className="footnote">
         Real schools, real school colours, invented preferences. The marks are our own and no
@@ -125,6 +133,11 @@ function Walkthrough({ run, boardRef, pair, ghost, onPick, onGhost }: Walkthroug
 
   return (
     <>
+      <p className="lede">
+        Everyone here has ranked the other side. Nobody can be talked into anything. Watch what
+        happens, and at the end try to find two people who would rather have each other.
+      </p>
+
       <div className="sidepicker" role="group" aria-label="Which side does the asking">
         <span className="sidepicker__label">Who does the asking?</span>
         <button

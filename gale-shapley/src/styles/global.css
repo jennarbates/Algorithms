@@ -57,8 +57,28 @@
   box-sizing: border-box;
 }
 
+/* --- the shell ---------------------------------------------------------- */
+
+/* The page is locked to one screen, the same contract the Big-O visual keeps.
+   The document itself never scrolls: the header and the footnote hold still,
+   and whatever sits between them is handed the height that is left over and
+   made to fit inside it.
+ *
+ * Every flex child on that path carries min-height: 0. A flex item defaults to
+ * refusing to shrink below the height of its own content, so one missing line
+ * is all it takes for the lock to stop holding without anything looking wrong
+ * until the content grows. */
+html {
+  height: 100%;
+}
+
 body {
   margin: 0;
+  height: 100dvh;
+  overflow: hidden;
+  padding: 10px 18px;
+  display: flex;
+  flex-direction: column;
   background: var(--bg);
   color: var(--ink);
   font:
@@ -71,25 +91,141 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* React mounts into a div, so the shell is body > #root > .page rather than the
+   body > .app that a hand written page gets. That extra div is exactly the kind
+   of link a percentage height chain breaks on: #root has no height of its own,
+   so height: 100% on .page resolves against nothing and silently becomes auto.
+   Flex all the way down instead, which needs no parent to have a stated height. */
+#root {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .page {
-  max-width: 1040px;
+  width: 100%;
+  max-width: 1520px;
+  flex: 1 1 auto;
+  min-height: 0;
   margin: 0 auto;
-  padding: 40px 20px 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* --- masthead ----------------------------------------------------------- */
 
-.masthead h1 {
-  font-size: 30px;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  margin: 0 0 10px;
+/* One bar. Every pixel the header takes is a pixel the board does not get, so
+   what used to be a title, a three line lede and two rows of pills is now the
+   title, the mode switch, and the one sentence the whole page exists to make
+   believable. The lede moved down into the run itself, where it reads as the
+   opening caption it always was. */
+.masthead {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
 }
 
-.lede {
+.masthead__left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.masthead h1 {
+  font-size: clamp(18px, 2vw, 24px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.masthead__back {
+  font-size: 12px;
+  color: var(--ink-faint);
+  text-decoration: none;
+}
+
+.masthead__back:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+/* Where Big-O keeps its formal line. This is the condition the whole page is
+   trying to earn, so it stays in view the entire time rather than being read
+   once at the top and then scrolled away from. */
+.masthead__rule {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.masthead__rule-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+.masthead__rule-text {
+  font-size: 13px;
+  font-weight: 600;
   color: var(--ink-soft);
-  margin: 0 0 20px;
-  max-width: 62ch;
+}
+
+/* The top level switch, segmented rather than loose pills, so it never reads
+   as the same kind of control as the choices inside a mode. */
+.modes {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+}
+
+.modes button {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  padding: 4px 13px;
+  cursor: pointer;
+}
+
+.modes button:hover {
+  color: var(--ink);
+}
+
+.modes button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* --- the deck ----------------------------------------------------------- */
+
+/* Everything between the header and the footnote, given whatever height is
+   left over.
+ *
+ * For now it scrolls its own content. The board column and the work column
+ * that will make scrolling unnecessary come next; until they land, keeping the
+ * scroll here rather than on the document means the header and the controls
+ * inside each mode stay where the shell puts them, and the page is never left
+ * half converted. */
+.deck {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .sidepicker {
@@ -98,6 +234,12 @@ body {
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 26px;
+}
+
+.lede {
+  color: var(--ink-soft);
+  margin: 0 0 20px;
+  max-width: 62ch;
 }
 
 .sidepicker__label {
@@ -452,7 +594,7 @@ body {
   background: color-mix(in srgb, var(--ink-faint) 10%, transparent);
 }
 
-.stage-settled .entry--held {
+.page--settled .entry--held {
   border-style: solid;
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 22%, transparent);
@@ -707,11 +849,15 @@ body {
   color: var(--ink-soft);
 }
 
+/* Pinned to the bottom of the shell rather than trailing the content, so the
+   credit is always visible and never costs the board any height. */
 .footnote {
-  margin-top: 34px;
-  font-size: 12.5px;
+  flex: 0 0 auto;
+  margin: 0;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
   color: var(--ink-faint);
-  max-width: 62ch;
 }
 
 .token {
@@ -1719,5 +1865,42 @@ body {
 
   .tierpick button {
     flex: 1 1 0;
+  }
+}
+
+/* --- the escape hatch ---------------------------------------------------- */
+
+/* Narrow or short, the page gets its scroll back. Locking a window that cannot
+   hold the content is worse than not locking it at all: it hides the bottom of
+   whatever is open rather than letting the reader reach it.
+ *
+ * Big-O unlocks below 600px of height because its drawing is one SVG that can
+ * be scaled down to nothing. The board here is two columns of real cards with
+ * a real floor, so this unlocks a hundred pixels higher.
+ *
+ * It comes last in the file so it beats the locked rules wherever they sit. */
+@media (max-width: 1180px), (max-height: 700px) {
+  html {
+    height: auto;
+  }
+
+  body {
+    height: auto;
+    overflow: visible;
+    padding: 10px 18px 40px;
+  }
+
+  #root,
+  .page {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  .deck {
+    overflow-y: visible;
+  }
+
+  .footnote {
+    margin-top: 24px;
   }
 }
