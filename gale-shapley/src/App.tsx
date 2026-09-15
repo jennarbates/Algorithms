@@ -2,18 +2,17 @@ import { useCallback, useRef, useState } from 'react';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 import { presetById } from './content/presets';
 import { boardStatus, pastStatus } from './content/narration';
-import { ActionBar } from './components/ActionBar';
 import { FinishesBody } from './components/FinishesBody';
 import { HoldsBody } from './components/HoldsBody';
 import type { Pair } from './components/HoldsBody';
 import { LeftOutBody } from './components/LeftOutBody';
 import { AskerPanel } from './components/AskerPanel';
 import { MatchLines } from './components/MatchLines';
-import { NarrationLog } from './components/NarrationLog';
 import { PairChallenge } from './components/PairChallenge';
 import { Practice } from './components/Practice';
 import { ReceiverPanel } from './components/ReceiverPanel';
 import { WhyItWorks } from './components/WhyItWorks';
+import { WorkColumn } from './components/WorkColumn';
 import { useRun } from './hooks/useRun';
 import type { Run } from './hooks/useRun';
 
@@ -178,42 +177,37 @@ function Walkthrough({ run, boardRef, pair, ghost, onPick, onGhost }: Walkthroug
         </div>
       </section>
 
-      <div className="workcol">
-        <p className="lede">
-          Everyone here has ranked the other side. Nobody can be talked into anything. Watch what
-          happens, and at the end try to find two people who would rather have each other.
-        </p>
-
-        <ActionBar state={state} locked={viewingPast} onStep={run.step} onReset={run.reset} />
-
-        <PairChallenge
-          key={run.runId}
-          instance={INSTANCE}
-          state={state}
-          pair={pair}
-          onPick={onPick}
-        />
-
-        <WhyItWorks
-          run={run}
-          bodies={{
-            finishes: <FinishesBody run={run} />,
-            'nobody-left-out': <LeftOutBody run={run} />,
-            holds: (
-              <HoldsBody
-                run={run}
-                instance={INSTANCE}
-                pair={pair}
-                onPick={onPick}
-                onGhost={onGhost}
-              />
-            ),
-          }}
-        />
-
-        <h2 className="section-title">What has happened so far</h2>
-        <NarrationLog state={run.current} viewStep={run.viewStep} onView={run.viewAt} />
-      </div>
+      <WorkColumn
+        run={run}
+        challenge={
+          <PairChallenge
+            key={run.runId}
+            instance={INSTANCE}
+            state={state}
+            pair={pair}
+            onPick={onPick}
+          />
+        }
+        why={
+          <WhyItWorks
+            key={run.runId}
+            run={run}
+            bodies={{
+              finishes: <FinishesBody run={run} />,
+              'nobody-left-out': <LeftOutBody run={run} />,
+              holds: (
+                <HoldsBody
+                  run={run}
+                  instance={INSTANCE}
+                  pair={pair}
+                  onPick={onPick}
+                  onGhost={onGhost}
+                />
+              ),
+            }}
+          />
+        }
+      />
     </div>
   );
 }

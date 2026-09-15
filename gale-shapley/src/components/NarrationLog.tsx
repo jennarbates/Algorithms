@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { narrate } from '../content/narration';
 import { Sentence } from './Sentence';
 import type { EngineState } from '../core/engine';
@@ -14,6 +15,12 @@ import type { EngineState } from '../core/engine';
  * The log always shows the whole run, even while the board is showing the
  * past. The line being looked at is marked, and everything after it is dimmed
  * so the reader can see how far back they are.
+ *
+ * It lives in a column that is shorter than the run gets, so it keeps the
+ * newest line in view on its own: a record that has to be scrolled to be read
+ * is not doing the job of catching a moment that went past too fast. It stops
+ * doing that while the reader is looking back, because dragging them to the
+ * bottom is the opposite of what they just asked for.
  */
 
 interface NarrationLogProps {
@@ -25,6 +32,13 @@ interface NarrationLogProps {
 }
 
 export function NarrationLog({ state, viewStep = null, onView }: NarrationLogProps) {
+  const lastRef = useRef<HTMLLIElement>(null);
+
+  useEffect(() => {
+    if (viewStep !== null) return;
+    lastRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [state.log.length, viewStep]);
+
   if (state.log.length === 0) {
     return (
       <div className="log log--empty">
@@ -49,6 +63,7 @@ export function NarrationLog({ state, viewStep = null, onView }: NarrationLogPro
         return (
           <li
             key={`${event.kind}-${event.step}-${index}`}
+            ref={index === state.log.length - 1 ? lastRef : undefined}
             className={classes.join(' ')}
             aria-current={isViewed ? 'step' : undefined}
           >

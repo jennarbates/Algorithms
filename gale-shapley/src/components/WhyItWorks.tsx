@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { CLAIMS, SECTION } from '../content/proofs';
 import type { Claim as ClaimContent } from '../content/proofs';
@@ -20,7 +20,14 @@ import type { Run } from '../hooks/useRun';
  * arguments are about the finished board.
  *
  * The claims are usable alone. This is not a guided mode, and there is no
- * order to open them in.
+ * order to open them in. Which one is open is this component's only state, and
+ * the page keys it on the run, so starting a fresh run closes whatever was
+ * open: the arguments are about a particular finished board, and that board has
+ * just stopped existing. But only one is open at a time, and that is not a
+ * matter of taste: three open at once ran to nearly two thousand pixels in this
+ * column. An argument that has to be scrolled away from to see the board it is
+ * about is an argument the reader cannot follow, and every one of these
+ * arguments is about the board.
  */
 
 interface WhyItWorksProps {
@@ -31,13 +38,11 @@ interface WhyItWorksProps {
 
 export function WhyItWorks({ run, bodies = {} }: WhyItWorksProps) {
   const settled = run.current.phase === 'done';
+  const [openId, setOpenId] = useState<ClaimContent['id'] | null>(null);
 
   return (
-    <section className={settled ? 'why' : 'why why--not-yet'} aria-labelledby="why-title">
-      <h2 className="section-title why__title" id="why-title">
-        {SECTION.title}
-      </h2>
-      <p className="why__intro">{SECTION.intro}</p>
+    <section className={settled ? 'why' : 'why why--not-yet'}>
+      {openId === null ? <p className="why__intro">{SECTION.intro}</p> : null}
 
       {settled ? null : (
         <p className="why__not-yet" role="status">
@@ -53,6 +58,8 @@ export function WhyItWorks({ run, bodies = {} }: WhyItWorksProps) {
             claim={claim}
             run={run}
             enabled={settled}
+            open={openId === claim.id}
+            onToggle={() => setOpenId((current) => (current === claim.id ? null : claim.id))}
           >
             {bodies[claim.id]}
           </Claim>
@@ -71,6 +78,8 @@ interface ClaimProps {
   readonly claim: ClaimContent;
   readonly run: Run;
   readonly enabled: boolean;
+  readonly open: boolean;
+  readonly onToggle: () => void;
   /** The run-driven body. Optional, so a claim can ship its words before its picture. */
   readonly children?: ReactNode;
 }
@@ -84,12 +93,25 @@ interface ClaimProps {
  * three is what lets the reader stop noticing the shell and attend to the
  * argument.
  *
+ * Which one is open is owned above, so that opening one closes the others. The
+ * summary's own click has to be cancelled for that: left alone the element
+ * toggles itself, and it would fight the state that is trying to keep only one
+ * of them open.
+ *
  * Before the run is settled the header is rendered as text rather than as a
  * disclosure, so there is nothing to click and nothing to explain.
  */
-export function Claim({ index, claim, run, enabled, children }: ClaimProps) {
+export function Claim({ index, claim, run, enabled, open, onToggle, children }: ClaimProps) {
   const [formal, setFormal] = useState(false);
+  const ref = useRef<HTMLDetailsElement>(null);
   const bodyId = `claim-${claim.id}-body`;
+
+  // An opened claim takes itself to the top of the column, because it is about
+  // to need all of the room below it: with a pair picked, the third one runs to
+  // twelve hundred pixels in a column that is under five hundred.
+  useEffect(() => {
+    if (open) ref.current?.scrollIntoView({ block: 'start' });
+  }, [open]);
 
   const header = (
     <>
@@ -109,8 +131,16 @@ export function Claim({ index, claim, run, enabled, children }: ClaimProps) {
   }
 
   return (
-    <details className="claim">
-      <summary className="claim__summary">{header}</summary>
+    <details className="claim" open={open} ref={ref}>
+      <summary
+        className="claim__summary"
+        onClick={(event) => {
+          event.preventDefault();
+          onToggle();
+        }}
+      >
+        {header}
+      </summary>
 
       <div className="claim__inner" id={bodyId}>
         <p className="claim__claim">{formal ? claim.formal.claim : claim.plain.claim}</p>

@@ -18,6 +18,10 @@ import type { Instance } from '../core/types';
  * failed to disprove, five or six times, and understood why each time. It is a
  * different quality of understanding, and it arrives without a definition ever
  * being stated.
+ *
+ * It is one tab of the work column rather than a section of its own, so the
+ * title and the frame belong to the column. What is here is the daring and the
+ * answer, next to the board the answer is about.
  */
 
 interface PairChallengeProps {
@@ -79,8 +83,7 @@ export function PairChallenge({ instance, state, pair, onPick }: PairChallengePr
   const allTested = testedCount === worthTesting.length && worthTesting.length > 0;
 
   return (
-    <section className="challenge">
-      <h2 className="section-title">Try to break it</h2>
+    <div className="challenge">
       <p className="challenge__prompt">{challengePrompt(state)}</p>
 
       <div className="challenge__pickers">
@@ -171,6 +174,6 @@ export function PairChallenge({ instance, state, pair, onPick }: PairChallengePr
           )}
         </p>
       ) : null}
-    </section>
+    </div>
   );
 }
