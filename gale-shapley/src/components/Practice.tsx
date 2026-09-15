@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { matchingOf, run } from '../core/engine';
 import { blockingPairs } from '../core/stability';
@@ -236,6 +236,10 @@ export function Practice({ onLeave }: PracticeProps) {
     setTier(tierNext);
     setAt(index);
   };
+
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const verdictRef = useRef<HTMLDivElement>(null);
+  const showing = useRef('');
 
   // ---- the four ways of answering -----------------------------------------
 
@@ -603,6 +607,28 @@ export function Practice({ onLeave }: PracticeProps) {
 
   const { check, retry } = view;
 
+  /**
+   * Where the question is scrolled to, which is two rules rather than one.
+   *
+   * Arriving at a question means starting at the top of it, whether or not it
+   * has been answered before. Answering the one already on screen means the
+   * closing note, which is appended under the options, should come into view
+   * rather than waiting below the fold for someone to go looking.
+   *
+   * Both live here, in one effect keyed on both things, because as two effects
+   * they would race on the case that does both at once: navigating to a
+   * question that was answered earlier.
+   */
+  useEffect(() => {
+    const here = `${tier}:${at}`;
+    if (showing.current !== here) {
+      showing.current = here;
+      bodyRef.current?.scrollTo({ top: 0 });
+      return;
+    }
+    if (view.answered) verdictRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [tier, at, view.answered]);
+
   const tally = (v: Verdict) => questions.filter((q) => scores[q.id] === v).length;
   const lastTier = TIERS[TIERS.length - 1] ?? 1;
 
@@ -616,7 +642,7 @@ export function Practice({ onLeave }: PracticeProps) {
           </span>
         </div>
 
-        <div className="practice__body">
+        <div className="practice__body" ref={bodyRef}>
           <p className="qtests">Testing: {question.tests}</p>
           <h2 className="qprompt">{question.prompt}</h2>
           {question.quote ? <pre className="qquote">{question.quote}</pre> : null}
@@ -626,7 +652,10 @@ export function Practice({ onLeave }: PracticeProps) {
           {view.body}
 
           {view.answered ? (
-            <div className={view.right ? 'qverdict qverdict--ok' : 'qverdict qverdict--no'}>
+            <div
+              ref={verdictRef}
+              className={view.right ? 'qverdict qverdict--ok' : 'qverdict qverdict--no'}
+            >
               <h3>{view.right ? 'What this was testing' : 'What this is testing'}</h3>
               <p>{view.note ?? question.close}</p>
               {view.note ? <p>{question.close}</p> : null}
