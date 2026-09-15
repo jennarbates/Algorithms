@@ -132,80 +132,88 @@ function Walkthrough({ run, boardRef, pair, ghost, onPick, onGhost }: Walkthroug
   const settled = state.phase === 'done';
 
   return (
-    <>
-      <p className="lede">
-        Everyone here has ranked the other side. Nobody can be talked into anything. Watch what
-        happens, and at the end try to find two people who would rather have each other.
-      </p>
-
-      <div className="sidepicker" role="group" aria-label="Which side does the asking">
-        <span className="sidepicker__label">Who does the asking?</span>
-        <button
-          type="button"
-          className={askingSide === 'students' ? 'pill pill--on' : 'pill'}
-          onClick={() => run.switchSide('students')}
-          aria-pressed={askingSide === 'students'}
-        >
-          Students
-        </button>
-        <button
-          type="button"
-          className={askingSide === 'schools' ? 'pill pill--on' : 'pill'}
-          onClick={() => run.switchSide('schools')}
-          aria-pressed={askingSide === 'schools'}
-        >
-          Schools
-        </button>
-      </div>
-
-      <ActionBar state={state} locked={viewingPast} onStep={run.step} onReset={run.reset} />
-
-      {viewingPast ? (
-        <div className="board-status board-status--past" role="status">
-          <span>{pastStatus(state, run.current)}</span>
-          <button type="button" className="button button--small" onClick={run.backToNow}>
-            Back to now
-          </button>
+    <div className="walk">
+      <section className="boardcol" aria-label="The board">
+        <div className="boardcol__head">
+          <div className="sidepicker" role="group" aria-label="Which side does the asking">
+            <span className="sidepicker__label">Who does the asking?</span>
+            <button
+              type="button"
+              className={askingSide === 'students' ? 'pill pill--on' : 'pill'}
+              onClick={() => run.switchSide('students')}
+              aria-pressed={askingSide === 'students'}
+            >
+              Students
+            </button>
+            <button
+              type="button"
+              className={askingSide === 'schools' ? 'pill pill--on' : 'pill'}
+              onClick={() => run.switchSide('schools')}
+              aria-pressed={askingSide === 'schools'}
+            >
+              Schools
+            </button>
+          </div>
         </div>
-      ) : (
-        <p className={settled ? 'board-status board-status--final' : 'board-status'}>
-          {boardStatus(state)}
+
+        {viewingPast ? (
+          <div className="board-status board-status--past" role="status">
+            <span>{pastStatus(state, run.current)}</span>
+            <button type="button" className="button button--small" onClick={run.backToNow}>
+              Back to now
+            </button>
+          </div>
+        ) : (
+          <p className={settled ? 'board-status board-status--final' : 'board-status'}>
+            {boardStatus(state)}
+          </p>
+        )}
+
+        <div className={viewingPast ? 'board board--past' : 'board'}>
+          <div className="board__inner" ref={boardRef}>
+            <AskerPanel instance={INSTANCE} state={state} />
+            <ReceiverPanel instance={INSTANCE} state={state} />
+            <MatchLines state={state} boardRef={boardRef} ghost={viewingPast ? ghost : null} />
+          </div>
+        </div>
+      </section>
+
+      <div className="workcol">
+        <p className="lede">
+          Everyone here has ranked the other side. Nobody can be talked into anything. Watch what
+          happens, and at the end try to find two people who would rather have each other.
         </p>
-      )}
 
-      <div className={viewingPast ? 'board board--past' : 'board'} ref={boardRef}>
-        <AskerPanel instance={INSTANCE} state={state} />
-        <ReceiverPanel instance={INSTANCE} state={state} />
-        <MatchLines state={state} boardRef={boardRef} ghost={viewingPast ? ghost : null} />
+        <ActionBar state={state} locked={viewingPast} onStep={run.step} onReset={run.reset} />
+
+        <PairChallenge
+          key={run.runId}
+          instance={INSTANCE}
+          state={state}
+          pair={pair}
+          onPick={onPick}
+        />
+
+        <WhyItWorks
+          run={run}
+          bodies={{
+            finishes: <FinishesBody run={run} />,
+            'nobody-left-out': <LeftOutBody run={run} />,
+            holds: (
+              <HoldsBody
+                run={run}
+                instance={INSTANCE}
+                pair={pair}
+                onPick={onPick}
+                onGhost={onGhost}
+              />
+            ),
+          }}
+        />
+
+        <h2 className="section-title">What has happened so far</h2>
+        <NarrationLog state={run.current} viewStep={run.viewStep} onView={run.viewAt} />
       </div>
-
-      <PairChallenge
-        key={run.runId}
-        instance={INSTANCE}
-        state={state}
-        pair={pair}
-        onPick={onPick}
-      />
-
-      <WhyItWorks
-        run={run}
-        bodies={{
-          finishes: <FinishesBody run={run} />,
-          'nobody-left-out': <LeftOutBody run={run} />,
-          holds: (
-            <HoldsBody
-              run={run}
-              instance={INSTANCE}
-              pair={pair}
-              onPick={onPick}
-              onGhost={onGhost}
-            />
-          ),
-        }}
-      />
-
-      <h2 className="section-title">What has happened so far</h2>
-      <NarrationLog state={run.current} viewStep={run.viewStep} onView={run.viewAt} />
-    </>
+    </div>
   );
 }

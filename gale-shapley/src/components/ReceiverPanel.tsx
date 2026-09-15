@@ -57,7 +57,11 @@ export function ReceiverPanel({ instance, state }: ReceiverPanelProps) {
               <PartyToken id={party.id} party={mine} size={40} />
               <div className="row__ident">
                 <div className="row__name">{party.name}</div>
-                {blurb ? <div className="row__blurb">{blurb}</div> : null}
+                {blurb ? (
+                  <div className="row__blurb" title={blurb}>
+                    {blurb}
+                  </div>
+                ) : null}
               </div>
               {receiver.holding === null ? <span className="chip">nobody yet</span> : null}
             </header>

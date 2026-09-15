@@ -52,7 +52,11 @@ export function AskerPanel({ instance, state }: AskerPanelProps) {
               <PartyToken id={party.id} party={mine} size={40} />
               <div className="row__ident">
                 <div className="row__name">{party.name}</div>
-                {blurb ? <div className="row__blurb">{blurb}</div> : null}
+                {blurb ? (
+                  <div className="row__blurb" title={blurb}>
+                    {blurb}
+                  </div>
+                ) : null}
               </div>
               {asker.heldBy === null ? <span className="chip chip--looking">looking</span> : null}
             </header>

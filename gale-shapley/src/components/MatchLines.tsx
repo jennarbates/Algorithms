@@ -132,9 +132,20 @@ export function MatchLines({ state, boardRef, ghost = null }: MatchLinesProps) {
     const update = () => setLines(measure(board, state, ghost));
     update();
 
+    // Two ways of hearing that the board has changed size, because one of them
+    // is not always enough. The observer catches a reflow the window knows
+    // nothing about, a column changing width on its own; the window event
+    // catches everything in environments where the observer does not fire, and
+    // there are some. Measuring twice is cheap and a line pointing at the wrong
+    // card is not.
     const observer = new ResizeObserver(update);
     observer.observe(board);
-    return () => observer.disconnect();
+    window.addEventListener('resize', update);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', update);
+    };
   }, [boardRef, state, ghost]);
 
   const settled = state.phase === 'done';

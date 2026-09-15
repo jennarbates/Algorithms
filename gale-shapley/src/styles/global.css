@@ -224,8 +224,48 @@ body {
 .deck {
   flex: 1 1 auto;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
-  padding-right: 2px;
+}
+
+/* --- the walkthrough, as two columns ------------------------------------ */
+
+/* The board on the left, the work on the right, both given the deck's height
+   and neither allowed to push the other off the screen.
+ *
+ * The point of the split is not that it is tidier. Every argument this page
+ * makes is about people who are drawn on the board, and the claims in "Why
+ * this works" scrub the board to particular moments of the run. Stacked, the
+ * button that scrubs sat two thousand pixels below the thing it scrubbed, so
+ * clicking it appeared to do nothing at all. Side by side, it cannot. */
+.walk {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 480px);
+}
+
+.boardcol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.boardcol__head {
+  flex: 0 0 auto;
+}
+
+/* The work column scrolls for now. The switch, the pinned controls and the one
+   stage at a time that will make most of that scrolling unnecessary come next. */
+.workcol {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .sidepicker {
@@ -233,7 +273,6 @@ body {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 26px;
 }
 
 .lede {
@@ -349,7 +388,8 @@ body {
 /* --- the two columns ---------------------------------------------------- */
 
 .board-status {
-  margin: 20px 0 12px;
+  flex: 0 0 auto;
+  margin: 0;
   padding: 9px 14px;
   border-radius: var(--radius-sm);
   font-size: 13.5px;
@@ -392,20 +432,40 @@ body {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
+/* Two boxes, not one. The outer frame is what takes the height it is given and
+   scrolls when a short window leaves it less than it needs; the inner box is
+   what the pairing lines are positioned against.
+ *
+ * That order matters and it is the whole reason for the extra element. The
+ * lines are an absolutely positioned SVG measured from the cards. Put the
+ * scroll on the same box the lines are positioned against and the SVG stays
+ * put while the cards move under it, so every line ends up pointing at the
+ * wrong card. Scrolling the frame instead moves the inner box, the cards and
+ * the SVG together, and every measurement inside it stays true. */
+.board {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 /* The columns sit further apart than they strictly need to, because the gap
    between them is where the pairing lines are drawn, and a line needs some
    room to be read as a line rather than a smudge. */
-.board {
+.board__inner {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0, 1fr), not 1fr. A 1fr track will not go below its content's
+     min-content width, and clamping the blurb to one line made that width the
+     whole sentence, so the two panels quietly stopped being equal and pushed
+     past the edge of the board. Naming a zero minimum is what lets the track
+     be the share it says it is, and what lets the ellipsis do its job. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 64px;
-  margin-top: 22px;
 }
 
 @media (max-width: 760px) {
-  .board {
-    grid-template-columns: 1fr;
+  .board__inner {
+    grid-template-columns: minmax(0, 1fr);
     gap: 18px;
   }
 }
@@ -542,10 +602,30 @@ body {
   font-size: 15px;
 }
 
+/* Two lines at most, once the page is locked to a screen.
+ *
+ * The blurb is flavour, but left to wrap freely it was what decided how tall the
+ * board was, and it decided it backwards: the narrower the column, the more
+ * lines it took, so the board grew from 482px at 1000px wide to 645px at 640px.
+ * A board that gets taller as its column gets narrower cannot be fitted to a
+ * screen at all.
+ *
+ * What the lock needs is a ceiling, not a single line. One line was the first
+ * attempt and it cut the longest blurb in half at every width. Two lines cost
+ * about 34px of board and clip nothing at any width the lock covers, so the
+ * ceiling is real and the text survives. The full string stays in the DOM for
+ * screen readers either way, and sits in a title for anyone hovering. The
+ * escape hatch lets it wrap freely again: a page that scrolls has no reason to
+ * truncate anything. */
 .row__blurb {
   font-size: 12.5px;
   color: var(--ink-faint);
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 .chip {
@@ -1876,10 +1956,16 @@ body {
  *
  * Big-O unlocks below 600px of height because its drawing is one SVG that can
  * be scaled down to nothing. The board here is two columns of real cards with
- * a real floor, so this unlocks a hundred pixels higher.
+ * a real floor, so this unlocks well above that.
+ *
+ * 720px is where that floor lands. The board is tallest before the run starts,
+ * at 517px, and the header, the two strips above it, the gaps and the footnote
+ * take the rest. Below this the board would be handed less height than it
+ * needs; it would cope, because the frame scrolls, but a board that scrolls by
+ * seventeen pixels is worse than a page that scrolls properly.
  *
  * It comes last in the file so it beats the locked rules wherever they sit. */
-@media (max-width: 1180px), (max-height: 700px) {
+@media (max-width: 1180px), (max-height: 720px) {
   html {
     height: auto;
   }
@@ -1896,8 +1982,22 @@ body {
     min-height: 0;
   }
 
-  .deck {
-    overflow-y: visible;
+  .deck,
+  .board,
+  .workcol {
+    overflow: visible;
+  }
+
+  .walk {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .row__blurb {
+    display: block;
+    -webkit-line-clamp: none;
+    line-clamp: none;
+    overflow: visible;
   }
 
   .footnote {
