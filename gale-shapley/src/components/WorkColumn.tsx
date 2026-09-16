@@ -99,6 +99,9 @@ export function WorkColumn({ run, challenge, why }: WorkColumnProps) {
 
       <p className="side__hint">
         {viewingPast ? 'You are looking back. Go back to now to carry on.' : actionHint(state)}
+        <span className="side__keys">
+          Arrow keys step the run and look back at it. Escape returns to now.
+        </span>
       </p>
     </aside>
   );

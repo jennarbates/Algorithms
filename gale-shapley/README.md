@@ -23,6 +23,91 @@ best outcome available to them in any stable arrangement. Run it with the school
 asking and every student gets their worst. Same algorithm, same preferences,
 opposite answers.
 
+## One screen
+
+The page never scrolls. On a desktop the board, the work beside it and the
+controls are all in view at once, and so is every question in practice. That is
+the same contract [`../big-o`](../big-o) keeps, and it is kept the same way.
+
+```
+header                 title, Walkthrough/Practice, the condition being earned
+ board          work    the two columns of the walkthrough
+footnote               credit, and the keys
+```
+
+The point is not tidiness. Every argument this page makes is about people drawn
+on the board: the claims in "Why this works" scrub the board to particular
+moments of the run and draw a red line for a pairing that would have to exist.
+Stacked down a page, the button that scrubs sat **two thousand pixels below the
+thing it scrubbed**, so clicking it appeared to do nothing at all. The board
+stays on screen so that it cannot.
+
+### The rules
+
+1. `html, body` are `100dvh` and `overflow: hidden`. The document never scrolls.
+2. One flex column: header `flex: 0 0 auto`, the deck `flex: 1 1 auto`, footnote
+   `flex: 0 0 auto`.
+3. Every flex child on that path carries **`min-height: 0`**. A flex item
+   defaults to refusing to shrink below its own content, so one missing line is
+   all it takes for the lock to stop holding, and nothing looks wrong until the
+   content grows.
+4. One internal scroller per column, and never the thing the reader acts on.
+   `.side__body` and `.practice__body` scroll; the controls under them do not.
+5. Controls are pinned to the bottom of their column.
+6. Below 1180px wide or 720px tall, the whole thing unlocks: `height: auto`,
+   `overflow: visible`, one column, every internal scroller released. That rule
+   lives at the end of `global.css` so it beats the locked ones wherever they
+   sit. Locking a window that cannot hold the content is worse than not locking
+   it, because it hides the bottom of whatever is open instead of letting the
+   reader reach it.
+
+720px is where the floor lands: the board is tallest before the run starts, at
+517px, and the header, the two strips above it, the gaps and the footnote take
+the rest.
+
+### Four ways this breaks
+
+Each of these failed silently while the page was being converted, so they are
+written down rather than remembered.
+
+**The chain through `#root`.** React mounts into a div, so the shell is
+`body > #root > .page`, not the `body > .app` a hand-written page gets.
+`height: 100%` on `.page` resolves against `#root`, which has no height, and
+becomes `auto`. The shell is flex the whole way down instead, which needs no
+ancestor to declare a height.
+
+**`1fr` is not `minmax(0, 1fr)`.** A `1fr` track will not go below its content's
+min-content width. Clamping the blurb on a card to one line made that width the
+whole sentence, and the board's two panels quietly stopped being equal and
+pushed past its edge.
+
+**The board is two boxes.** `.board` is the frame that takes the height it is
+given and scrolls if it is starved; `.board__inner` is what the pairing lines
+are positioned against. That order is the whole reason for the extra element:
+put the scroll on the box the lines are positioned against and the SVG stays put
+while the cards move under it, so every line ends up pointing at the wrong card.
+
+**The card blurbs decide the board's height, backwards.** Left to wrap freely
+they took more lines as the column got narrower, so the board grew from 482px at
+1000px wide to 645px at 640px. A board that gets taller as its column narrows
+cannot be fitted to a screen. They are clamped to two lines, which is a ceiling
+without costing the text, and the escape hatch unclamps them.
+
+## Keys
+
+Arrow keys belong to whichever mode is on screen, and never to a text field.
+
+| Key   | What it does                                                          |
+| ----- | --------------------------------------------------------------------- |
+| `->`  | One step of the run                                                   |
+| `<-`  | Look at the moment before, exactly as clicking a line of the log does |
+| `Esc` | Back to now                                                           |
+
+`<-` does not undo anything. There is no step-back on this page by design: a run
+that can be rewound invites the reader to treat a pairing as decided and then
+undecided, which is the misreading the page is built against. Looking back
+leaves the run where it was, and the banner over the board says so.
+
 ## Commands
 
 ```bash
@@ -42,7 +127,7 @@ requirement rather than a preference: the page is published as an artifact where
 external hosts are blocked, so all CSS, JS and imagery has to be inlined.
 `vite-plugin-singlefile` does the inlining.
 
-## Layout
+## Where the code lives
 
 ```
 src/
@@ -69,7 +154,7 @@ exercises/       reimplement the engine from scratch, same suite
 docs/            plans for what is not built yet
 ```
 
-## Two things worth knowing before changing anything
+## Three things worth knowing before changing anything
 
 **`step` is pure.** `(state) => state`, never mutating. That is what makes
 stepping backwards, replaying and running to completion inside a test all
@@ -87,6 +172,14 @@ The large preset is held to a further standard: it must be **typical** of its
 size, not the most lopsided seed available. A test compares it against the
 average over four hundred random markets of the same size. Cherry-picking would
 have made a better demo and a worse lesson.
+
+**The one-screen lock has no test.** Every suite here is pure logic with no DOM,
+so nothing fails if a new section pushes the controls below a fold or a missing
+`min-height: 0` unlocks the height. The rules and the four ways they break are
+in [One screen](#one-screen) above; the check is to open the page at 1181x721,
+the tightest window the lock still covers, and confirm the document does not
+scroll, the board does not scroll, and the controls are in view in both modes
+and on every tab.
 
 ## Practice
 

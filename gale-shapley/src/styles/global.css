@@ -378,6 +378,17 @@ body {
   color: var(--ink-faint);
 }
 
+/* The keys belong next to the button they drive rather than in the footnote.
+   Down there they pushed it onto a second line, which cost the board fifteen
+   pixels it did not have at the tightest window the lock still covers. Here the
+   column's own scroller absorbs the line. */
+.side__keys {
+  display: block;
+  margin-top: 3px;
+  font-size: 11.5px;
+  opacity: 0.8;
+}
+
 .sidepicker {
   display: flex;
   align-items: center;

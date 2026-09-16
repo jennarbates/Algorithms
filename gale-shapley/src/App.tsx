@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 import { presetById } from './content/presets';
 import { boardStatus, pastStatus } from './content/narration';
@@ -17,7 +17,7 @@ import { useRun } from './hooks/useRun';
 import type { Run } from './hooks/useRun';
 
 /**
- * Phase 2: the stepping view.
+ * The page.
  *
  * One instance, one direction at a time, one proposal per two clicks. Choosing
  * the preset and comparing the two directions side by side come later; what is
@@ -39,8 +39,11 @@ import type { Run } from './hooks/useRun';
  *
  * What this file owns is the shell: a header that holds still, a footnote that
  * holds still, and one growing area between them that is handed the rest of the
- * height. The page is locked to a single screen, so nothing a reader has to act
- * on can end up below a fold. See the README for the rules that keeps.
+ * height. In the walkthrough that area is the board on the left and the work on
+ * the right, and the split is the point rather than the decoration: every
+ * argument the page makes is about people drawn on the board, so the board is
+ * the one thing that never leaves the screen. The README has the rules that
+ * keeps and the ways they break.
  */
 
 const INSTANCE = presetById('opener');
@@ -62,6 +65,47 @@ export function App() {
     setPair((p) => (kind === 'student' ? { ...p, student: id } : { ...p, school: id }));
     setGhost(null);
   }, []);
+
+  /**
+   * The arrow keys, as the Big-O visual binds them: they belong to whichever
+   * mode is on screen, and never to a text field.
+   *
+   * Left does not undo anything. There is no step-back on this page by design,
+   * because a run that can be rewound invites the reader to treat a pairing as
+   * decided and then undecided, which is the misreading the whole page is built
+   * against. Left looks at an earlier moment, exactly as clicking a line of the
+   * log does, and the run stays where it was. Escape comes back to it.
+   */
+  const { step, viewAt, backToNow, viewingPast, viewStep, stepCount } = run;
+  const phase = run.state.phase;
+
+  useEffect(() => {
+    if (mode !== 'walk') return;
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+
+      if (event.key === 'ArrowRight') {
+        if (viewingPast || phase === 'done') return;
+        step();
+      } else if (event.key === 'ArrowLeft') {
+        const from = viewStep ?? stepCount;
+        if (from <= 0) return;
+        viewAt(from - 1);
+      } else if (event.key === 'Escape') {
+        if (!viewingPast) return;
+        backToNow();
+      } else {
+        return;
+      }
+      event.preventDefault();
+    };
+
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [mode, step, viewAt, backToNow, viewingPast, viewStep, stepCount, phase]);
 
   return (
     <main className={settled && mode === 'walk' ? 'page page--settled' : 'page'}>
