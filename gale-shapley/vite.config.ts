@@ -23,5 +23,18 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],
+
+    /**
+     * `tests/layout.test.ts` reads the stylesheet and checks the rules the
+     * one-screen lock is built from, so the stylesheet has to actually arrive.
+     *
+     * Vitest stubs CSS out of the module graph by default, which is right for a
+     * suite that never looks at it: importing a component would otherwise drag
+     * the whole sheet through a processor for nothing. The stub is by extension
+     * though, so it catches `?raw` too, and the import comes back as an empty
+     * string rather than as an error. A suite that parses an empty string finds
+     * no rules and breaks no rules, so it passes everything and guards nothing.
+     */
+    css: true,
   },
 });

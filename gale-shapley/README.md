@@ -149,7 +149,7 @@ src/
     questions.ts   the practice bank, four tiers of it
     narration.ts   the words of the run log, one line per event
   components/    React components
-tests/           the verifier suite
+tests/           the verifier suite, plus the one-screen rules in layout.test.ts
 exercises/       reimplement the engine from scratch, same suite
 docs/            plans for what is not built yet
 ```
@@ -173,13 +173,24 @@ size, not the most lopsided seed available. A test compares it against the
 average over four hundred random markets of the same size. Cherry-picking would
 have made a better demo and a worse lesson.
 
-**The one-screen lock has no test.** Every suite here is pure logic with no DOM,
-so nothing fails if a new section pushes the controls below a fold or a missing
-`min-height: 0` unlocks the height. The rules and the four ways they break are
-in [One screen](#one-screen) above; the check is to open the page at 1181x721,
-the tightest window the lock still covers, and confirm the document does not
-scroll, the board does not scroll, and the controls are in view in both modes
-and on every tab.
+**The one-screen lock is half tested, and it is worth knowing which half.**
+`tests/layout.test.ts` reads `global.css` and checks the rules the lock is built
+from: every box on the shrink path names a zero minimum, every grid track that
+carries clamped text uses `minmax(0, 1fr)`, the scroll is on the board's frame
+and not on the box the pairing lines sit in, no controls row is a scroller, and
+the escape hatch is last in the file and releases every scroller the locked
+layer creates. Those are the four ways the lock breaks silently, and each check
+has been confirmed to fail when its rule is broken.
+
+What no test here can check is whether the lock actually **holds**, because that
+is a layout outcome and there is no layout engine in the suite. jsdom would not
+help: it lays nothing out and reports every rectangle as zero. That half is a
+browser's job, so the check stays manual. Open the page at **1181x721**, the
+tightest window the lock still covers, and confirm the document does not scroll,
+the board does not scroll, and the controls are in view in both modes, on all
+three tabs of the walkthrough and on every question in practice. The margin
+there is three pixels, so a single extra line of copy anywhere in the header or
+the footnote is enough to break it.
 
 ## Practice
 
