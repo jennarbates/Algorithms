@@ -10,11 +10,12 @@ import { buildBigO } from './bigo.mjs';
 import { buildGS } from './gs.mjs';
 import { buildGraphs } from './graphs.mjs';
 import { buildBounds } from './bounds.mjs';
+import { buildPrep } from './prep.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
-for (const [name, html] of [['big-o-workbook', buildBigO()], ['gale-shapley-workbook', buildGS()], ['graphs-workbook', buildGraphs()], ['bounds-workbook', buildBounds()]]) {
+for (const [name, html] of [['big-o-workbook', buildBigO()], ['gale-shapley-workbook', buildGS()], ['graphs-workbook', buildGraphs()], ['bounds-workbook', buildBounds()], ['proving-counting-searching-workbook', buildPrep()]]) {
   const htmlPath = join(here, `${name}.html`);
   writeFileSync(htmlPath, html);
   execFileSync(CHROME, [

@@ -1,3 +1,4 @@
+import { hasTies } from './ties';
 import type { BlockingPair, Instance, Matching, SchoolId, StudentId } from './types';
 
 /**
@@ -6,7 +7,17 @@ import type { BlockingPair, Instance, Matching, SchoolId, StudentId } from './ty
  * A student and a school block an arrangement when they would BOTH rather have
  * each other than what they currently have. One side wanting out is not enough.
  * That is the whole idea, and the check below is a literal transcription of it.
+ *
+ * It is written for strict lists, and refuses an instance with ties rather
+ * than reading a tie as whichever order the names happen to be stored in. With
+ * ties, "would rather" splits into two notions, and `core/ties` has both.
  */
+
+function strictOnly(instance: Instance): void {
+  if (hasTies(instance)) {
+    throw new Error(`${instance.id} has ties; judge it with core/ties instead`);
+  }
+}
 
 /** Who is at each school under this arrangement. */
 function occupantOf(matching: Matching): Readonly<Record<SchoolId, StudentId>> {
@@ -35,6 +46,7 @@ function prefers(prefs: readonly string[], candidate: string, current: string | 
  * a consistent list and tests can compare directly.
  */
 export function blockingPairs(instance: Instance, matching: Matching): BlockingPair[] {
+  strictOnly(instance);
   const occupant = occupantOf(matching);
   const pairs: BlockingPair[] = [];
 
@@ -92,6 +104,7 @@ export function judgePair(
   studentId: StudentId,
   schoolId: SchoolId,
 ): PairVerdict {
+  strictOnly(instance);
   const student = instance.students.find((s) => s.id === studentId);
   if (!student) throw new Error(`Unknown student id: ${studentId}`);
   const school = instance.schools.find((c) => c.id === schoolId);

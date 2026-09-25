@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { Count } from './chapters/Count';
+import { Deep } from './chapters/Deep';
 import { Floors } from './chapters/Floors';
 import { Race } from './chapters/Race';
+import { Reuse } from './chapters/Reuse';
 import { Triangle } from './chapters/Triangle';
 import { Practice } from './components/Practice';
 
 /**
- * The page: lecture 3 in four chapters and a practice mode.
+ * The page: lecture 3 in four chapters, two more that practise the same
+ * skills on new programs, and a practice mode.
  *
  * The same shell as `../graphs`: the thing being argued about on the left, the
  * working on the right, and the one fact each chapter earns under the title.
@@ -14,7 +17,7 @@ import { Practice } from './components/Practice';
  * together, and where the numbers they bound come from.
  */
 
-type Mode = 'floors' | 'count' | 'triangle' | 'race' | 'practice';
+type Mode = 'floors' | 'count' | 'triangle' | 'race' | 'deep' | 'reuse' | 'practice';
 
 const MODES: readonly { readonly id: Mode; readonly label: string; readonly rule: string }[] = [
   { id: 'floors', label: '1 · Ω and Θ', rule: 'Ω is a floor, O a ceiling, Θ both at once' },
@@ -25,6 +28,16 @@ const MODES: readonly { readonly id: Mode; readonly label: string; readonly rule
   },
   { id: 'triangle', label: '3 · The triangle', rule: 'Floors come from throwing work away' },
   { id: 'race', label: '4 · Polynomial or not', rule: 'Efficient means O(nᵈ) for some constant d' },
+  {
+    id: 'deep',
+    label: '5 · Three loops deep',
+    rule: 'Stretch every loop for a ceiling; keep a box for a floor',
+  },
+  {
+    id: 'reuse',
+    label: '6 · Same answer, less work',
+    rule: 'Keep what you computed; the output is a floor',
+  },
   { id: 'practice', label: 'Practice', rule: 'Any witness that really holds is right' },
 ];
 
@@ -65,6 +78,8 @@ export function App() {
         {mode === 'count' && <Count />}
         {mode === 'triangle' && <Triangle />}
         {mode === 'race' && <Race />}
+        {mode === 'deep' && <Deep />}
+        {mode === 'reuse' && <Reuse />}
         {mode === 'practice' && <Practice />}
       </div>
 

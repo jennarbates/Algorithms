@@ -12,6 +12,19 @@ export type SchoolId = string;
 /** Which side of the market is doing the asking in a given run. */
 export type Side = 'students' | 'schools';
 
+/**
+ * Ties in a preference list, written between neighbours: `tiedWithNext[k]` is
+ * true when `prefs[k]` and `prefs[k + 1]` are tied, meaning the person has no
+ * preference between them. A run of trues is one tied group.
+ *
+ * Absent, or all false, is a strict list, which is what every preset has and
+ * what the process needs. Only the ties explorer ever sets it, and only
+ * `core/ties` reads it: the process and the ordinary blocking-pair check both
+ * refuse a list that has a tie in it, rather than quietly reading the order as
+ * if it were strict.
+ */
+export type TiedWithNext = readonly boolean[];
+
 export interface Student {
   readonly id: StudentId;
   readonly name: string;
@@ -22,8 +35,10 @@ export interface Student {
    * behind the ordering and inventing one would be filler.
    */
   readonly reason?: string;
-  /** School ids, most wanted first. Strict and complete. */
+  /** School ids, most wanted first. Complete, and strict unless `tiedWithNext` says otherwise. */
   readonly prefs: readonly SchoolId[];
+  /** Optional ties in `prefs`. See `TiedWithNext`. */
+  readonly tiedWithNext?: TiedWithNext;
 }
 
 export interface School {
@@ -31,11 +46,16 @@ export interface School {
   readonly name: string;
   /** One plain sentence on what this school is weighting. Absent when random. */
   readonly note?: string;
-  /** Student ids, most wanted first. Strict and complete. */
+  /** Student ids, most wanted first. Complete, and strict unless `tiedWithNext` says otherwise. */
   readonly prefs: readonly StudentId[];
+  /** Optional ties in `prefs`. See `TiedWithNext`. */
+  readonly tiedWithNext?: TiedWithNext;
 }
 
-/** A complete market: equal-sized sides with strict, complete preferences. */
+/**
+ * A complete market: equal-sized sides with complete preferences, strict unless
+ * a list says it has ties.
+ */
 export interface Instance {
   readonly id: string;
   readonly title: string;

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { actionHint, actionLabel, narrate } from '../content/narration';
 import { SECTION } from '../content/proofs';
+import { askTally } from '../core/asks';
 import { NarrationLog } from './NarrationLog';
 import { Sentence } from './Sentence';
 import type { Run } from '../hooks/useRun';
@@ -113,11 +114,16 @@ export function WorkColumn({ run, challenge, why }: WorkColumnProps) {
  * The number is the run's own step count rather than a position in a fixed
  * list, because there is no fixed list: how many questions get asked depends on
  * the preferences, which is the whole point of the first claim.
+ *
+ * Beside it, the asks: every ask is two steps, the question and its answer, and
+ * the asks are what a running time counts, so they get their own number, with n
+ * and n² for scale.
  */
 function RunHead({ run }: { readonly run: Run }) {
   const { state } = run;
   const latest = state.log[state.log.length - 1];
   const done = state.phase === 'done';
+  const asks = askTally(state);
 
   return (
     <>
@@ -125,6 +131,12 @@ function RunHead({ run }: { readonly run: Run }) {
         <span className="side__stepnum">{state.stepCount}</span>
         <span className="side__steplabel">
           {done ? (state.stepCount === 1 ? 'step in all' : 'steps in all') : 'so far'}
+        </span>
+        <span
+          className="side__asks"
+          title="Each ask takes two steps: the question, then its answer."
+        >
+          {asks.used} {asks.used === 1 ? 'ask' : 'asks'} · n = {asks.n} · n² = {asks.total}
         </span>
       </div>
 

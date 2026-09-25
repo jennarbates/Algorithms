@@ -10,7 +10,7 @@ import { renderQ, renderKey, doc, esc, writeLines } from './lib.mjs';
 import { bestN0, check } from '../bounds/src/core/bounds.ts';
 import { SLIDE_16, isPolynomial, showGrowth, factorial } from '../bounds/src/core/growth.ts';
 import { evalQ, parseQ, poly, polyScale, showPoly, showQ } from '../bounds/src/core/poly.ts';
-import { PRINT1, PRINT2, SUM_PRODUCT, countOf, inSquare, squareCount } from '../bounds/src/core/programs.ts';
+import { PRINT1, PRINT2, SUM_PRODUCT, TRIANGLES, DEEPER, POWERS_SLOW, POWERS_FAST, TIMES_TABLE, boxSize, countOf, inSquare, squareCount, written } from '../bounds/src/core/programs.ts';
 import { QUESTIONS, TIER_LABELS } from '../bounds/src/content/questions.ts';
 
 const Q = (s) => parseQ(s);
@@ -170,6 +170,38 @@ ${SLIDE_16.map((f) => `<tr><td class="l">${esc(f.label)}</td><td class="l">Θ(${
 <p class="small">Polynomial says nothing about the degree: n¹⁰⁰ is polynomial. And every exponential passes every polynomial eventually: 2ⁿ overtakes n¹⁰ between n = 58 and 59, and stays ahead.</p></div>`;
 }
 
+function part5(keys) {
+  const n = 12;
+  const cell = (p) => {
+    const b = p.box(n);
+    return `<p class="small">Box at n = ${n}: ${p.bands.map(esc).join(', ')}: ${b.i.hi - b.i.lo + 1} × ${b.j.hi - b.j.lo + 1} × ${b.k.hi - b.k.lo + 1} = <b>${boxSize(b)}</b> steps, of ${countOf(p, n)} in all.</p>`;
+  };
+  const b6 = DEEPER.box(5);
+  keys.push(`<section class="k"><div class="khead">W5 · deeper at n = 5</div>
+<p>Exact: ${countOf(DEEPER, 5)} (1² + 2² + … + 5²). Box: i ≤ 2, j ≥ 3, k ≤ 2: ${b6.i.hi - b6.i.lo + 1} × ${b6.j.hi - b6.j.lo + 1} × ${b6.k.hi - b6.k.lo + 1} = ${boxSize(b6)}. Ceiling: 5³ = 125. So ${boxSize(b6)} ≤ ${countOf(DEEPER, 5)} ≤ 125.</p></section>`);
+  return `<div class="page"><span class="tag">Part 5 · Learn</span><h2>Three loops deep</h2>
+<p>The triangle’s moves work one dimension up. The count is a sum of sums; the ceiling lets every loop run to n; the floor keeps a <b>box</b> of triples where every one really runs, and each side of the box is a constant fraction of n.</p>
+<div class="two"><div><pre>${esc(['triangles(n)', ...TRIANGLES.lines].join('\n'))}</pre>
+<p>Exact: ${esc(TRIANGLES.countText)}. ${esc(TRIANGLES.boxWhy)}</p>${cell(TRIANGLES)}</div>
+<div><pre>${esc(['deeper(n)', ...DEEPER.lines].join('\n'))}</pre>
+<p>Exact: ${esc(DEEPER.countText)}. ${esc(DEEPER.boxWhy)}</p>${cell(DEEPER)}</div></div>
+<div class="note"><b>Choosing a box.</b> Pick a band for each index so that (1) every triple in the box satisfies the loop conditions, and (2) each band has at least a constant fraction of n values. Then the box has at least c·n³ steps, and the program at least that many: Ω(n³).</div>
+<div class="warn"><b>A box that is too thin proves too little.</b> If one band has only 10 values, the box has about 10·n² steps: a true floor, but only Ω(n²).</div>
+<div class="try"><span class="tag">Warm-up W5 · deeper at n = 5</span><p>Count deeper’s steps at n = 5 exactly, then count its box (i ≤ n/2, j ≥ n/2, k ≤ n/2), and check the box fits under the count and the count under n³.</p>${writeLines(3)}</div></div>`;
+}
+
+function part6(keys) {
+  const n = 10;
+  keys.push(`<section class="k"><div class="khead">W6 · powers at n = 5</div>
+<p>From scratch: 1 + 2 + 3 + 4 + 5 = ${countOf(POWERS_SLOW, 5)} multiplications. Reusing: ${countOf(POWERS_FAST, 5)}. Both write ${written(POWERS_FAST, 5).join(', ')}.</p></section>`);
+  return `<div class="page"><span class="tag">Part 6 · Learn</span><h2>Same answer, less work</h2>
+<div class="two"><div><pre>${esc(['powers, from scratch', ...POWERS_SLOW.lines].join('\n'))}</pre><p>${esc(POWERS_SLOW.countText)} multiplications: ${countOf(POWERS_SLOW, n)} at n = ${n}. Θ(n²).</p></div>
+<div><pre>${esc(['powers, reusing the last one', ...POWERS_FAST.lines].join('\n'))}</pre><p>${esc(POWERS_FAST.countText)} multiplications: ${countOf(POWERS_FAST, n)} at n = ${n}. Θ(n).</p></div></div>
+<p>Same table, entry for entry. The slow one rebuilt xᵏ⁻¹ inside every xᵏ; the fast one kept it. <b>Strictly faster</b> means the ratio goes to 0: here n / (n(n + 1)/2) = 2/(n + 1) → 0. A version that did half the work would be faster, but not strictly: the ratio would be ½.</p>
+<div class="defn"><b>The output is a floor.</b> Whatever the algorithm, it must write its answer. The powers table has n entries, so Ω(n): the fast version is as good as it gets. A times table has n² entries (${countOf(TIMES_TABLE, n)} at n = ${n}), so no algorithm fills it in less than Ω(n²).</div>
+<div class="try"><span class="tag">Warm-up W6 · powers at n = 5</span><p>Count the multiplications each version makes at n = 5, and write out the table they both produce (x = 3).</p>${writeLines(2)}</div></div>`;
+}
+
 function summary() {
   return `<div class="page summary"><span class="tag">Keep this page</span><h2>One-page summary</h2><div class="two"><div>
 <h3>Definitions</h3><ul><li>O: T ≤ c·f from n₀ on. A ceiling, and it can be loose.</li><li>Ω: T ≥ c·f from n₀ on. A floor.</li><li>Θ: both, c₁·f ≤ T ≤ c₂·f, one n₀ (the later one). Tight.</li><li>f = O(g) says nothing about whether g = O(f).</li></ul>
@@ -189,13 +221,13 @@ export function buildBounds() {
   const actKeys = [];
 
   let body = `<div class="cover"><span class="tag">Algorithms · printable workbook</span>
-<h1>Floors and Ceilings</h1><div class="sub">Big-Omega, Big-Theta and running-time analysis (COMPSCI 311, lecture 3) on paper: the definitions, witnesses you find yourself, loops counted exactly, and ${QUESTIONS.length} questions in four tiers, with an answer key worked out by the same code the website runs.</div>
+<h1>Floors and Ceilings</h1><div class="sub">Big-Omega, Big-Theta and running-time analysis (COMPSCI 311, lecture 3) on paper: the definitions, witnesses you find yourself, loops counted exactly, three loops deep, doing the same job with less work, and ${QUESTIONS.length} questions in six tiers, with an answer key worked out by the same code the website runs.</div>
 <h3>How to use this packet</h3><ol>
 <li>Work in order: each part is a Learn page with worked examples, a warm-up, then questions.</li>
 <li>Questions marked <b>clicker</b> are the lecture's own.</li>
 <li>For a witness question, any constants and n₀ that really hold are right. The key shows one and says how to check yours.</li>
 <li>The threshold is inclusive throughout: "for all n ≥ n₀", as in the lecture.</li></ol>
-<table class="toc" style="margin-top:14pt">${[1, 2, 3, 4].map((t) => `<tr><td><b>Part ${t}</b></td><td>${TIER_LABELS[t]}</td><td>${byTier[t].length} questions</td></tr>`).join('')}
+<table class="toc" style="margin-top:14pt">${[1, 2, 3, 4, 5, 6].map((t) => `<tr><td><b>Part ${t}</b></td><td>${TIER_LABELS[t]}</td><td>${byTier[t].length} questions</td></tr>`).join('')}
 <tr><td><b>Summary</b></td><td>One page to keep</td><td></td></tr><tr><td><b>Key</b></td><td>Warm-ups and every question</td><td></td></tr></table></div>`;
 
   const questionPages = (t) => {
@@ -223,6 +255,10 @@ export function buildBounds() {
   body += questionPages(3);
   body += part4();
   body += questionPages(4);
+  body += part5(actKeys);
+  body += questionPages(5);
+  body += part6(actKeys);
+  body += questionPages(6);
   body += summary();
   body += `<div class="page"><span class="tag">Answer key</span><h2>Answer key: warm-ups</h2><p class="keyintro">Try everything before you look.</p>${actKeys.join('')}</div>`;
   body += `<div class="page"><span class="tag">Answer key</span><h2>Answer key: questions</h2>${keys.join('')}</div>`;

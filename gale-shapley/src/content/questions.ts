@@ -1,4 +1,5 @@
 import type { Side } from '../core/types';
+import type { TiedGiven } from './bench';
 import type { Term } from './proofs';
 
 /**
@@ -54,6 +55,33 @@ export interface Option {
   /** Absent means false. Which is correct is fixed text here, unlike arrangements. */
   readonly ok?: true;
   readonly why: string;
+  /**
+   * What the option says about a market with ties, for the questions that
+   * quote one. The suite checks it against `core/ties`, and checks that `ok` is
+   * set exactly when the claim is true.
+   */
+  readonly claims?: TieClaim;
+  /**
+   * How many asks the option says a run of the question's lists makes, by
+   * which side asks. The suite runs the engine and checks that `ok` is set
+   * exactly when every number given is right.
+   */
+  readonly asks?: { readonly students?: number; readonly schools?: number };
+}
+
+/**
+ * A claim about the quoted market with ties. Every field given has to hold for
+ * the claim to be true; `matching` stands in for the question's own when the
+ * options are matchings rather than pairs.
+ */
+export interface TieClaim {
+  readonly matching?: Readonly<Record<string, string>>;
+  /** Student id, then school id. */
+  readonly pair?: readonly [string, string];
+  /** What the pair is: `weak` includes strong ones, `weak only` does not. */
+  readonly is?: 'strong' | 'weak' | 'weak only' | 'neither';
+  readonly freeOfStrong?: boolean;
+  readonly freeOfWeak?: boolean;
 }
 
 /** One line of an argument, offered with the wrong lines a reader actually writes. */
@@ -88,6 +116,11 @@ interface Common {
   readonly prompt: string;
   /** Shown in a monospaced block under the prompt, for a statement or an argument. */
   readonly quote?: string;
+  /**
+   * A market with ties the question quotes, since no preset has ties. The quote
+   * prints it, and the suite checks the quote against it word for word.
+   */
+  readonly tied?: TiedGiven;
   /** What the question was really about, shown once it has been answered. */
   readonly close: string;
 }
@@ -162,6 +195,15 @@ export const FORMAL_TERMS: readonly Term[] = [
   {
     term: 'O(n²)',
     replaces: 'work that grows like n times n, give or take a fixed multiple',
+  },
+  {
+    term: 'strong instability',
+    replaces: 'two people not together who each strictly prefer the other to who they have',
+  },
+  {
+    term: 'weak instability',
+    replaces:
+      'two people not together where one strictly prefers the other, and the other prefers them too or does not mind',
   },
   {
     term: 'NP-hard',
@@ -769,6 +811,111 @@ export const QUESTIONS: readonly Question[] = [
   },
 
   {
+    id: 'count-lecture',
+    tier: 3,
+    kind: 'choice',
+    tests: 'counting the asks in one run',
+    instanceId: 'lecture-example',
+    prompt:
+      'The lecture’s running example, with the schools asking. How many asks does the run make, first to last?',
+    options: [
+      {
+        t: '3',
+        asks: { schools: 3 },
+        why: 'Three would be every school asking once and being held. Here MIT is let go by Priya, and UMass Amherst is let go by Sam and then turned away by Priya, and each of those costs one more ask.',
+      },
+      {
+        t: '4',
+        asks: { schools: 4 },
+        why: 'Four is the count with the students asking. Same lists, other side, a different count.',
+      },
+      {
+        t: '6',
+        ok: true,
+        asks: { schools: 6 },
+        why: 'Three first asks, and one more for each time a school is let go or turned away: MIT once, UMass Amherst twice.',
+      },
+      {
+        t: '9',
+        asks: { schools: 9 },
+        why: 'Nine is n², the ceiling the counting argument gives for three a side. The ceiling is not the count.',
+      },
+    ],
+    close:
+      'A count is only as good as the trace behind it. Guessing from n, or from the ceiling, or from the other side’s run, gives a different number; writing down every ask and what it ended in gives this one.',
+  },
+
+  {
+    id: 'count-worksheet',
+    tier: 3,
+    kind: 'choice',
+    tests: 'counting the asks in one run',
+    instanceId: 'worksheet',
+    prompt:
+      'The four-by-four from tier 1, with the schools asking. How many asks does the run make?',
+    options: [
+      {
+        t: '4',
+        asks: { schools: 4 },
+        why: 'Four would be every school held on its first ask. Priya alone is asked by all four schools and lets three of them go.',
+      },
+      {
+        t: '8',
+        asks: { schools: 8 },
+        why: 'Eight counts the four first asks and the four let-gos, and misses the one ask that was turned away on the spot.',
+      },
+      {
+        t: '16',
+        asks: { schools: 16 },
+        why: 'Sixteen is n² for four a side, the ceiling. UMass Amherst asks more than anybody here, and it asks three times, not four.',
+      },
+      {
+        t: '9',
+        ok: true,
+        asks: { schools: 9 },
+        why: 'Four first asks, four more after somebody is let go, and one more after Sam turns Berkeley away.',
+      },
+    ],
+    close:
+      'Counting a run is bookkeeping, and it rewards the same habit as working it: one line per ask, and a note of what each one ended in. The total is then the number of lines.',
+  },
+
+  {
+    id: 'count-both-ways',
+    tier: 3,
+    kind: 'choice',
+    tests: 'what the number of asks depends on',
+    instanceId: 'nothing-changes',
+    prompt:
+      'These lists have exactly one stable matching, so both runs end in the same place. How many asks does each run make?',
+    options: [
+      {
+        t: 'The same both ways, 10, since both runs end in the same place.',
+        asks: { students: 10, schools: 10 },
+        why: 'The ending is the same because only one matching holds. The route there is not, and the count is a count of the route.',
+      },
+      {
+        t: '10 with the students asking, 8 with the schools asking.',
+        ok: true,
+        asks: { students: 10, schools: 8 },
+        why: 'With the students asking, Priya is let go by MIT, Sam by NYU and Ravi by Berkeley, and three asks are turned away: four first asks and six more. With the schools asking there are two let-gos and two turn-aways: four and four.',
+      },
+      {
+        t: '8 with the students asking, 10 with the schools asking.',
+        asks: { students: 8, schools: 10 },
+        why: 'The right two numbers the wrong way round. In the schools-asking run only UMass Amherst and Berkeley ever ask more than once.',
+      },
+      {
+        t: '16 both ways: four a side, four asks each.',
+        asks: { students: 16, schools: 16 },
+        why: 'Sixteen is n², the ceiling. Neither run reaches it: nobody on either side asks all four names on their list except UMass Amherst when the schools ask, and Ravi when the students ask.',
+      },
+    ],
+    close:
+      'How many asks a run makes is a fact about the lists and about which side asks, not about n alone, and not about where the run ends. The workbench on this page counts them for any lists you write.',
+  },
+
+  {
     id: 'the-constant-work',
     tier: 3,
     kind: 'choice',
@@ -1219,6 +1366,329 @@ export const QUESTIONS: readonly Question[] = [
     ],
     close:
       'This variant came first. The National Resident Matching Program had been running a version of this algorithm for ten years when Gale and Shapley published in 1962, and the generalisation costs one line, because a hospital with q posts is q hospitals with one.',
+  },
+
+  // --- ties --------------------------------------------------------------------
+  //
+  // No preset has ties, so these quote their own lists, and store them in `tied`
+  // as well so that the suite can check every claim against core/ties. They ask
+  // about particular lists and particular matchings, never about lists in
+  // general: the workbench is where a reader tries their own.
+
+  {
+    id: 'tied-strong',
+    tier: 4,
+    kind: 'multi',
+    tests: 'what a strong instability needs',
+    tied: {
+      students: {
+        priya: [['mit', 'umass'], ['nyu']],
+        sam: [['mit'], ['nyu'], ['umass']],
+        ravi: [['nyu'], ['mit', 'umass']],
+      },
+      schools: {
+        mit: [['sam', 'ravi'], ['priya']],
+        umass: [['priya'], ['sam'], ['ravi']],
+        nyu: [['priya', 'sam', 'ravi']],
+      },
+      matching: { priya: 'nyu', sam: 'umass', ravi: 'mit' },
+    },
+    quote:
+      'Students, best first (= means tied):\n' +
+      '  Priya          MIT = UMass Amherst > NYU\n' +
+      '  Sam            MIT > NYU > UMass Amherst\n' +
+      '  Ravi           NYU > MIT = UMass Amherst\n' +
+      'Schools, best first:\n' +
+      '  MIT            Sam = Ravi > Priya\n' +
+      '  UMass Amherst  Priya > Sam > Ravi\n' +
+      '  NYU            Priya = Sam = Ravi\n' +
+      'The matching: Priya–NYU · Sam–UMass Amherst · Ravi–MIT',
+    prompt:
+      'Some of these lists have ties. Tick every pair that is a strong instability of this matching.',
+    options: [
+      {
+        t: 'Priya and MIT',
+        claims: { pair: ['priya', 'mit'], is: 'strong' },
+        why: 'Priya would rather have MIT than NYU, but MIT ranks Priya below Ravi, who it has. MIT would rather stay, so this pair is neither kind.',
+      },
+      {
+        t: 'Priya and UMass Amherst',
+        ok: true,
+        claims: { pair: ['priya', 'umass'], is: 'strong' },
+        why: 'Priya would rather have UMass Amherst than NYU, and UMass Amherst ranks Priya above Sam, who it has. Both strictly.',
+      },
+      {
+        t: 'Sam and MIT',
+        claims: { pair: ['sam', 'mit'], is: 'strong' },
+        why: 'Sam would rather have MIT than UMass Amherst, but MIT ranks Sam level with Ravi. Not minding is not the same as wanting, so this one is weak and not strong.',
+      },
+      {
+        t: 'Sam and NYU',
+        claims: { pair: ['sam', 'nyu'], is: 'strong' },
+        why: 'Sam would rather have NYU than UMass Amherst, and NYU ranks all three students level. Weak, not strong.',
+      },
+      {
+        t: 'Ravi and UMass Amherst',
+        claims: { pair: ['ravi', 'umass'], is: 'strong' },
+        why: 'Ravi ranks MIT and UMass Amherst level, and UMass Amherst would rather keep Sam. Neither kind.',
+      },
+      {
+        t: 'Ravi and NYU',
+        claims: { pair: ['ravi', 'nyu'], is: 'strong' },
+        why: 'Ravi would rather have NYU than MIT, and NYU ranks everybody level. Weak, not strong.',
+      },
+    ],
+    close:
+      'A strong instability needs both people to strictly want the switch. A tie on either side is enough to stop a pair being strong, and it is not enough to stop it being weak, which is what the next question asks about.',
+  },
+
+  {
+    id: 'tied-weak',
+    tier: 4,
+    kind: 'multi',
+    tests: 'what a weak instability needs',
+    tied: {
+      students: {
+        priya: [['mit', 'umass'], ['nyu']],
+        sam: [['mit'], ['nyu'], ['umass']],
+        ravi: [['nyu'], ['mit', 'umass']],
+      },
+      schools: {
+        mit: [['sam', 'ravi'], ['priya']],
+        umass: [['priya'], ['sam'], ['ravi']],
+        nyu: [['priya', 'sam', 'ravi']],
+      },
+      matching: { priya: 'nyu', sam: 'umass', ravi: 'mit' },
+    },
+    quote:
+      'Students, best first (= means tied):\n' +
+      '  Priya          MIT = UMass Amherst > NYU\n' +
+      '  Sam            MIT > NYU > UMass Amherst\n' +
+      '  Ravi           NYU > MIT = UMass Amherst\n' +
+      'Schools, best first:\n' +
+      '  MIT            Sam = Ravi > Priya\n' +
+      '  UMass Amherst  Priya > Sam > Ravi\n' +
+      '  NYU            Priya = Sam = Ravi\n' +
+      'The matching: Priya–NYU · Sam–UMass Amherst · Ravi–MIT',
+    prompt: 'Same lists, same matching. Now tick every pair that is a weak instability.',
+    options: [
+      {
+        t: 'Priya and MIT',
+        claims: { pair: ['priya', 'mit'], is: 'weak' },
+        why: 'Priya strictly wants MIT, but MIT strictly prefers Ravi, who it has. For weak, the other side has to want the switch or not mind it, and MIT minds.',
+      },
+      {
+        t: 'Priya and UMass Amherst',
+        ok: true,
+        claims: { pair: ['priya', 'umass'], is: 'weak' },
+        why: 'The strong one from the last question. Both strictly want the switch, which more than meets the weak definition.',
+      },
+      {
+        t: 'Sam and MIT',
+        ok: true,
+        claims: { pair: ['sam', 'mit'], is: 'weak' },
+        why: 'Sam strictly prefers MIT to UMass Amherst, and MIT has Sam level with Ravi. One strict, one indifferent.',
+      },
+      {
+        t: 'Sam and NYU',
+        ok: true,
+        claims: { pair: ['sam', 'nyu'], is: 'weak' },
+        why: 'Sam strictly prefers NYU to UMass Amherst, and NYU has everybody level. One strict, one indifferent.',
+      },
+      {
+        t: 'Ravi and UMass Amherst',
+        claims: { pair: ['ravi', 'umass'], is: 'weak' },
+        why: 'Ravi does not mind, but nobody here strictly wants anything: UMass Amherst would rather keep Sam. Weak needs one side to strictly want it.',
+      },
+      {
+        t: 'Ravi and NYU',
+        ok: true,
+        claims: { pair: ['ravi', 'nyu'], is: 'weak' },
+        why: 'Ravi strictly prefers NYU to MIT, and NYU has everybody level. One strict, one indifferent.',
+      },
+    ],
+    close:
+      'Every strong instability is also a weak one, so the weak list starts from the strong one and adds each pair where one side strictly wants the switch and the other does not mind. Four here, against one strong.',
+  },
+
+  {
+    id: 'tied-free',
+    tier: 4,
+    kind: 'choice',
+    tests: 'checking one matching against both definitions',
+    tied: {
+      students: {
+        priya: [['mit', 'umass'], ['nyu']],
+        sam: [['mit'], ['nyu'], ['umass']],
+        ravi: [['nyu'], ['mit', 'umass']],
+      },
+      schools: {
+        mit: [['sam', 'ravi'], ['priya']],
+        umass: [['priya'], ['sam'], ['ravi']],
+        nyu: [['priya', 'sam', 'ravi']],
+      },
+      matching: { priya: 'umass', sam: 'nyu', ravi: 'mit' },
+    },
+    quote:
+      'Students, best first (= means tied):\n' +
+      '  Priya          MIT = UMass Amherst > NYU\n' +
+      '  Sam            MIT > NYU > UMass Amherst\n' +
+      '  Ravi           NYU > MIT = UMass Amherst\n' +
+      'Schools, best first:\n' +
+      '  MIT            Sam = Ravi > Priya\n' +
+      '  UMass Amherst  Priya > Sam > Ravi\n' +
+      '  NYU            Priya = Sam = Ravi\n' +
+      'The matching: Priya–UMass Amherst · Sam–NYU · Ravi–MIT',
+    prompt:
+      'The same lists, and a different matching. Is it free of strong instabilities? Is it free of weak ones?',
+    options: [
+      {
+        t: 'Free of both.',
+        claims: { freeOfStrong: true, freeOfWeak: true },
+        why: 'Sam and MIT break it weakly: Sam would rather have MIT than NYU, and MIT has Sam level with Ravi, who it has. So do Ravi and NYU.',
+      },
+      {
+        t: 'Free of strong ones, but not of weak ones: Sam and MIT are a weak instability.',
+        ok: true,
+        claims: { freeOfStrong: true, freeOfWeak: false, pair: ['sam', 'mit'], is: 'weak only' },
+        why: 'No pair has both people strictly wanting the switch. Sam and MIT is one of two weak ones; Ravi and NYU is the other.',
+      },
+      {
+        t: 'Free of neither: Sam and MIT are a strong instability.',
+        claims: { freeOfStrong: false, pair: ['sam', 'mit'], is: 'strong' },
+        why: 'Sam strictly wants MIT, but MIT ranks Sam level with Ravi. Level is not better, so the pair is weak and not strong.',
+      },
+      {
+        t: 'Free of weak ones, but not of strong ones.',
+        claims: { freeOfStrong: false, freeOfWeak: true },
+        why: 'No matching can be that: a strong instability meets the weak definition too, so a matching with a strong one always has a weak one.',
+      },
+    ],
+    close:
+      'Free of strong instabilities and free of weak ones are two different checks, and this matching passes one and fails the other. Read which one a question asks for before answering it.',
+  },
+
+  {
+    id: 'tied-one-pair',
+    tier: 4,
+    kind: 'choice',
+    tests: 'where indifference counts',
+    tied: {
+      students: {
+        priya: [['mit'], ['umass', 'nyu']],
+        sam: [['umass', 'mit'], ['nyu']],
+        ravi: [['mit'], ['nyu'], ['umass']],
+      },
+      schools: {
+        mit: [['sam'], ['priya', 'ravi']],
+        umass: [['priya', 'ravi'], ['sam']],
+        nyu: [['sam'], ['ravi'], ['priya']],
+      },
+      matching: { priya: 'umass', sam: 'nyu', ravi: 'mit' },
+    },
+    quote:
+      'Students, best first (= means tied):\n' +
+      '  Priya          MIT > UMass Amherst = NYU\n' +
+      '  Sam            UMass Amherst = MIT > NYU\n' +
+      '  Ravi           MIT > NYU > UMass Amherst\n' +
+      'Schools, best first:\n' +
+      '  MIT            Sam > Priya = Ravi\n' +
+      '  UMass Amherst  Priya = Ravi > Sam\n' +
+      '  NYU            Sam > Ravi > Priya\n' +
+      'The matching: Priya–UMass Amherst · Sam–NYU · Ravi–MIT',
+    prompt: 'New lists. In this matching, what are Priya and MIT?',
+    options: [
+      {
+        t: 'A strong instability.',
+        claims: { pair: ['priya', 'mit'], is: 'strong' },
+        why: 'Priya does strictly prefer MIT to UMass Amherst, but MIT ranks Priya level with Ravi, who it has. Strong needs MIT to strictly prefer her.',
+      },
+      {
+        t: 'Neither: MIT would gain nothing, so nothing happens.',
+        claims: { pair: ['priya', 'mit'], is: 'neither' },
+        why: 'Gaining is not the test for weak. MIT does not mind and Priya strictly wants the switch, which is exactly what weak asks for.',
+      },
+      {
+        t: 'A weak instability and not a strong one.',
+        ok: true,
+        claims: { pair: ['priya', 'mit'], is: 'weak only' },
+        why: 'Priya strictly prefers MIT to UMass Amherst; MIT ranks Priya level with Ravi. One strict, one indifferent.',
+      },
+      {
+        t: 'Neither, because Priya ranks UMass Amherst and NYU level.',
+        claims: { pair: ['priya', 'mit'], is: 'neither' },
+        why: 'Her tie is between UMass Amherst and NYU, and MIT is above both. A tie only matters when it is between the two people being compared.',
+      },
+    ],
+    close:
+      'Indifference counts toward weak and never toward strong. The strong one in this matching is somewhere else: Sam and MIT, where each strictly prefers the other.',
+  },
+
+  {
+    id: 'tied-every-matching',
+    tier: 4,
+    kind: 'multi',
+    tests: 'checking every matching of one instance',
+    tied: {
+      students: {
+        priya: [['mit'], ['umass', 'nyu']],
+        sam: [['umass', 'mit'], ['nyu']],
+        ravi: [['mit'], ['nyu'], ['umass']],
+      },
+      schools: {
+        mit: [['sam'], ['priya', 'ravi']],
+        umass: [['priya', 'ravi'], ['sam']],
+        nyu: [['sam'], ['ravi'], ['priya']],
+      },
+    },
+    quote:
+      'Students, best first (= means tied):\n' +
+      '  Priya          MIT > UMass Amherst = NYU\n' +
+      '  Sam            UMass Amherst = MIT > NYU\n' +
+      '  Ravi           MIT > NYU > UMass Amherst\n' +
+      'Schools, best first:\n' +
+      '  MIT            Sam > Priya = Ravi\n' +
+      '  UMass Amherst  Priya = Ravi > Sam\n' +
+      '  NYU            Sam > Ravi > Priya',
+    prompt:
+      'The same lists, and all six of their matchings. Tick every one that has no strong instability.',
+    options: [
+      {
+        t: 'Priya–MIT · Sam–UMass Amherst · Ravi–NYU',
+        ok: true,
+        claims: { matching: { priya: 'mit', sam: 'umass', ravi: 'nyu' }, freeOfStrong: true },
+        why: 'No pair both strictly want the switch. It is not free of weak ones: Sam and MIT, and Ravi and MIT, are both weak.',
+      },
+      {
+        t: 'Priya–MIT · Sam–NYU · Ravi–UMass Amherst',
+        claims: { matching: { priya: 'mit', sam: 'nyu', ravi: 'umass' }, freeOfStrong: true },
+        why: 'Sam and MIT: Sam would rather have MIT than NYU, and MIT would rather have Sam than Priya. Strong.',
+      },
+      {
+        t: 'Priya–UMass Amherst · Sam–MIT · Ravi–NYU',
+        ok: true,
+        claims: { matching: { priya: 'umass', sam: 'mit', ravi: 'nyu' }, freeOfStrong: true },
+        why: 'Nothing breaks it, of either kind. Sam has a school from his top group, and Priya and Ravi would each rather have MIT, which would rather keep Sam.',
+      },
+      {
+        t: 'Priya–UMass Amherst · Sam–NYU · Ravi–MIT',
+        claims: { matching: { priya: 'umass', sam: 'nyu', ravi: 'mit' }, freeOfStrong: true },
+        why: 'The matching from the last question. Sam and MIT each strictly prefer the other: Sam to NYU, MIT to Ravi.',
+      },
+      {
+        t: 'Priya–NYU · Sam–MIT · Ravi–UMass Amherst',
+        claims: { matching: { priya: 'nyu', sam: 'mit', ravi: 'umass' }, freeOfStrong: true },
+        why: 'Ravi and NYU: Ravi would rather have NYU than UMass Amherst, and NYU would rather have Ravi than Priya. Strong.',
+      },
+      {
+        t: 'Priya–NYU · Sam–UMass Amherst · Ravi–MIT',
+        ok: true,
+        claims: { matching: { priya: 'nyu', sam: 'umass', ravi: 'mit' }, freeOfStrong: true },
+        why: 'No pair both strictly want the switch, though three are weak: Priya with MIT, Priya with UMass Amherst, and Sam with MIT.',
+      },
+    ],
+    close:
+      'A question about every matching of an instance is answered by checking every matching, and with three a side there are only six. The workbench on this page lists them all, with both kinds marked, for any lists you write.',
   },
 
   {

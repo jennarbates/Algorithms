@@ -801,7 +801,7 @@ input:focus-visible,
 .practice__tiers {
   flex: 0 0 auto;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -1668,6 +1668,63 @@ input {
   stroke-width: 0.8;
 }
 
+/* Chapter 5: each cell carries how many times the k loop runs there. */
+.grid--sums {
+  aspect-ratio: auto;
+}
+
+.cell__h {
+  fill: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.cell__h--on {
+  fill: var(--on-accent);
+}
+
+.cell__h--box {
+  fill: var(--side0);
+  font-weight: 800;
+}
+
+.cell__h--on.cell__h--box {
+  fill: var(--on-accent);
+}
+
+.grid__sum {
+  fill: var(--ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  dominant-baseline: middle;
+}
+
+/* Chapter 6: two programs side by side above the chart. */
+.board--race {
+  gap: 8px;
+}
+
+.pair {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pair__title {
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.pair__title b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
 /* --- small screens ---------------------------------------------------------------
  *
  * The board and the work cannot sit side by side below 900px, so the lock comes
@@ -1723,6 +1780,10 @@ input {
   }
 
   .board--split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pair {
     grid-template-columns: minmax(0, 1fr);
   }
 

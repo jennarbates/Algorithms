@@ -15,14 +15,24 @@ import {
 import type { Poly } from '../src/core/poly.ts';
 import {
   BAR,
+  DEEPER,
   FOO,
+  POWERS_FAST,
+  POWERS_SLOW,
   PRINT1,
   PRINT2,
   PROGRAMS,
   SUM_PRODUCT,
+  TIMES_TABLE,
+  TRIANGLES,
+  TRIPLE_LOOPS,
+  X,
+  boxSize,
   countOf,
+  inBox,
   inSquare,
   squareCount,
+  written,
 } from '../src/core/programs.ts';
 
 const Q = (s: string) => {
@@ -219,6 +229,97 @@ describe('the programs', () => {
         expect(squareCount(n)).toBeLessThan((n / 2) ** 2);
         expect(squareCount(n)).toBeGreaterThanOrEqual(((n - 1) / 2) ** 2);
       }
+    }
+  });
+});
+
+describe('chapter 5: three loops deep', () => {
+  const n3 = poly(0, 0, 0, 1);
+
+  it('each cell height is the length of its k loop, and the cells add up to the count', () => {
+    for (const p of TRIPLE_LOOPS) {
+      for (let n = 0; n <= 25; n++) {
+        const per: Record<string, number> = {};
+        for (const s of p.run(n)) per[`${s.i},${s.j}`] = (per[`${s.i},${s.j}`] ?? 0) + 1;
+        let sum = 0;
+        for (let i = 1; i <= n; i++)
+          for (let j = 1; j <= n; j++) {
+            const h = p.height(n, i, j);
+            expect(h, `${p.id} n=${n} (${i},${j})`).toBe(per[`${i},${j}`] ?? 0);
+            if (!p.reached(n, i, j)) expect(h).toBe(0);
+            sum += h;
+          }
+        expect(sum).toBe(countOf(p, n));
+      }
+    }
+  });
+
+  it('every triple in each box really runs, and the box is the size the page says', () => {
+    for (const p of TRIPLE_LOOPS) {
+      for (let n = 0; n <= 30; n++) {
+        const b = p.box(n);
+        const ran = new Set(p.run(n).map((s) => `${s.i},${s.j},${s.k}`));
+        let inside = 0;
+        for (let i = 1; i <= n; i++)
+          for (let j = 1; j <= n; j++)
+            for (let k = 1; k <= n; k++)
+              if (inBox(b, i, j, k)) {
+                inside++;
+                expect(ran.has(`${i},${j},${k}`), `${p.id} n=${n} (${i},${j},${k})`).toBe(true);
+              }
+        expect(inside).toBe(boxSize(b));
+      }
+    }
+  });
+
+  it("deeper's box is chapter 3's square, ⌊n/2⌋ values of k deep", () => {
+    for (let n = 0; n <= 40; n++)
+      expect(boxSize(DEEPER.box(n))).toBe(squareCount(n) * Math.floor(n / 2));
+  });
+
+  it('each floor, box ≥ n³/den, holds from n0 on (to n = 300) and not at n0 − 1', () => {
+    for (const p of TRIPLE_LOOPS) {
+      const { den, n0 } = p.floor;
+      const holds = (n: number) => den * boxSize(p.box(n)) >= n ** 3;
+      for (let n = n0; n <= 300; n++) expect(holds(n), `${p.id} at ${n}`).toBe(true);
+      expect(holds(n0 - 1)).toBe(false);
+    }
+  });
+
+  it('the ceiling: every loop run to n is at least the count, and both are Θ(n³)', () => {
+    for (const p of TRIPLE_LOOPS) {
+      expect(check(p.count, n3, 'O', { upper: Q('1'), n0: 0 }), p.id).toEqual({ ok: true });
+      expect(relationHolds(p.count, n3, 'Θ')).toBe(true);
+      expect(relates(p.growth, 'Θ', g(3))).toBe(true);
+    }
+    // The triangles witness in tier 5: 1/27 and 1/6, first good from n = 3.
+    expect(bestN0(TRIANGLES.count, n3, 'Θ', { lower: Q('1/27'), upper: Q('1/6') })).toBe(3);
+  });
+});
+
+describe('chapter 6: same answer, less work', () => {
+  it('both power programs write the same n entries, the real powers of x', () => {
+    for (let n = 0; n <= 40; n++) {
+      const slow = written(POWERS_SLOW, n);
+      const fast = written(POWERS_FAST, n);
+      expect(slow).toEqual(fast);
+      expect(slow).toHaveLength(n);
+      slow.forEach((v, k) => expect(v).toBe(String(X ** BigInt(k + 1))));
+    }
+  });
+
+  it('g/f = 2/(n + 1) exactly, so it goes to 0: g is O(f) and not Ω(f)', () => {
+    for (let n = 1; n <= 40; n++)
+      expect(countOf(POWERS_FAST, n) * (n + 1)).toBe(2 * countOf(POWERS_SLOW, n));
+    expect(relates(POWERS_FAST.growth, 'O', POWERS_SLOW.growth)).toBe(true);
+    expect(relates(POWERS_FAST.growth, 'Ω', POWERS_SLOW.growth)).toBe(false);
+    expect(relationHolds(POWERS_FAST.count, POWERS_SLOW.count, 'Ω')).toBe(false);
+  });
+
+  it('the output floor: the fast one does exactly one multiplication per entry written', () => {
+    for (let n = 0; n <= 40; n++) {
+      expect(countOf(POWERS_FAST, n)).toBe(written(POWERS_FAST, n).length);
+      expect(written(TIMES_TABLE, n)).toHaveLength(n * n);
     }
   });
 });

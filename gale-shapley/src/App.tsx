@@ -13,6 +13,7 @@ import { Practice } from './components/Practice';
 import { ReceiverPanel } from './components/ReceiverPanel';
 import { WhyItWorks } from './components/WhyItWorks';
 import { WorkColumn } from './components/WorkColumn';
+import { Workbench } from './components/Workbench';
 import { useRun } from './hooks/useRun';
 import type { Run } from './hooks/useRun';
 
@@ -37,6 +38,10 @@ import type { Run } from './hooks/useRun';
  * practice section takes the whole page over rather than sitting underneath the
  * board: a reader who can still see the answer cannot be asked for it.
  *
+ * And a third. A problem set eventually asks for lists the reader chooses, so
+ * the workbench hands them an editor, a checker for lists with ties, and a run
+ * of the process with its asks counted, on lists of their own.
+ *
  * What this file owns is the shell: a header that holds still, a footnote that
  * holds still, and one growing area between them that is handed the rest of the
  * height. In the walkthrough that area is the board on the left and the work on
@@ -53,7 +58,7 @@ type Ghost = { asker: string; receiver: string } | null;
 export function App() {
   const run = useRun(INSTANCE, 'students');
   const boardRef = useRef<HTMLDivElement>(null);
-  const [mode, setMode] = useState<'walk' | 'practice'>('walk');
+  const [mode, setMode] = useState<'walk' | 'practice' | 'bench'>('walk');
 
   const settled = run.state.phase === 'done';
 
@@ -116,7 +121,7 @@ export function App() {
           </a>
           <h1>Who gets in, and why</h1>
 
-          <span className="modes" role="group" aria-label="Walkthrough or practice">
+          <span className="modes" role="group" aria-label="Walkthrough, practice or workbench">
             <button type="button" onClick={() => setMode('walk')} aria-pressed={mode === 'walk'}>
               Walkthrough
             </button>
@@ -126,6 +131,9 @@ export function App() {
               aria-pressed={mode === 'practice'}
             >
               Practice
+            </button>
+            <button type="button" onClick={() => setMode('bench')} aria-pressed={mode === 'bench'}>
+              Your own lists
             </button>
           </span>
         </div>
@@ -141,6 +149,8 @@ export function App() {
       <div className="deck">
         {mode === 'practice' ? (
           <Practice onLeave={() => setMode('walk')} />
+        ) : mode === 'bench' ? (
+          <Workbench />
         ) : (
           <Walkthrough
             run={run}

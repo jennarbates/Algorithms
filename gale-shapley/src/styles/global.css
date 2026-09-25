@@ -762,7 +762,8 @@ body {
   background: color-mix(in srgb, var(--ink-faint) 10%, transparent);
 }
 
-.page--settled .entry--held {
+.page--settled .entry--held,
+.bench--settled .entry--held {
   border-style: solid;
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 22%, transparent);
@@ -2035,6 +2036,374 @@ body {
   .tierpick button {
     flex: 1 1 0;
   }
+}
+
+/* --- the asks, beside the step count ------------------------------------ */
+
+.side__asks {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* --- the workbench -------------------------------------------------------- */
+
+/* The workbench is the walkthrough's layout, class for class (.walk, .boardcol,
+   .board, .side), so every rule of the one-screen lock and every release in the
+   escape hatch already covers it. Nothing below creates a scroller: the long
+   parts, the editor and the list of every arrangement, live in .side__body,
+   which is the column's one scroller already. */
+
+.bench__heads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.pill--small {
+  font-size: 12px;
+  padding: 3px 10px;
+}
+
+/* The ties board. Smaller cards than the walkthrough's, because there is no run
+   to watch on them, only lists to read. */
+.row--tied {
+  padding: 10px 12px 11px;
+  margin-bottom: 8px;
+}
+
+.tiedlist {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 9px 0 0;
+  padding: 0;
+}
+
+.tiedlist__group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 3px;
+  border-radius: 10px;
+}
+
+/* A tied group sits on one shared ground, so "these count as one place on the
+   list" reads before the equals signs do. */
+.tiedlist__group--tied {
+  background: color-mix(in srgb, var(--live) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--live) 45%, transparent);
+}
+
+.tiedlist__sign,
+.tiedlist__eq {
+  font:
+    600 13px/1 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  color: var(--ink-faint);
+}
+
+.entry--partner {
+  border-style: solid;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* Solid against dashed carries strong against weak, so the difference does not
+   rest on colour. */
+.pairline--together .matchline__path {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.pairline--together .matchline__end {
+  fill: var(--accent);
+}
+
+.pairline--strong .matchline__path,
+.pairline--weak .matchline__path {
+  stroke: var(--bad);
+  stroke-width: 2.5;
+}
+
+.pairline--weak .matchline__path {
+  stroke-dasharray: 7 5;
+}
+
+.pairline--strong .matchline__end,
+.pairline--weak .matchline__end {
+  fill: var(--bad);
+}
+
+.pairline--focus .matchline__path {
+  stroke-width: 4.5;
+}
+
+.pairline--faded {
+  opacity: 0.18;
+}
+
+/* The editor. */
+.editor__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.editor__select {
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 3px 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.editor__hint {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.editor__cap,
+.bench__cap {
+  margin: 14px 0 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.editrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.editrow__who {
+  flex: 0 0 8.5rem;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.editrow__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.editrow__name {
+  line-height: 0;
+  padding: 2px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.editrow__name:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.editrow__name:disabled {
+  cursor: default;
+}
+
+.editrow__sign {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font:
+    600 13px/1 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.editrow__sign:hover {
+  border-color: var(--live);
+}
+
+.editrow__sign--tied {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--live) 22%, transparent);
+  border-color: var(--live);
+}
+
+.editrow__sign--fixed {
+  display: inline-grid;
+  place-items: center;
+  border-color: transparent;
+  background: none;
+  cursor: default;
+}
+
+/* What the checker says. */
+.bench__key {
+  list-style: none;
+  margin: 8px 0 4px;
+  padding: 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.bench__key li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.bench__swatch {
+  flex: 0 0 26px;
+  height: 0;
+  border-top: 3px solid var(--bad);
+  transform: translateY(-4px);
+}
+
+.bench__swatch--weak {
+  border-top-style: dashed;
+}
+
+.bench__pairs {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.bench__none {
+  margin: 0;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.bench__why,
+.bench__all {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bench__why {
+  gap: 6px;
+}
+
+.bench__all {
+  gap: 4px;
+}
+
+.bench__whybtn {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--surface-sunk);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--bad);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.bench__whybtn--weak {
+  border-left-style: dashed;
+}
+
+.bench__whybtn--on {
+  border-color: var(--bad);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--bad) 22%, transparent);
+}
+
+.bench__arr {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  text-align: left;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+
+.bench__arr:hover {
+  border-color: var(--accent);
+}
+
+.bench__arr--on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.bench__arrtext {
+  min-width: 0;
+}
+
+.bench__counts {
+  flex: 0 0 auto;
+  display: inline-flex;
+  gap: 8px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.bench__n--strong,
+.bench__n--weak {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+.bench__readout {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.bench__scale {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.bench__totals {
+  margin: 8px 0 12px;
+  font-size: 13px;
+  color: var(--ink-soft);
 }
 
 /* --- the escape hatch ---------------------------------------------------- */

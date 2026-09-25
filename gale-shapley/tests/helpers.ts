@@ -39,3 +39,20 @@ export function randomInstance(n: number, seed: number): Instance {
     schools: schoolIds.map((id) => ({ id, name: id, prefs: shuffled(studentIds, rnd) })),
   };
 }
+
+/**
+ * A random market whose lists may have ties: the same random orders as
+ * `randomInstance`, then each neighbouring pair on each list tied with the
+ * given chance. A chance of 0 gives back a strict market.
+ */
+export function randomTiedInstance(n: number, seed: number, chance: number): Instance {
+  const base = randomInstance(n, seed);
+  const rnd = mulberry32(seed ^ 0x5eed);
+  const marks = (length: number) => Array.from({ length: length - 1 }, () => rnd() < chance);
+  return {
+    ...base,
+    id: `random-tied-${n}-${seed}`,
+    students: base.students.map((s) => ({ ...s, tiedWithNext: marks(s.prefs.length) })),
+    schools: base.schools.map((c) => ({ ...c, tiedWithNext: marks(c.prefs.length) })),
+  };
+}

@@ -3,7 +3,17 @@ import type { Kind } from '../core/bounds.ts';
 import { factorial } from '../core/growth.ts';
 import { evalQ, parseQ, poly } from '../core/poly.ts';
 import type { Poly } from '../core/poly.ts';
-import { PRINT1, SUM_PRODUCT, countOf, squareCount } from '../core/programs.ts';
+import {
+  DEEPER,
+  POWERS_FAST,
+  POWERS_SLOW,
+  PRINT1,
+  SUM_PRODUCT,
+  TRIANGLES,
+  boxSize,
+  countOf,
+  squareCount,
+} from '../core/programs.ts';
 
 /**
  * The practice questions, one tier per chapter.
@@ -22,7 +32,7 @@ import { PRINT1, SUM_PRODUCT, countOf, squareCount } from '../core/programs.ts';
  * workbook asks exactly these questions and its key comes from the same engine.
  */
 
-export type Tier = 1 | 2 | 3 | 4;
+export type Tier = 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface Option {
   readonly t: string;
@@ -72,18 +82,21 @@ export interface WitnessQuestion extends Common {
 
 export type Question = ChoiceQuestion | MultiQuestion | NumberQuestion | WitnessQuestion;
 
-export const TIERS: readonly Tier[] = [1, 2, 3, 4];
+export const TIERS: readonly Tier[] = [1, 2, 3, 4, 5, 6];
 
 export const TIER_LABELS: Readonly<Record<Tier, string>> = {
   1: 'Floors and ceilings',
   2: 'Count every step',
   3: 'The triangle',
   4: 'Polynomial or not',
+  5: 'Three loops deep',
+  6: 'Same answer, less work',
 };
 
 const Q = (s: string) => parseQ(s) as NonNullable<ReturnType<typeof parseQ>>;
 const n1 = poly(0, 1);
 const n2 = poly(0, 0, 1);
+const n3 = poly(0, 0, 0, 1);
 
 /** The smallest n₀ with n − 10 ≥ 0.5n. */
 const halfN0 = bestN0(poly(-10, 1), n1, 'Ω', { lower: Q('0.5') }) ?? -1;
@@ -94,6 +107,13 @@ const sumProductAt10 = countOf(SUM_PRODUCT, 10);
 const squareAt10 = squareCount(10);
 const tripleAt6 = Number(evalQ(poly(0, '1/3', '1/2', '1/6'), 6).n);
 const matchingsAt10 = factorial(10);
+const trianglesAt8 = countOf(TRIANGLES, 8);
+const deeperAt6 = countOf(DEEPER, 6);
+const boxAt9 = boxSize(TRIANGLES.box(9));
+const slowAt10 = countOf(POWERS_SLOW, 10);
+const speedupAt199 = countOf(POWERS_SLOW, 199) / countOf(POWERS_FAST, 199);
+/** The first n₀ from which n³/27 ≤ n(n − 1)(n − 2)/6 ≤ n³/6. */
+const trianglesN0 = bestN0(TRIANGLES.count, n3, 'Θ', { lower: Q('1/27'), upper: Q('1/6') }) ?? -1;
 
 export const QUESTIONS: readonly Question[] = [
   // --- Tier 1: floors and ceilings -------------------------------------------------
@@ -650,6 +670,298 @@ export const QUESTIONS: readonly Question[] = [
     ],
     close:
       'Polynomials are closed under adding, multiplying and composing. That is another reason the definition works.',
+  },
+  // --- Tier 5: three loops deep ------------------------------------------------------
+  {
+    id: 'triangles-at-8',
+    tier: 5,
+    kind: 'number',
+    tests: 'counting a triple loop whose ranges depend on the loops outside',
+    prompt: 'How many times does the inner line run when n = 8?',
+    quote: TRIANGLES.lines.join('\n'),
+    unit: 'Times =',
+    answer: trianglesAt8,
+    why: `Each run is one set of three points with i < j < k, and each set is visited once, in increasing order. That is the number of ways to choose 3 of 8: 8·7·6/6 = ${trianglesAt8}. In general n(n − 1)(n − 2)/6.`,
+    near: [
+      { v: 8 ** 3, why: 'That is n³, as if every loop ran from 1 to n.' },
+      {
+        v: 8 * 7 * 6,
+        why: 'That counts ordered triples. The loops only visit i < j < k, one order of each set of three.',
+      },
+      { v: (8 * 7) / 2, why: 'That is the number of (i, j) pairs, one loop too few.' },
+    ],
+    close:
+      'When each loop starts just past the one outside it, the count is "choose 3": about n³/6, and Θ(n³).',
+  },
+  {
+    id: 'deeper-at-6',
+    tier: 5,
+    kind: 'number',
+    tests: 'summing the cells of the (i, j) grid',
+    prompt: 'How many times does the inner line run when n = 6?',
+    quote: DEEPER.lines.join('\n'),
+    unit: 'Times =',
+    answer: deeperAt6,
+    why: `Cell (i, j) runs j times. Column j is reached by the j rows i = 1 to j, so it contributes j · j. Adding: 1 + 4 + 9 + 16 + 25 + 36 = ${deeperAt6}, which is n(n + 1)(2n + 1)/6 at n = 6.`,
+    near: [
+      { v: 6 ** 3, why: 'That is n³, the ceiling from letting every loop run to n.' },
+      { v: (6 * 7) / 2, why: 'That counts the (i, j) cells, n(n + 1)/2, and forgets the k loop.' },
+      {
+        v: 6 * ((6 * 7) / 2),
+        why: 'That is as if j started at 1 in every row. It starts at i, so row i misses 1 + … + (i − 1).',
+      },
+    ],
+    close:
+      'Summing by columns instead of rows turned an awkward double sum into 1² + 2² + … + n². Pick the order that makes each term simple.',
+  },
+  {
+    id: 'box-at-9',
+    tier: 5,
+    kind: 'number',
+    tests: 'the size of a box of triples',
+    prompt:
+      'For triangles, the floor keeps only the triples with i ≤ n/3, n/3 < j ≤ 2n/3 and k > 2n/3. How many triples does it keep when n = 9?',
+    quote: TRIANGLES.lines.join('\n'),
+    unit: 'Triples kept =',
+    answer: boxAt9,
+    why: `i ∈ {1, 2, 3}, j ∈ {4, 5, 6}, k ∈ {7, 8, 9}: 3 × 3 × 3 = ${boxAt9}. Every one has i < j < k, so every one really runs.`,
+    near: [
+      {
+        v: countOf(TRIANGLES, 9),
+        why: 'That is every triple the program checks, the exact count.',
+      },
+      { v: 9 ** 3, why: 'That is n³, the ceiling.' },
+      { v: 9, why: 'That is the 3 × 3 cells of (i, j), before multiplying by the 3 values of k.' },
+    ],
+    close:
+      'A box is a product of three band widths. Each is about n/3, so the box is about n³/27, which is Ω(n³).',
+  },
+  {
+    id: 'box-which',
+    tier: 5,
+    kind: 'choice',
+    tests: 'choosing a box where every triple really runs',
+    prompt:
+      'To show triangles is Ω(n³), you count a box of triples and claim the program does at least that much work. Which box makes the argument valid?',
+    quote: TRIANGLES.lines.join('\n'),
+    options: [
+      {
+        t: 'i ≤ n/2, j ≤ n/2, k ≥ n/2',
+        why: 'The box has triples with j ≤ i, such as i = j = 1, and the loops never reach those. Its size is not a floor on the work.',
+      },
+      {
+        t: 'i, j and k all ≤ n/3',
+        why: 'Most of those triples never run (i = j = k = 1, say), and counting the ones that do is the same problem again at n/3.',
+      },
+      {
+        t: 'i ≤ n/3, n/3 < j ≤ 2n/3, k > 2n/3',
+        ok: true,
+        why: 'The bands are in order, so i < j < k for every triple in the box, and every one runs. About (n/3)³ of them.',
+      },
+      {
+        t: 'Every i, j, k from 1 to n: n³ triples',
+        why: 'That is the ceiling. Most of those triples never run, so it bounds the work above, not below.',
+      },
+    ],
+    close:
+      'The box has to sit entirely inside the work that really happens, and each of its sides has to be a constant fraction of n. Both, or it proves nothing.',
+  },
+  {
+    id: 'deeper-bounds',
+    tier: 5,
+    kind: 'multi',
+    tests: 'O, Ω and Θ for a triple loop',
+    prompt: 'deeper runs its inner line n(n + 1)(2n + 1)/6 times. Tick every true statement.',
+    quote: DEEPER.lines.join('\n'),
+    options: [
+      {
+        t: 'Θ(n³)',
+        ok: true,
+        why: 'The box gives at least about n³/8, and letting every loop run to n gives at most n³.',
+      },
+      { t: 'O(n⁴)', ok: true, why: 'A ceiling can be as high as you like.' },
+      { t: 'Ω(n²)', ok: true, why: 'A floor can be as low as you like.' },
+      {
+        t: 'O(n²)',
+        why: 'The count is about n³/3, which passes c·n² for every c. Three loops over ranges that grow with n.',
+      },
+      { t: 'Θ(n²)', why: 'The ceiling half fails, as for O(n²).' },
+      { t: 'Ω(n⁴)', why: 'The count is at most n³, and n³ is not Ω(n⁴).' },
+    ],
+    close:
+      'Only Θ(n³) is tight. When an exam asks for "the" running time, it means the Θ, with a floor argument and a ceiling argument both shown.',
+  },
+  {
+    id: 'witness-triangles',
+    tier: 5,
+    kind: 'witness',
+    tests: 'a Θ witness for a triple loop',
+    prompt:
+      'Prove n(n − 1)(n − 2)/6 = Θ(n³): give a floor c₁, a ceiling c₂ and one n₀ where both hold.',
+    T: TRIANGLES.count,
+    f: n3,
+    rel: 'Θ',
+    example: { lower: '1/27', upper: '1/6', n0: trianglesN0 },
+    why: `c₂ = 1/6: dropping the − 1 and − 2 only makes each factor bigger, so the count is at most n³/6. c₁ = 1/27 is the box of thirds, and it first holds for good at n = ${trianglesN0}. So c₁ = 1/27, c₂ = 1/6, n₀ = ${trianglesN0}.`,
+    close:
+      'The ceiling is "round every factor up", the floor is "keep a box". The constants come straight out of the two arguments.',
+  },
+
+  // --- Tier 6: same answer, less work --------------------------------------------------
+  {
+    id: 'slow-at-10',
+    tier: 6,
+    kind: 'number',
+    tests: 'counting the work of recomputing from scratch',
+    prompt:
+      'This program fills P[k] = xᵏ for k = 1 to n. How many multiplications does it do when n = 10?',
+    quote: POWERS_SLOW.lines.join('\n'),
+    unit: 'Multiplications =',
+    answer: slowAt10,
+    why: `xᵏ takes k multiplications from scratch, so 1 + 2 + … + 10 = 10·11/2 = ${slowAt10}.`,
+    near: [
+      { v: 100, why: 'That is n², as if every power took n multiplications.' },
+      { v: 10, why: 'That is the version that reuses P[k − 1]: one multiplication per entry.' },
+      { v: 45, why: 'That is 0 + 1 + … + 9. The t loop runs k times, not k − 1.' },
+    ],
+    close: 'The same triangle as sum-product: Θ(n²) for a table of n numbers.',
+  },
+  {
+    id: 'speedup-at-199',
+    tier: 6,
+    kind: 'number',
+    tests: 'how the gap between two algorithms grows',
+    prompt:
+      'At n = 199, how many times as many multiplications does the from-scratch program do as the one that reuses the last power?',
+    unit: 'Times as many =',
+    answer: speedupAt199,
+    why: `From scratch: 199·200/2 = ${countOf(POWERS_SLOW, 199)}. Reusing: ${countOf(POWERS_FAST, 199)}. The ratio is (n + 1)/2 = ${speedupAt199}.`,
+    near: [
+      { v: 199, why: 'That is the reusing count itself, not the ratio.' },
+      { v: 2, why: 'The ratio is (n + 1)/2, which grows with n. It is not a constant.' },
+      {
+        v: countOf(POWERS_SLOW, 199),
+        why: 'That is the from-scratch count itself, not the ratio.',
+      },
+    ],
+    close:
+      'A ratio that grows without bound is what "asymptotically faster" means. Twice as fast at every n would be the same Θ.',
+  },
+  {
+    id: 'reuse-why',
+    tier: 6,
+    kind: 'choice',
+    tests: 'finding the repeated work',
+    prompt:
+      'Both programs write the same table P[1..n]. Why does the from-scratch one do Θ(n²) work?',
+    quote: POWERS_SLOW.lines.join('\n'),
+    options: [
+      {
+        t: 'Its multiplications are slower.',
+        why: 'Each is the same p · x. The difference is how many there are.',
+      },
+      { t: 'It writes more entries.', why: 'Both write exactly n: P[1] to P[n].' },
+      {
+        t: 'To get xᵏ it recomputes xᵏ⁻¹ on the way, although it wrote that into P[k − 1] a moment ago.',
+        ok: true,
+        why: 'Starting from P[k − 1] instead of from 1 saves k − 1 multiplications for every k.',
+      },
+      {
+        t: 'It has two nested loops, and two nested loops are always Θ(n²).',
+        why: 'Not always: Print2 is two nested loops and Θ(n). Count, do not guess from the shape.',
+      },
+    ],
+    close:
+      'Look for an inner loop whose work for this round is the previous round’s work plus a little. Keep the previous result and add the little.',
+  },
+  {
+    id: 'strictly-faster',
+    tier: 6,
+    kind: 'choice',
+    tests: 'what strictly faster means',
+    prompt:
+      'Algorithm A takes f(n) steps and algorithm B takes g(n). Which fact shows B is asymptotically faster, not just faster by a constant factor?',
+    options: [
+      {
+        t: 'g(n)/f(n) → 0 as n grows.',
+        ok: true,
+        why: 'Then no constant c > 0 has g ≥ c·f for all large n, so g is O(f) but not Ω(f).',
+      },
+      {
+        t: 'g(n) ≤ f(n) for every n.',
+        why: 'g = n and f = 2n satisfy it, and they are Θ of each other.',
+      },
+      { t: 'g = O(f).', why: 'That is true when g = f as well.' },
+      {
+        t: 'g has a smaller leading coefficient than f.',
+        why: 'That is a constant factor, the one thing Big-O ignores.',
+      },
+    ],
+    close:
+      'To show a new algorithm is strictly better, work out both counts, divide, and show the ratio goes to 0.',
+  },
+  {
+    id: 'output-floor',
+    tier: 6,
+    kind: 'choice',
+    tests: 'the output size as a lower bound',
+    prompt:
+      'Some algorithm fills an n × n table with T[i, j] = i · j. Before seeing its code, what can you say about its running time?',
+    options: [
+      {
+        t: 'Ω(n): it has to look at n.',
+        why: 'True, but far from the best floor available.',
+      },
+      {
+        t: 'Ω(n²): it writes n² entries, and each write is at least one step.',
+        ok: true,
+        why: 'Every algorithm that produces the table pays for the table. So the plain double loop, n² steps, is already optimal.',
+      },
+      {
+        t: 'It could be O(n log n) with a clever enough trick.',
+        why: 'No trick writes n² entries in fewer than n² steps.',
+      },
+      {
+        t: 'Nothing: a lower bound needs the code.',
+        why: 'This one does not. It holds for every algorithm with this output.',
+      },
+    ],
+    close:
+      'An algorithm can never be faster than its output. When your algorithm’s running time matches the size of what it writes, it cannot be beaten by more than a constant.',
+  },
+  {
+    id: 'which-floor',
+    tier: 6,
+    kind: 'multi',
+    tests: 'when the output floor is strong and when it is weak',
+    prompt: 'Tick every task where the size of the output alone forces Ω(n²) time.',
+    options: [
+      { t: 'Write the n × n times table.', ok: true, why: 'n² entries.' },
+      {
+        t: 'Given n numbers A[1..n], write A[i] + A[j] into an n × n table for every i and j.',
+        ok: true,
+        why: 'n² entries, whatever the numbers are.',
+      },
+      {
+        t: 'Write every product i · j · k for i, j, k from 1 to n.',
+        ok: true,
+        why: 'n³ entries, and a floor of n³ is also a floor of n².',
+      },
+      {
+        t: 'Write the powers x¹ to xⁿ.',
+        why: 'n entries: the output gives Ω(n), and n steps suffice.',
+      },
+      {
+        t: 'Say whether n numbers contain a repeat.',
+        why: 'The answer is one word. Reading the input gives Ω(n), and neither floor is n².',
+      },
+      {
+        t: 'Sort n numbers.',
+        why: 'The output is n numbers: Ω(n) from the output. Sorting by comparisons does need more, but the output alone does not show it.',
+      },
+    ],
+    close:
+      'The output floor is free and always true, and sometimes it is the whole story. When it is far below your algorithm, either the algorithm can improve or you need a different argument.',
   },
 ];
 

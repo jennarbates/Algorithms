@@ -3,6 +3,7 @@ import {
   advance,
   backToNow,
   createHistory,
+  finish,
   isViewingPast,
   latest,
   viewAt,
@@ -21,6 +22,7 @@ import type { Instance, Side } from '../core/types';
 
 type Action =
   | { readonly type: 'step' }
+  | { readonly type: 'finish' }
   | { readonly type: 'reset' }
   | { readonly type: 'switch-side'; readonly side: Side }
   | { readonly type: 'view'; readonly step: number }
@@ -37,6 +39,8 @@ function reduce(store: Store, action: Action): Store {
   switch (action.type) {
     case 'step':
       return { ...store, history: advance(history) };
+    case 'finish':
+      return { ...store, history: finish(history) };
     case 'reset':
       return {
         history: createHistory(history.instance, history.askingSide),
@@ -63,6 +67,8 @@ export interface Run {
   readonly viewingPast: boolean;
   readonly runId: number;
   readonly step: () => void;
+  /** Every remaining step at once. */
+  readonly finish: () => void;
   readonly reset: () => void;
   readonly switchSide: (side: Side) => void;
   readonly viewAt: (step: number) => void;
@@ -78,6 +84,7 @@ export function useRun(instance: Instance, initialSide: Side): Run {
   const { history, runId } = store;
 
   const step = useCallback(() => dispatch({ type: 'step' }), []);
+  const toEnd = useCallback(() => dispatch({ type: 'finish' }), []);
   const reset = useCallback(() => dispatch({ type: 'reset' }), []);
   const switchSide = useCallback((side: Side) => dispatch({ type: 'switch-side', side }), []);
   const view = useCallback((stepIndex: number) => dispatch({ type: 'view', step: stepIndex }), []);
@@ -95,6 +102,7 @@ export function useRun(instance: Instance, initialSide: Side): Run {
     viewingPast: isViewingPast(history),
     runId,
     step,
+    finish: toEnd,
     reset,
     switchSide,
     viewAt: view,

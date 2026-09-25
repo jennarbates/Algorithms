@@ -11,6 +11,7 @@ self-contained in its own folder with its own tooling.
 | [`big-o/`](./big-o) | The definition of Big-O, told as a building: small terms jump off the roof, f(n) needs c to get back up, and the basement turns out to be a floor, plus five tiers of practice | Live |
 | [`bounds/`](./bounds) | Big-Omega, Big-Theta and running-time analysis from lecture 3: floors and ceilings checked exactly on a chart you set, programs counted line by line, the sum-product triangle, and polynomial against exponential time, plus four tiers of practice | Live |
 | [`graphs/`](./graphs) | Graph traversal from lectures 4 to 6: BFS layers on the 1970 Internet, DFS and the queue-or-stack traversal, the two-colour bipartite test, and topological order, plus four tiers of practice | Live |
+| [`limited-search/`](./limited-search) | Breaking boards: finding a board's bending strength with one board, with plenty, and with two, where the reader brings the strategy and the page runs it against every possible strength, plus three tiers of practice | Live |
 
 ## Conventions
 

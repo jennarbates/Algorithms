@@ -1,11 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { createEngine, matchingOf, run, step } from '../src/core/engine';
-import { MAX_ENUMERABLE_SIZE, allStableMatchings, sameMatching } from '../src/core/enumerate';
+import {
+  MAX_ENUMERABLE_SIZE,
+  allPerfectMatchings,
+  allStableMatchings,
+  sameMatching,
+} from '../src/core/enumerate';
 import { blockingPairs, isPerfect, isStable } from '../src/core/stability';
 import { PRESETS, presetById } from '../src/content/presets';
 import { QUESTIONS, FORMAL_TERMS, questionsIn } from '../src/content/questions';
-import type { Question } from '../src/content/questions';
-import type { Matching } from '../src/core/types';
+import type { Option, Question, TieClaim } from '../src/content/questions';
+import { instanceFromGiven, tiedQuote } from '../src/content/bench';
+import { judgeTiedPair, strongInstabilities, weakInstabilities } from '../src/core/ties';
+import type { Instance, Matching } from '../src/core/types';
 
 /**
  * The practice questions, checked rather than proofread.
@@ -429,6 +436,7 @@ describe('the direction of the asymmetry', () => {
 /**
  * The three tier 4 claims that can be settled by computation rather than by
  * reading. Each one is an answer the bank marks correct, so each one is checked.
+ * The newer tie questions are checked further down, claim by claim.
  */
 describe('the variants tier 4 asserts', () => {
   // --- ties: strong always avoidable, weak not -------------------------------
@@ -635,5 +643,180 @@ describe('everything the question needs is on the page with it', () => {
       expect(q.instanceId, `${q.id} names people the reader cannot otherwise see`).toBeTruthy();
       expect(() => presetById(q.instanceId as string), q.id).not.toThrow();
     }
+  });
+});
+
+/**
+ * The questions on markets with ties.
+ *
+ * No preset has ties, so each of these carries its lists in `tied` and prints
+ * them in `quote`. Two things could go stale: the printed lists could drift from
+ * the stored ones, and an `ok` could stop matching what the core says. Both are
+ * checked, every option of every question, rather than proofread.
+ */
+describe('the questions on lists with ties', () => {
+  const tiedQuestions = QUESTIONS.filter(
+    (q): q is Question & { tied: NonNullable<Question['tied']> } => q.tied !== undefined,
+  );
+
+  function holds(instance: Instance, fallback: Matching | undefined, claim: TieClaim): boolean {
+    const matching = claim.matching ?? fallback;
+    if (!matching) throw new Error('a claim about a matching needs a matching');
+    let ok = true;
+    if (claim.freeOfStrong !== undefined) {
+      ok &&= (strongInstabilities(instance, matching).length === 0) === claim.freeOfStrong;
+    }
+    if (claim.freeOfWeak !== undefined) {
+      ok &&= (weakInstabilities(instance, matching).length === 0) === claim.freeOfWeak;
+    }
+    if (claim.pair) {
+      const [student, school] = claim.pair;
+      const v = judgeTiedPair(instance, matching, student, school);
+      expect(v.alreadyTogether, `${student} and ${school} are together`).toBe(false);
+      const kind = v.strong ? 'strong' : v.weak ? 'weak only' : 'neither';
+      if (claim.is === 'weak') ok &&= v.weak;
+      else if (claim.is !== undefined) ok &&= kind === claim.is;
+    }
+    return ok;
+  }
+
+  const optionsOf = (q: Question): readonly Option[] =>
+    q.kind === 'choice' || q.kind === 'multi' ? q.options : [];
+
+  it('exists, in the formal tiers', () => {
+    expect(tiedQuestions.length).toBeGreaterThan(0);
+    for (const q of tiedQuestions) expect(q.tier, q.id).toBeGreaterThan(1);
+  });
+
+  it('prints exactly the lists it stores', () => {
+    for (const q of tiedQuestions) expect(q.quote, q.id).toBe(tiedQuote(q.tied));
+  });
+
+  it('really has ties in the lists it quotes, and a perfect matching where it names one', () => {
+    for (const q of tiedQuestions) {
+      const instance = instanceFromGiven(q.id, q.tied);
+      const tied = [...instance.students, ...instance.schools].some((p) =>
+        p.tiedWithNext?.some(Boolean),
+      );
+      expect(tied, q.id).toBe(true);
+      const matchings: Readonly<Record<string, string>>[] = [];
+      if (q.tied.matching) matchings.push(q.tied.matching);
+      for (const o of optionsOf(q)) if (o.claims?.matching) matchings.push(o.claims.matching);
+      for (const m of matchings) {
+        expect(new Set(Object.values(m)).size, q.id).toBe(instance.schools.length);
+        expect(Object.keys(m).sort(), q.id).toEqual(instance.students.map((s) => s.id).sort());
+      }
+    }
+  });
+
+  it('marks an option right exactly when the core says its claim holds', () => {
+    for (const q of tiedQuestions) {
+      const instance = instanceFromGiven(q.id, q.tied);
+      for (const o of optionsOf(q)) {
+        expect(o.claims, `${q.id}: "${o.t}" makes no checkable claim`).toBeDefined();
+        if (!o.claims) continue;
+        expect(holds(instance, q.tied.matching, o.claims), `${q.id}: "${o.t}"`).toBe(!!o.ok);
+      }
+    }
+  });
+
+  it('offers every pair not already together, when the options are pairs', () => {
+    for (const q of tiedQuestions) {
+      if (q.kind !== 'multi' || !q.tied.matching) continue;
+      const offered = q.options.map((o) => o.claims?.pair?.join('|')).sort();
+      const instance = instanceFromGiven(q.id, q.tied);
+      const everyPair = instance.students
+        .flatMap((s) => instance.schools.map((c) => [s.id, c.id] as const))
+        .filter(([s, c]) => q.tied.matching?.[s] !== c)
+        .map((p) => p.join('|'))
+        .sort();
+      expect(offered, q.id).toEqual(everyPair);
+    }
+  });
+
+  it('offers every matching, when the options are matchings', () => {
+    for (const q of tiedQuestions) {
+      if (q.kind !== 'multi' || q.tied.matching) continue;
+      const instance = instanceFromGiven(q.id, q.tied);
+      const offered = q.options.map((o) => JSON.stringify(o.claims?.matching));
+      expect(new Set(offered).size, q.id).toBe(offered.length);
+      expect(offered.length, q.id).toBe(allPerfectMatchings(instance).length);
+    }
+  });
+});
+
+/**
+ * The questions that count proposals. The number each option gives is checked
+ * against a run of the engine, so a list edited under one of them fails here
+ * rather than leaving a wrong answer marked right.
+ */
+describe('the questions that count proposals', () => {
+  const asksIn = (instanceId: string, side: 'students' | 'schools') =>
+    run(presetById(instanceId), side).log.filter((e) => e.kind === 'ask').length;
+
+  const counting = QUESTIONS.filter(
+    (q) => (q.kind === 'choice' || q.kind === 'multi') && q.options.some((o) => o.asks),
+  );
+
+  it('exists, and every option in one gives a count', () => {
+    expect(counting.length).toBeGreaterThan(0);
+    for (const q of counting) {
+      expect(q.instanceId, q.id).toBeTruthy();
+      if (q.kind !== 'choice' && q.kind !== 'multi') continue;
+      for (const o of q.options) expect(o.asks, `${q.id}: "${o.t}"`).toBeDefined();
+    }
+  });
+
+  it('marks an option right exactly when the engine agrees with every count it gives', () => {
+    for (const q of counting) {
+      if (q.kind !== 'choice' && q.kind !== 'multi') continue;
+      const id = q.instanceId as string;
+      for (const o of q.options) {
+        const { students, schools } = o.asks ?? {};
+        const right =
+          (students === undefined || students === asksIn(id, 'students')) &&
+          (schools === undefined || schools === asksIn(id, 'schools'));
+        expect(right, `${q.id}: "${o.t}"`).toBe(!!o.ok);
+      }
+    }
+  });
+
+  it('quotes the other counts and events its reasons rely on correctly', () => {
+    // count-lecture: four with the students asking; MIT let go once, UMass
+    // Amherst let go once and turned away once, with the schools asking.
+    expect(asksIn('lecture-example', 'students')).toBe(4);
+    const lecture = run(presetById('lecture-example'), 'schools').log;
+    const letGo = lecture.flatMap((e) => (e.kind === 'displaced' ? [e.displaced] : []));
+    const turned = lecture.flatMap((e) => (e.kind === 'turned-away' ? [e.asker] : []));
+    expect(letGo.sort()).toEqual(['mit', 'umass']);
+    expect(turned).toEqual(['umass']);
+
+    // count-both-ways: who is let go with the students asking, and who asks
+    // more than once, or all four names, in each run.
+    const nothing = presetById('nothing-changes');
+    const byStudents = run(nothing, 'students').log;
+    expect(byStudents.flatMap((e) => (e.kind === 'displaced' ? [e.displaced] : []))).toEqual([
+      'priya',
+      'sam',
+      'ravi',
+    ]);
+    expect(byStudents.filter((e) => e.kind === 'turned-away')).toHaveLength(3);
+    const bySchools = run(nothing, 'schools').log;
+    expect(bySchools.filter((e) => e.kind === 'displaced')).toHaveLength(2);
+    expect(bySchools.filter((e) => e.kind === 'turned-away')).toHaveLength(2);
+    const perAsker = (log: typeof bySchools) => {
+      const tally: Record<string, number> = {};
+      for (const e of log) if (e.kind === 'ask') tally[e.asker] = (tally[e.asker] ?? 0) + 1;
+      return tally;
+    };
+    const schoolsTally = perAsker(bySchools);
+    expect(
+      Object.keys(schoolsTally)
+        .filter((k) => (schoolsTally[k] ?? 0) > 1)
+        .sort(),
+    ).toEqual(['berkeley', 'umass']);
+    const studentsTally = perAsker(byStudents);
+    expect(Object.keys(studentsTally).filter((k) => studentsTally[k] === 4)).toEqual(['ravi']);
+    expect(Object.keys(schoolsTally).filter((k) => schoolsTally[k] === 4)).toEqual(['umass']);
   });
 });

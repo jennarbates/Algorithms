@@ -5,7 +5,8 @@ no maths background, without simplifying it into something untrue.
 
 Three students, three schools, one seat each. Watch who asks whom, who gets
 held, who gets bumped, and then try to break the result. Then switch the page
-into practice and work it yourself, on instances it never animates.
+into practice and work it yourself, on instances it never animates, or onto the
+workbench and write lists of your own.
 
 ## The idea
 
@@ -135,6 +136,7 @@ src/
     types.ts       domain types
     engine.ts      the process, as a pure state machine
     stability.ts   blocking pairs, and the explanation behind each one
+    ties.ts        lists with ties, and strong and weak instabilities
     enumerate.ts   brute force over every arrangement, used to check the above
     history.ts     a run with every moment kept, and which moment is being viewed
     asks.ts        every ask in a run as a grid, the evidence that it finishes
@@ -148,6 +150,7 @@ src/
     proofs.ts      the words of the "Why this works" section, plain and formal
     questions.ts   the practice bank, four tiers of it
     narration.ts   the words of the run log, one line per event
+    bench.ts       the workbench's markets, editing moves and sentences
   components/    React components
 tests/           the verifier suite, plus the one-screen rules in layout.test.ts
 exercises/       reimplement the engine from scratch, same suite
@@ -211,16 +214,19 @@ is, which formula says it, which formulas negate it, which English sentence
 negates it, what is wrong with an argument that reaches the right conclusion the
 wrong way, and then the correct disproof, assembled line by line. **Tier 3** is
 where a textbook chapter ends: how many questions the process can possibly ask,
-what an O(n²) bound rests on besides the procedure, the proof that the asking
+how many one particular run does ask, counted on three sets of lists, what an
+O(n²) bound rests on besides the procedure, the proof that the asking
 side does best, what holds of every instance rather than of this one, whether
 misreporting a list ever pays, and which of the assumptions are load-bearing.
 **Tier 4** is what the chapter proves and then sets as exercises: the measure of
 progress that bounds the loop and the proof that nobody is left out, which are
 facts (1.2) to (1.5) of the text; the good-and-bad-people argument and forbidden
 pairs, which are its two solved exercises; and hospitals with several posts and a
-surplus of students, and what indifference costs, which are exercises 4 and 5.
+surplus of students, and what indifference costs, which are exercises 4 and 5;
+and five more questions on lists with ties, which tell a strong instability from
+a weak one on particular lists and particular matchings, small enough to check by hand.
 
-Six questions each, and the order inside a tier climbs too.
+Six to ten questions a tier, and the order inside a tier climbs too.
 
 | Tier 1 asks                               | The belief it is aimed at                                |
 | ----------------------------------------- | -------------------------------------------------------- |
@@ -243,6 +249,7 @@ Six questions each, and the order inside a tier climbs too.
 | Tier 3 asks                                | The belief it is aimed at                                |
 | ------------------------------------------ | -------------------------------------------------------- |
 | the largest number of asks there can be    | that a displacement chain can be exponential             |
+| how many asks one run makes, three times   | that the count follows from n, or from the ending        |
 | what turns O(n³) into O(n²) here           | that a running time is a property of the procedure alone |
 | the proof that the asking side does best   | that "first violation" is a stylistic choice             |
 | which of six claims hold of every instance | that the algorithm can reach every stable matching       |
@@ -257,6 +264,11 @@ Six questions each, and the order inside a tier climbs too.
 | what forbidden pairs change                | that a forbidden pair is the same as being ranked last          |
 | hospitals with several posts and a surplus | that unequal sides have no stable assignment                    |
 | what ties cost                             | that ties can always be broken away                             |
+| which pairs are strong instabilities       | that not minding is the same as wanting                         |
+| which pairs are weak instabilities         | that a pair needs both sides keen to break anything             |
+| whether one matching is free of each kind  | that free of one kind means free of the other                   |
+| what one pair is                           | that a tie anywhere on a list excuses a pair                    |
+| which matchings have no strong instability | that a claim about every matching can be checked on one         |
 
 Tiers 2, 3 and 4 follow Kleinberg and Tardos chapter 1: its statements (1.1)
 through (1.9), its two solved exercises, and exercises 1, 2, 4, 5 and 8. The
@@ -297,6 +309,13 @@ rejects is walked through every preset in both directions, confirming both
 halves of the reason it gives: the number of free people is allowed to stand
 still, which disqualifies it, and it never rises.
 
+The questions on lists with ties quote their lists, since no preset has ties,
+and store them as well, in `tied`. The suite checks the quote against the stored
+lists word for word, and every option carries the claim it makes (this pair is
+strong, this matching has no weak instability) so the suite can check it against
+`core/ties` and fail if an `ok` disagrees. The counting questions do the same
+with the number of asks, which the suite gets by running the engine.
+
 ### The vocabulary rule, one tier at a time
 
 Tier 1 is held to the same banned word list as the log and the proof section: no
@@ -324,6 +343,49 @@ with every list ranking both good people on the other side above both bad ones.
 Every good student is with a good school in all four of its stable matchings,
 which is the claim tier 4 argues by counting and `tests/questions.test.ts`
 settles by exhaustive search.
+
+## Your own lists
+
+The third mode, the workbench, is for the question a problem set asks sooner or
+later: write lists that make something happen, or find out whether some lists
+can. It is an editor and two instruments, and it reports on the lists on screen
+and nothing else. It never says what is true of lists in general; that is the
+reader's to work out.
+
+**The editor** has two moves. Click a name to move it one place earlier, and
+click the sign between two neighbours to tie them (`=`) or untie them (`>`).
+Adjacent swaps reach every order and a tie between neighbours is the only kind a
+sorted list can have, so between them they reach every list. A new size deals
+fresh shuffled lists, and any preset of the right size can be loaded as a start.
+
+**Ties** takes up to four a side. Pick any arrangement, from a list of every
+arrangement the lists have, each with its count of strong and of weak
+instabilities, and the board draws it: green for who is with whom, solid red for
+a strong instability, dashed red for one that is weak and not strong. Beside the
+board, one generated sentence per pair says what each side thinks and so which
+kind it is. The definitions are the problem set's: a person prefers x to y when
+x is higher and not tied with y; strong is both preferring each other to who
+they have; weak is one preferring and the other preferring too or indifferent.
+So every strong instability is also weak, and on strict lists both are exactly
+the ordinary blocking pair, which `tests/ties.test.ts` checks on every
+arrangement of a few hundred random markets.
+
+There is no run on this side. The process has no rule for "keeps whichever it
+likes better" when it likes two the same, so `createEngine`, and the ordinary
+`blockingPairs` with it, refuse an instance with ties rather than read a tie as
+whatever order the names happen to be stored in.
+
+**Counting asks** takes strict lists up to six a side, runs the real process
+on them from either side, and counts the asks as it goes, with n and n² beside
+the count for scale and both full-run totals over the board. The ask grid and
+the log from the walkthrough come along. Change a list and the run starts again
+from nothing. The walkthrough's own run shows the same count beside its step
+count now: every ask is two steps, the question and its answer.
+
+The two instruments keep separate lists, because they are different questions
+about different kinds of market and a change made for one should not quietly
+move the other. The layout is the walkthrough's, class for class, so the
+one-screen rules above hold here without new ones.
 
 ## Language
 

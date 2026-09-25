@@ -59,6 +59,17 @@ export function advance(history: RunHistory): RunHistory {
   return { ...history, states: [...history.states, step(last)], viewStep: null };
 }
 
+/**
+ * Every remaining step at once, each one kept, so the log and the grid of asks
+ * read exactly as they would have after stepping by hand. Refused while looking
+ * at the past, for the same reason `advance` is.
+ */
+export function finish(history: RunHistory): RunHistory {
+  let out = history;
+  for (let next = advance(out); next !== out; next = advance(out)) out = next;
+  return out;
+}
+
 /** Look at a past moment. Out-of-range steps are clamped rather than thrown. */
 export function viewAt(history: RunHistory, stepIndex: number): RunHistory {
   const clamped = Math.max(0, Math.min(stepIndex, history.states.length - 1));

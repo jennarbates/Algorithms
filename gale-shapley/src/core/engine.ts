@@ -1,3 +1,4 @@
+import { hasTies } from './ties';
 import type { Instance, Matching, SchoolId, Side, StudentId } from './types';
 
 /**
@@ -43,7 +44,16 @@ function toParty(id: string, name: string, prefs: readonly string[]): Party {
   return { id, name, prefs, rankOf };
 }
 
+/**
+ * The process is defined on strict lists: "keeps whichever of the two it likes
+ * better" has no answer when it likes them the same. So an instance with ties
+ * is refused here, loudly, rather than run on whatever order its names happen
+ * to be stored in. The ties explorer judges arrangements; it never runs this.
+ */
 export function createRoster(instance: Instance, askingSide: Side): Roster {
+  if (hasTies(instance)) {
+    throw new Error(`${instance.id} has ties, and the process is only defined on strict lists`);
+  }
   const students = instance.students.map((s) => toParty(s.id, s.name, s.prefs));
   const schools = instance.schools.map((c) => toParty(c.id, c.name, c.prefs));
   return askingSide === 'students'

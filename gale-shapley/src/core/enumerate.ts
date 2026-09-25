@@ -1,4 +1,6 @@
 import { isStable } from './stability';
+import { instabilities } from './ties';
+import type { TiedVerdict } from './ties';
 import type { Instance, Matching, SchoolId, Side, StudentId } from './types';
 
 /**
@@ -48,6 +50,29 @@ export function allPerfectMatchings(instance: Instance): Matching[] {
 
 export function allStableMatchings(instance: Instance): Matching[] {
   return allPerfectMatchings(instance).filter((m) => isStable(instance, m));
+}
+
+/**
+ * One arrangement of a market that may have ties, with every instability it
+ * has. `weak` includes the strong ones, since each of those is weak as well.
+ */
+export interface ArrangementReport {
+  readonly matching: Matching;
+  readonly strong: readonly TiedVerdict[];
+  readonly weak: readonly TiedVerdict[];
+}
+
+/**
+ * Every arrangement, and what is wrong with each, for a market with or
+ * without ties. This is what the ties explorer lists. It reports and does not
+ * summarise: whatever the reader wants to know about the whole set, they can
+ * read off it.
+ */
+export function reportEveryArrangement(instance: Instance): ArrangementReport[] {
+  return allPerfectMatchings(instance).map((matching) => {
+    const weak = instabilities(instance, matching);
+    return { matching, strong: weak.filter((v) => v.strong), weak };
+  });
 }
 
 /** Who a given student is with, across a set of arrangements. */

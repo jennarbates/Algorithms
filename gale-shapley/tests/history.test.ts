@@ -4,6 +4,7 @@ import {
   advance,
   backToNow,
   createHistory,
+  finish,
   isViewingPast,
   latest,
   viewAt,
@@ -88,5 +89,24 @@ describe('looking at the past', () => {
     expect(resumed.viewStep).toBeNull();
     expect(resumed.states).toHaveLength(8);
     expect(latest(resumed).stepCount).toBe(7);
+  });
+});
+
+describe('finishing in one go', () => {
+  it('keeps every moment, exactly as stepping one at a time would', () => {
+    for (const instance of PRESETS) {
+      for (const side of SIDES) {
+        let byHand = createHistory(instance, side);
+        while (latest(byHand).phase !== 'done') byHand = advance(byHand);
+        const atOnce = finish(createHistory(instance, side));
+        expect(atOnce.states.length, `${instance.id}/${side}`).toBe(byHand.states.length);
+        expect(latest(atOnce)).toEqual(latest(byHand));
+      }
+    }
+  });
+
+  it('does nothing while looking at the past', () => {
+    const looking = viewAt(advanced(3), 1);
+    expect(finish(looking)).toBe(looking);
   });
 });
