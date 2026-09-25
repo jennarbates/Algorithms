@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-export const repo = join(here, '..', '..');
+export const repo = join(here, '..');
 
 // ---------------------------------------------------------------------------
 // Sources. Read from the same files the site reads, so nothing is retyped.
@@ -184,6 +184,9 @@ export function renderQ(num, q, opts = {}) {
   } else if (k === 'pairing' || k === 'run') {
     body = opts.body;
   } else if (k === 'arrangements') {
+    body = opts.body;
+  } else if (opts.body) {
+    // Any other kind (the graph workbook's layers, edges, walks...) brings its own body.
     body = opts.body;
   }
   return `<section class="q">${head(num, q)}${pre}${givenBlock(q)}<p class="prompt">${esc(q.prompt)}</p>${body}</section>`;

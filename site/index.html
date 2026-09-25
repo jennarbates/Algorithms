@@ -770,6 +770,68 @@
           </div>
         </li>
 
+        <li class="card">
+          <!-- A BFS tree in three layers, one edge inside a layer left dashed. -->
+          <svg
+            class="card__thumb"
+            viewBox="0 0 320 140"
+            role="img"
+            aria-label="Sketch of a graph pulled into three rows, one node on top, three below it and four below those, with solid tree edges and one dashed edge inside a row"
+          >
+            <g
+              font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+              font-size="11"
+              fill="var(--ink-faint)"
+            >
+              <text x="28" y="28">L0</text>
+              <text x="28" y="72">L1</text>
+              <text x="28" y="116">L2</text>
+            </g>
+            <g stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" fill="none">
+              <path d="M176 24 L112 68" />
+              <path d="M176 24 L176 68" />
+              <path d="M176 24 L240 68" />
+              <path d="M112 68 L84 112" />
+              <path d="M112 68 L140 112" />
+              <path d="M176 68 L204 112" />
+              <path d="M240 68 L268 112" />
+            </g>
+            <g stroke="var(--ink-faint)" stroke-width="2" stroke-dasharray="5 4" fill="none">
+              <path d="M140 112 L204 112" />
+              <path d="M240 68 L204 112" />
+            </g>
+            <g stroke="var(--accent)" stroke-width="2" fill="var(--surface, #fff)">
+              <circle cx="176" cy="24" r="7" fill="var(--live)" stroke="var(--live)" />
+              <circle cx="112" cy="68" r="7" />
+              <circle cx="176" cy="68" r="7" />
+              <circle cx="240" cy="68" r="7" />
+              <circle cx="84" cy="112" r="7" />
+              <circle cx="140" cy="112" r="7" />
+              <circle cx="204" cy="112" r="7" />
+              <circle cx="268" cy="112" r="7" />
+            </g>
+          </svg>
+
+          <div class="card__body">
+            <div class="card__eyebrow">
+              <span>Graph traversal</span>
+              <span class="status status--live">Live</span>
+            </div>
+            <h3 class="card__title">
+              <a class="card__link" href="./graphs/">How to walk a graph</a>
+            </h3>
+            <p class="card__blurb">
+              The 1970 Internet, searched from MIT until it falls into layers. Then the one word
+              between breadth first and depth first, a two-colour test that draws its own proof,
+              and courses to put in an order you choose. Four chapters, four tiers of practice.
+            </p>
+            <div class="card__foot">
+              <span>BFS, DFS, bipartite, topological sort</span>
+              <span class="card__cta">Open</span>
+            </div>
+          </div>
+        </li>
+
         <li class="card card--soon" aria-label="More visuals coming later in the semester">
           <svg
             class="card__thumb"

@@ -9,6 +9,7 @@ self-contained in its own folder with its own tooling.
 | --- | --- | --- |
 | [`gale-shapley/`](./gale-shapley) | Stable matching, as an interactive page that explains itself to someone with no maths background, plus four tiers of practice | In progress |
 | [`big-o/`](./big-o) | The definition of Big-O, told as a building: small terms jump off the roof, and f(n) needs c to get back up, plus five tiers of practice | Live |
+| [`graphs/`](./graphs) | Graph traversal from lectures 4 to 6: BFS layers on the 1970 Internet, DFS and the queue-or-stack traversal, the two-colour bipartite test, and topological order, plus four tiers of practice | Live |
 
 ## Conventions
 
