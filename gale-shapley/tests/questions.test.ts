@@ -628,11 +628,12 @@ describe('everything the question needs is on the page with it', () => {
     }
   });
 
-  it('prints the lists for every tier 1 question, since all of them are about one market', () => {
+  it('prints the lists for every tier 1 question, since every one of them names people', () => {
+    // Most of tier 1 is about the worksheet's market; the last three are the
+    // lecture's own lists. Either way the panel has to print the lists it is about.
     for (const q of questionsIn(1)) {
-      expect(q.instanceId, `${q.id} names people the reader cannot otherwise see`).toBe(
-        'worksheet',
-      );
+      expect(q.instanceId, `${q.id} names people the reader cannot otherwise see`).toBeTruthy();
+      expect(() => presetById(q.instanceId as string), q.id).not.toThrow();
     }
   });
 });

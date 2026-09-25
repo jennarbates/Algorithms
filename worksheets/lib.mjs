@@ -33,7 +33,7 @@ export function loadGS() {
   const e = p.indexOf('export const PRESETS');
   const specs = new Function(
     'buildInstance',
-    `${p.slice(s, e)}; return [opener, headOn, everyoneAgrees, cascade, nothingChanges, worksheet, noMutualFirst, goodAndBad];`,
+    `${p.slice(s, e)}; return [opener, headOn, everyoneAgrees, cascade, nothingChanges, worksheet, noMutualFirst, goodAndBad, lectureExample, lectureClicker, homework];`,
   )((x) => x);
   const presets = Object.fromEntries(specs.map((sp) => [sp.id, toInstance(sp)]));
   return { ...bank, presets };

@@ -351,11 +351,115 @@ export const QUESTIONS: readonly Question[] = [
       'The route is not part of the answer. That is worth knowing before a problem set, because the working shown in a solution will rarely be the working you did.',
   },
 
+  // Lecture 1's own lists, with its letters turned into the page's names: the
+  // colleges a, b, c are MIT, UMass Amherst and NYU, and the students 1, 2, 3 are
+  // Priya, Sam and Ravi. The lecture has the colleges do the asking, so these are
+  // run with the schools asking unless they say otherwise.
+
+  {
+    id: 'lecture-run',
+    tier: 1,
+    kind: 'pairing',
+    tests: 'working the lecture’s own example by hand',
+    instanceId: 'lecture-example',
+    side: 'schools',
+    prompt:
+      'The lecture’s running example (slide 25), with its colleges a, b, c named MIT, UMass Amherst and NYU and its students 1, 2, 3 named Priya, Sam and Ravi. The lecture has the colleges ask, so here the schools are asking. Where does everybody end up?',
+    rows: {
+      priya:
+        'MIT asks her first and she holds it. Then NYU asks, her first choice, and she lets MIT go. UMass Amherst asks later and she turns it away: she already has NYU.',
+      sam: 'UMass Amherst asks him first. Then MIT asks, which he likes better, so he lets UMass go and stays at MIT.',
+      ravi: 'UMass Amherst gets to him last, after Sam has let it go and Priya has turned it away. Nobody else ever asks him, so UMass Amherst it is.',
+    },
+    close:
+      'Six questions, the same six the slides go through: a asks 1, b asks 2, c asks 1 and bumps a, a asks 2 and bumps b, b is turned away by 1, b asks 3. Only one arrangement holds for these lists, so the students asking would land in exactly the same seats.',
+  },
+
+  {
+    id: 'lecture-find-the-pair',
+    tier: 1,
+    kind: 'arrangements',
+    tests: 'finding the two people who would both switch',
+    instanceId: 'lecture-clicker',
+    prompt:
+      'The lists from the lecture’s first clicker (slide 22), named the same way. Tick every seating that cannot be broken by two people who would both rather have each other.',
+    candidates: [
+      {
+        pairs: { priya: 'mit', sam: 'nyu', ravi: 'umass' },
+        note: 'This is the seating on the slide, the one the clicker asks you to break. The pair it is after is b and 1.',
+      },
+      {
+        pairs: { priya: 'mit', sam: 'umass', ravi: 'nyu' },
+        note: 'This is where the schools asking ends up: every school but NYU gets its first choice.',
+      },
+      {
+        pairs: { priya: 'nyu', sam: 'mit', ravi: 'umass' },
+        note: 'Sam has his first choice, which is not the same as nobody being able to break it.',
+      },
+      {
+        pairs: { priya: 'umass', sam: 'mit', ravi: 'nyu' },
+        note: 'This is where the students asking ends up: Priya and Sam both have their first choice.',
+      },
+    ],
+    close:
+      'On the slide the answer is (b, 1): UMass Amherst holds Ravi but would rather have Priya, and Priya holds MIT but would rather have UMass Amherst. Two people, both better off, is all it takes. The two seatings that hold are the two the process reaches, one from each side.',
+  },
+
+  {
+    id: 'homework-run',
+    tier: 1,
+    kind: 'pairing',
+    tests: 'running the process when every first ask sticks',
+    instanceId: 'homework',
+    side: 'schools',
+    prompt:
+      'Homework 1, question 1, named the same way, with the colleges (the schools) asking. Where does everybody end up?',
+    rows: {
+      priya:
+        'MIT asks her first and nobody else ever asks her, so she stays at MIT, which is second on her own list.',
+      sam: 'UMass Amherst asks him first and nobody else does, so he stays at UMass Amherst, his second choice.',
+      ravi: 'NYU asks him and he wants NYU most, so NYU is where he stays.',
+    },
+    close:
+      'Three questions and done: every school’s first choice is free when it asks. With the students asking it is also three questions, and Priya and Sam swap, each getting their first choice. Ravi and NYU want each other most, so they are together whoever asks.',
+  },
+
   // ---------------------------------------------------------------------------
   // Tier 2. The statement from K&T chapter 1, exercise 1, and the exact reading
   // of it. This is where the textbook words appear, and FORMAL_TERMS is what
   // buys them.
   // ---------------------------------------------------------------------------
+
+  {
+    id: 'lecture-both-hold',
+    tier: 2,
+    kind: 'choice',
+    instanceId: 'no-mutual-first',
+    tests: 'whether a stable matching is unique',
+    prompt:
+      'Lecture 1, slide 24: colleges a: 1 2 and b: 2 1; students 1: b a and 2: a b. The lecture runs propose-and-reject with the colleges proposing, which on this page is the schools doing the asking. Which matching is stable? (Here a, b are MIT and NYU and 1, 2 are Priya and Sam: these are the lists shown above.)',
+    options: [
+      {
+        t: '{(a, 1), (b, 2)} only',
+        why: 'It is stable: each college has its first choice, so no college would move, and a blocking pair needs both sides to want it. But it is not the only one.',
+      },
+      {
+        t: '{(a, 2), (b, 1)} only',
+        why: 'It is stable: each student has their first choice, so no student would move. But it is not the only one.',
+      },
+      {
+        t: 'Neither',
+        why: 'A stable matching always exists, since the process always produces one. Here it produces two different ones depending on which side proposes.',
+      },
+      {
+        t: 'Both',
+        ok: true,
+        why: 'The colleges proposing gives the first, where every college has its first choice. The students proposing gives the second, where every student has theirs. Neither has a blocking pair.',
+      },
+    ],
+    close:
+      'Stable matchings are not unique. The college-proposing run gives the colleges their best stable partners and the students their worst; the student-proposing run does the reverse. Which side proposes chooses between them.',
+  },
 
   {
     id: 'what-is-an-instance',

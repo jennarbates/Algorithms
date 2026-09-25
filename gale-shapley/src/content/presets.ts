@@ -2,8 +2,9 @@ import { schoolIdentity, studentIdentity } from './cast';
 import type { Instance, School, Student } from '../core/types';
 
 /**
- * The nine instances the page ships with: six the walkthrough can animate, and
- * three the practice section works on paper.
+ * The twelve instances the page ships with: six the walkthrough can animate,
+ * three the practice section works on paper, and three from lecture 1's own
+ * slides and homework, renamed into the page's cast and nothing else.
  *
  * Every claim made about these ("this one has exactly one stable arrangement",
  * "flipping the sides changes nothing here") is asserted in `tests/presets.test.ts`
@@ -424,6 +425,91 @@ const goodAndBad = buildInstance({
   ],
 });
 
+// ---------------------------------------------------------------------------
+// J, K, L. Lecture 1's own instances
+//
+// COMPSCI 311 lecture 1 works on three colleges a, b, c and three students 1,
+// 2, 3. Here they get the page's names, always the same way round: a, b, c are
+// MIT, UMass Amherst and NYU, and 1, 2, 3 are Priya, Sam and Ravi. The lists
+// are the slides' lists under that renaming and nothing else, so a run on the
+// page and a run on the slide can be checked against each other line by line.
+//
+// The lecture's Example 2 (slide 24, two colleges and two students where both
+// matchings hold) is not repeated here: under the same renaming it is exactly
+// `no-mutual-first` above, and tests/presets.test.ts checks that it is.
+// ---------------------------------------------------------------------------
+
+/**
+ * Slide 25, the running example the lecture builds the process on. With the
+ * colleges asking, as the lecture runs it, it takes six questions and ends at
+ * {(a, 2), (b, 3), (c, 1)}. It has only one arrangement that holds, so the
+ * students asking land in the same place.
+ */
+const lectureExample = buildInstance({
+  id: 'lecture-example',
+  title: 'The lecture’s running example',
+  teaches: 'The run the lecture works through on its slides, with the colleges asking.',
+  studentIds: ['priya', 'sam', 'ravi'],
+  schoolIds: ['mit', 'umass', 'nyu'],
+  studentPrefs: [
+    [2, 0, 1],
+    [0, 1, 2],
+    [0, 1, 2],
+  ],
+  schoolPrefs: [
+    [0, 1, 2],
+    [1, 0, 2],
+    [0, 2, 1],
+  ],
+});
+
+/**
+ * Slide 22, the clicker that asks for the pair that breaks {(a, 1), (b, 3),
+ * (c, 2)}. The answer is (b, 1): UMass Amherst and Priya.
+ */
+const lectureClicker = buildInstance({
+  id: 'lecture-clicker',
+  title: 'The lecture’s first clicker',
+  teaches: 'Finding the two people who would both rather have each other.',
+  studentIds: ['priya', 'sam', 'ravi'],
+  schoolIds: ['mit', 'umass', 'nyu'],
+  studentPrefs: [
+    [1, 0, 2],
+    [0, 1, 2],
+    [0, 1, 2],
+  ],
+  schoolPrefs: [
+    [0, 1, 2],
+    [1, 0, 2],
+    [0, 1, 2],
+  ],
+});
+
+/**
+ * Homework 1, question 1, which asks for the matching the process returns
+ * with the colleges asking. Every college's first choice takes it at once, and
+ * the students asking gives every student theirs instead. Two arrangements
+ * hold. Ravi is at NYU in both, since each is the other's first choice; Priya
+ * and Sam swap.
+ */
+const homework = buildInstance({
+  id: 'homework',
+  title: 'Homework 1, question 1',
+  teaches: 'Three questions each way, no turning away, and still two different answers.',
+  studentIds: ['priya', 'sam', 'ravi'],
+  schoolIds: ['mit', 'umass', 'nyu'],
+  studentPrefs: [
+    [1, 0, 2],
+    [0, 1, 2],
+    [2, 1, 0],
+  ],
+  schoolPrefs: [
+    [0, 1, 2],
+    [1, 0, 2],
+    [2, 1, 0],
+  ],
+});
+
 export const PRESETS: readonly Instance[] = [
   opener,
   headOn,
@@ -434,6 +520,9 @@ export const PRESETS: readonly Instance[] = [
   worksheet,
   noMutualFirst,
   goodAndBad,
+  lectureExample,
+  lectureClicker,
+  homework,
 ];
 
 export const DEFAULT_PRESET_ID = opener.id;

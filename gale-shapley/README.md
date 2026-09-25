@@ -144,7 +144,7 @@ src/
     useRun.ts      the page's one piece of state, over core/history
   content/
     cast.ts        who appears on the page and what they look like
-    presets.ts     the nine instances the page ships with
+    presets.ts     the twelve instances the page ships with, three from lecture 1
     proofs.ts      the words of the "Why this works" section, plain and formal
     questions.ts   the practice bank, four tiers of it
     narration.ts   the words of the run log, one line per event

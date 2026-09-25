@@ -193,6 +193,7 @@ function Walkthrough({ run, boardRef, pair, ghost, onPick, onGhost }: Walkthroug
               className={askingSide === 'schools' ? 'pill pill--on' : 'pill'}
               onClick={() => run.switchSide('schools')}
               aria-pressed={askingSide === 'schools'}
+              title="Lecture 1 has the colleges do the asking. That is this setting."
             >
               Schools
             </button>

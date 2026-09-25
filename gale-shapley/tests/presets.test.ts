@@ -259,3 +259,71 @@ describe('F. the big one', () => {
     expect(mean(studentRanks(instance, 'schools'))).toBeCloseTo(typicalAsked, 0);
   });
 });
+
+describe('J, K, L. lecture 1', () => {
+  const asks = (instance: Instance, side: Side) =>
+    run(instance, side).log.filter((e) => e.kind === 'ask');
+
+  it('the running example: six asks with the colleges asking, ending as on slide 25', () => {
+    const instance = presetById('lecture-example');
+    // a, b, c = mit, umass, nyu; 1, 2, 3 = priya, sam, ravi
+    expect(asks(instance, 'schools').map((e) => `${e.asker}>${e.receiver}`)).toEqual([
+      'mit>priya',
+      'umass>sam',
+      'nyu>priya',
+      'mit>sam',
+      'umass>priya',
+      'umass>ravi',
+    ]);
+    expect(matchingOf(run(instance, 'schools'))).toEqual({
+      priya: 'nyu',
+      sam: 'mit',
+      ravi: 'umass',
+    });
+    expect(allStableMatchings(instance)).toHaveLength(1);
+  });
+
+  it('the clicker: (b, 1) is the only pair that breaks the slide 22 arrangement', () => {
+    const instance = presetById('lecture-clicker');
+    const slide = { priya: 'mit', sam: 'nyu', ravi: 'umass' };
+    expect(isStable(instance, slide)).toBe(false);
+    // UMass Amherst (b) and Priya (1): each would rather have the other.
+    const umass = instance.schools.find((c) => c.id === 'umass');
+    const priya = instance.students.find((s) => s.id === 'priya');
+    expect(priya?.prefs.indexOf('umass')).toBeLessThan(priya?.prefs.indexOf('mit') ?? -1);
+    expect(umass?.prefs.indexOf('priya')).toBeLessThan(umass?.prefs.indexOf('ravi') ?? -1);
+    expect(allStableMatchings(instance)).toHaveLength(2);
+  });
+
+  it('the homework: every first ask holds, and the two directions swap Priya and Sam', () => {
+    const instance = presetById('homework');
+    for (const side of ['schools', 'students'] as const) {
+      expect(asks(instance, side)).toHaveLength(3);
+      expect(displacementCount(instance, side)).toBe(0);
+    }
+    expect(matchingOf(run(instance, 'schools'))).toEqual({
+      priya: 'mit',
+      sam: 'umass',
+      ravi: 'nyu',
+    });
+    expect(matchingOf(run(instance, 'students'))).toEqual({
+      priya: 'umass',
+      sam: 'mit',
+      ravi: 'nyu',
+    });
+  });
+
+  it('slide 24, Example 2, is no-mutual-first under the same renaming, with both matchings holding', () => {
+    const instance = presetById('no-mutual-first');
+    // colleges a: 1 2, b: 2 1; students 1: b a, 2: a b. a, b = mit, nyu; 1, 2 = priya, sam.
+    expect(instance.schools.map((c) => [c.id, c.prefs])).toEqual([
+      ['mit', ['priya', 'sam']],
+      ['nyu', ['sam', 'priya']],
+    ]);
+    expect(instance.students.map((s) => [s.id, s.prefs])).toEqual([
+      ['priya', ['nyu', 'mit']],
+      ['sam', ['mit', 'nyu']],
+    ]);
+    expect(allStableMatchings(instance)).toHaveLength(2);
+  });
+});

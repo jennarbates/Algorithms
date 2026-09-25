@@ -252,7 +252,7 @@ export function buildGS() {
 <p>Matching 1: student A at MIT, B at NYU. B strictly prefers MIT, and MIT is indifferent between A and B, so (B, MIT) blocks weakly. Matching 2 is the mirror, blocked weakly by (A, MIT). Every matching has a weakly blocking pair, so none is weakly stable, yet neither has a strongly blocking pair.</p></section>`;
 
   let body = `<div class="cover"><span class="tag">Algorithms · printable workbook</span>
-<h1>Who Gets In, and Why</h1><div class="sub">Stable matching (the Gale-Shapley algorithm), learned on paper: the procedure, runs you work by hand, the proofs, and 24 questions in four tiers, with an answer key that explains every option.</div>
+<h1>Who Gets In, and Why</h1><div class="sub">Stable matching (the Gale-Shapley algorithm), learned on paper: the procedure, runs you work by hand, the proofs, and ${G.QUESTIONS.length} questions in four tiers, with an answer key that explains every option.</div>
 <h3>How to use this packet</h3><ol>
 <li>Work in order. <b>Part 1</b> teaches the procedure with a worked example, then you run it yourself on warm-ups and two challenges. Every run has a blank <b>trace table</b>: one line per ask.</li>
 <li>Part 1 uses plain words (ask, hold, let go, holds). From Part 2 on, the textbook words come in, each with the plain phrase it replaces. The glossary is on the Part 2 page.</li>
@@ -274,11 +274,11 @@ export function buildGS() {
       if (q.kind === 'pairing') {
         const studentsAsk = q.side === 'students';
         const r = run(inst, studentsAsk);
-        const bodyQ = `${i === 0 ? prefTables(inst) : `<p class="small muted">Same lists as question ${t}.1.</p>${prefTables(inst, { compact: true })}`}${traceTable(studentsAsk ? 8 : 11)}${seatFill(inst)}`;
+        const bodyQ = `${i === 0 || q.instanceId !== byTier[t][0].instanceId ? prefTables(inst) : `<p class="small muted">Same lists as question ${t}.1.</p>${prefTables(inst, { compact: true })}`}${traceTable(studentsAsk ? 8 : 11)}${seatFill(inst)}`;
         s += renderQ(num, q, { body: bodyQ });
         keys.push(renderKey(num, q, { body: `<p class="ans">${seatsLine(inst, r.seat)}</p><ul class="whys">${inst.S.map((st, k) => `<li><b>${st}</b>: ${esc(q.rows[inst.sIds[k]])}</li>`).join('')}</ul>${keyTrace(inst, studentsAsk)}` }));
       } else if (q.kind === 'arrangements') {
-        const bodyQ = `<p class="small muted">Same lists as question ${t}.1.</p>${prefTables(inst, { compact: true })}
+        const bodyQ = `${q.instanceId === byTier[t][0].instanceId ? `<p class="small muted">Same lists as question ${t}.1.</p>${prefTables(inst, { compact: true })}` : prefTables(inst)}
           ${q.candidates.map((c, k) => `<div class="cand"><b>${'ABCDEF'[k]}</b><div><span class="box sq" style="display:inline-block;vertical-align:middle"></span> holds &nbsp; <span class="seats">${inst.S.map((st, x) => `${st} → ${inst.C[inst.cIds.indexOf(c.pairs[inst.sIds[x]])]}`).join(' · ')}</span></div><div class="blk">If not, who would both switch? <span></span> &amp; <span style="width:90pt"></span></div></div>`).join('')}`;
         s += renderQ(num, q, { body: bodyQ });
         const lines = q.candidates.map((c, k) => {
