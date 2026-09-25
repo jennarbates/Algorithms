@@ -545,6 +545,17 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
           <text id="cn3" x="552" y="97" class="label" text-anchor="end"></text>
         </g>
 
+        <!-- step 10 only: a copy of the shape left standing in the basement, as a floor.
+             Static, so no other scene's choreography has to know it exists; go() clears it. -->
+        <g id="floorNote" class="marker">
+          <g class="chip f" transform="translate(163 506)">
+            <rect x="-18" y="-15" width="36" height="30" rx="4"/><text>n&sup2;</text>
+          </g>
+          <text x="196" y="452" class="label big" fill="var(--brass)">the floor: 1&middot;n&sup2;</text>
+          <text x="196" y="470" class="label">never above T(n),</text>
+          <text x="196" y="485" class="label">so T(n) = &Omega;(n&sup2;)</text>
+        </g>
+
         <!-- note next to the basement -->
         <g id="baseNote" class="marker">
           <text x="196" y="452" class="label big" fill="var(--brass)">f(n) = n&sup2;, alone</text>
@@ -1363,6 +1374,27 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         car.style.transform = 'translateY(0)'; fDown = false;
         mark('n0mark', 0); mark('deadNote', 0); mark('baseNote', 0); mark('crossMark', 0);
         mark('defNote', 0); mark('higher', 1);
+      } },
+
+    { tag:'Floor', title:'The basement was a floor all along',
+      body:'Go back to step 7. n² on its own rode the elevator down because it is below T(n) at every n. Read the other way round, that is a promise too: T(n) ≥ 1·n² for every n ≥ 0. That is a floor, and a floor has its own name, Big-Omega. T(n) = Ω(f(n)) says some c > 0 and some n₀ keep c·f(n) at or below T(n) from n₀ on: the definition of Big-O with the inequality turned round. Now T(n) has a ceiling of the shape n², 15n² from n = 6, and a floor of the same shape, n² from n = 0. Held between two multiples of one shape is Big-Theta: T(n) = Θ(n²), with c₁ = 1, c₂ = 15, and one n₀ for both, the later of the two, 6. That is the claim the last step said Big-O could not make on its own. n³ can still be a ceiling, but it can never be a floor, because no constant keeps c·n³ under T(n) for long. The Floors and ceilings page lets you try that for yourself.',
+      sym:'T(n) = Θ(f(n)) means: some c₁, c₂ > 0 and some n₀ with c₁·f(n) ≤ T(n) ≤ c₂·f(n) for every n ≥ n₀',
+      num:'n² ≤ 14n² + 4n + 6 ≤ 15n² for every n ≥ 6, so T(n) = Θ(n²)',
+      run(){
+        mark('roofEarly', false); mark('roofLate', true);
+        snapDead('a'); snapDead('b'); resetPlus(); roofBreak(false);
+        place(chips.C, ...ROOF.C); place(chips.F, ...ROOF.F);
+        setC('15'); ops(0, 0, 1); tail('= Θ(n²)', 'g');
+        $('eqbar').classList.add('drop');
+        bracket($('brkTop'), 36, 0, 0, '', INK);
+        bracket($('brkA'), 64, 180, 260, 'the ceiling: 15n²', GREEN);
+        bracket($('brkB'), 64, 0, 0, '', RED);
+        cnote('', '', '', INK);
+        car.style.transform = 'translateY(0)'; fDown = false;
+        mark('n0mark', 1); mark('deadNote', 1); mark('baseNote', 0); mark('crossMark', 0);
+        mark('defNote', 0); mark('higher', 0);
+        // the floor appears once the roof has settled, so the two read as a pair
+        later(() => mark('floorNote', 1), reduce ? 0 : 450);
       } }
   ];
 
@@ -1721,7 +1753,21 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         // low enough on the n³ curve to clear the block of text in the top left
         hlab(sx(21), sy(fcube(21)) - 14, 'n³, from n = 15 on', 'var(--ink2)', 'end') +
         lab(sx(29.4), sy(fcf(30)) - 12, 'c·f(n) = 15n²', 'var(--roof)', 'end') +
-        lab(sx(28.4), sy(fT(30)) + 36, 'T(n)', 'var(--ink)', 'end') }
+        lab(sx(28.4), sy(fT(30)) + 36, 'T(n)', 'var(--ink)', 'end') },
+
+    // 10. a floor and a ceiling of the same shape: T(n) held between n² and 15n² from n₀ on
+    { view:'wide', legend:['T','f','cf'],
+      eq:'<span class="t-f">n&sup2;</span> <span class="op">&le;</span> <span class="t-T">T(n)</span> <span class="op">&le;</span> <span class="t-c">15n&sup2;</span>',
+      body:(v) => band(fcf, ff, 6, v.n1, v, 'var(--roof)', .14) +
+        curve(fcf, v, 'var(--roof)', '5 5') + curve(ff, v, 'var(--brass)') + curve(fT, v, 'var(--ink)'),
+      notes:(v, sx, sy) => n0line(v) +
+        // low enough to clear the n₀ = 6 label at the top of the dashed line
+        hlab(X0 + 6, YT + 64, 'Ceiling and floor, one shape.', 'var(--ink)', 'start') +
+        hlab(X0 + 6, YT + 82, 'From n₀ = 6, T(n) never leaves', 'var(--ink2)', 'start', true) +
+        hlab(X0 + 6, YT + 96, 'the shaded band: Θ(n²).', 'var(--ink2)', 'start', true) +
+        lab(sx(11.9), sy(fcf(11.9)) - 10, 'ceiling 15n²', 'var(--roof)', 'end') +
+        lab(sx(8.6) + 8, sy(fT(8.6)) + 16, 'T(n)', 'var(--ink)') +
+        lab(sx(11.9), sy(ff(11.9)) - 10, 'floor n²', 'var(--brass)', 'end') }
   ];
 
   // ---- where 15n² − T(n) comes from ----
@@ -3180,7 +3226,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
     i = Math.max(0, Math.min(scenes.length - 1, k));
     clearTimers();
     // props that only one scene uses, cleared here so no scene has to remember to
-    resetPlus(); cnote('');
+    resetPlus(); cnote(''); mark('floorNote', 0);
     const s = scenes[i];
     s.run(from);
     setChart(i);

@@ -45,7 +45,7 @@ beside the building so the metaphor never says something the numbers cannot
 back up.
 
 Step numbers in this file are the ones the page itself shows in its counter,
-`1 of 9` through `9 of 9`. In the source they are the indices of the `scenes`
+`1 of 10` through `10 of 10`. In the source they are the indices of the `scenes`
 and `CHARTS` arrays, which start at zero, so step 3 is `scenes[2]`.
 
 ## What the building means, and where it stops meaning it
@@ -189,11 +189,25 @@ opens the roof already broken with no shake, no falling span and no dust.
 
 ### One idea per step
 
-There are nine steps, and the split is deliberate: within a step the
+There are ten steps, and the split is deliberate: within a step the
 caption, the equation strip, the bracket over the roof and the note in the sky
 all hold still. Things move, but nothing that has to be read is replaced while
 it is being read. Where an argument has three parts it gets three steps and
 three clicks, rather than three captions on timers inside one step.
+
+### Step 10, the floor
+
+The last step turns the basement round. n² alone went down in step 7 because it
+is below T(n) at every n, and read the other way that is a floor: T(n) ≥ 1·n²
+from n = 0, so T(n) = Ω(n²). With the roof from step 8, 15n² from n = 6, T(n) is
+held between two multiples of one shape: Θ(n²), with c₁ = 1, c₂ = 15, n₀ = 6.
+
+The basement copy of n² is `#floorNote`, a static group rather than a second
+chip, so none of the nine timed scenes before it has to know it exists. `go()`
+clears it on every step alongside the other one-scene props, and step 10 turns
+it on after the roof has settled. The chart shades the band between n² and 15n²
+from n₀ on. Floors are the subject of [`../bounds`](../bounds), which the step's
+caption points to.
 
 ### Sinking below the roof line
 
@@ -338,7 +352,7 @@ the finished plot.
 
 ## Practice
 
-A reader can follow all nine steps and still leave with the wrong general rule.
+A reader can follow all ten steps and still leave with the wrong general rule.
 The three that survive a good explanation are that Big-O *is* the leading term,
 that lower order terms vanish, and that a bound is a measurement. So the page has
 a second mode, reached by the `Walkthrough / Practice` switch in the header, and

@@ -38,7 +38,7 @@ const ok = (cond, what) => {
 
 // --- every question can be rendered, scored, and read ----------------------
 
-const SCENES = 9;
+const SCENES = 10;
 
 for (const q of BANK) {
   const id = `tier ${q.tier} · ${q.tests}`;

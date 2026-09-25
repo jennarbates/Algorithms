@@ -200,6 +200,7 @@ function part4() {
 </ul>
 <h3>Every Θ proof has the same shape</h3>
 <p>An upper bound, a lower bound, and one threshold past which both hold: produce c₁, c₂ &gt; 0 and n₀. Often the lower bound is where the idea is.</p>
+<p><b>In the building (step 10):</b> the basement was a floor all along. n² alone is below T(n) = 14n² + 4n + 6 at every n, so T(n) ≥ 1·n² from n = 0: T(n) = Ω(n²). With the roof, 15n² from n = 6, that pins T(n) = Θ(n²) with c₁ = 1, c₂ = 15 and n₀ = 6, the later of the two thresholds.</p>
 <div class="try"><span class="tag">Warm-up</span>
 <p>1. Show 2ⁿ⁺¹ = Θ(2ⁿ) by naming c₁, c₂. &nbsp; 2. Show 2²ⁿ ≠ O(2ⁿ) in one line. &nbsp; 3. Compute lg(8!) and 8 lg 8 and (8/2)(lg 8 − 1).</p>${writeLines(3)}</div>
 </div>`;

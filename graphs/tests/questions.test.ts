@@ -33,6 +33,15 @@ const byId = (id: string): Question => {
 };
 
 describe('shape', () => {
+  it('the right option moves around, so it cannot be found by position', () => {
+    for (const t of TIERS) {
+      const places = questionsIn(t)
+        .filter((q) => q.kind === 'choice')
+        .map((q) => (q.kind === 'choice' ? q.options.findIndex((o) => o.ok) : -1));
+      if (places.length > 1) expect(new Set(places).size, `tier ${t}`).toBeGreaterThan(1);
+    }
+  });
+
   it('ids are unique and every tier has questions', () => {
     expect(new Set(QUESTIONS.map((q) => q.id)).size).toBe(QUESTIONS.length);
     for (const t of TIERS) expect(questionsIn(t).length).toBeGreaterThanOrEqual(5);

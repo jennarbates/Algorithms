@@ -39,7 +39,7 @@ function svgGraph(d, { w = 440, fill, badge, stroke, label } = {}) {
   const say = label ?? courseLabel(d);
   const P = (n) => [d.pos[n][0] * s, d.pos[n][1] * s];
   const pill = (n) => Math.max(20, 9 + say(n).length * 6.3);
-  const id = `a${Math.random().toString(36).slice(2, 8)}`;
+  const id = `arrow${++svgCount}`;
   const edges = g.edges.map((e) => {
     const [x1, y1] = P(e[0]);
     let [x2, y2] = P(e[1]);
@@ -70,6 +70,9 @@ function svgGraph(d, { w = 440, fill, badge, stroke, label } = {}) {
   }).join('');
   return `<svg width="${w}" height="${h}" viewBox="-8 -12 ${w + 16} ${h + 22}" xmlns="http://www.w3.org/2000/svg"><defs><marker id="${id}" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#444"/></marker></defs>${edges}${nodes}</svg>`;
 }
+
+// Arrow markers need an id unique within the document; a counter keeps rebuilds identical.
+let svgCount = 0;
 
 const figure = (svg, caption) => `<div class="fig">${svg}${caption ? `<div class="small muted">${caption}</div>` : ''}</div>`;
 
@@ -305,6 +308,7 @@ function summary() {
 // ---------------------------------------------------------------------------
 
 export function buildGraphs() {
+  svgCount = 0;
   const byTier = {};
   for (const q of QUESTIONS) (byTier[q.tier] ??= []).push(q);
   const keys = [];
