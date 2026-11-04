@@ -21,7 +21,9 @@ collection is meant to stay polyglot: a project here can be TypeScript, Python o
 anything else without dragging the others into its toolchain. Shared editor and
 CI config lives at the root, everything else lives in the project folder.
 
-CI runs per project, from `.github/workflows/`.
+CI checks each project on every pull request and before every deploy, from
+`.github/workflows/ci.yml`. It finds the projects itself and runs whichever of
+`format:check`, `lint`, `typecheck`, `test`, `check` and `build` each one defines.
 
 ## The website
 
@@ -68,4 +70,4 @@ Under the repository's **Settings, then Pages**, set **Source** to
    at `./<folder-name>/`.
 3. Add a row to the table at the top of this README.
 
-Push to `main` and the site rebuilds itself.
+Push to `main` and the site rebuilds itself, once every project's checks pass.
