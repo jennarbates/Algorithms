@@ -13,6 +13,7 @@ import type { Option, Question, TieClaim } from '../src/content/questions';
 import { instanceFromGiven, tiedQuote } from '../src/content/bench';
 import { judgeTiedPair, strongInstabilities, weakInstabilities } from '../src/core/ties';
 import type { Instance, Matching } from '../src/core/types';
+import { mulberry32 } from './helpers';
 
 /**
  * The practice questions, checked rather than proofread.
@@ -587,6 +588,208 @@ describe('the variants tier 4 asserts', () => {
 function buildGoodBad() {
   return presetById('good-and-bad');
 }
+
+/**
+ * The question that puts CLRS's maximum matching (CLRS 3e, section 26.3) beside
+ * a stable one, on lists with forbidden pairs. No preset has forbidden pairs and
+ * the engine wants complete lists, so the lists are stored here, the quote is
+ * checked against them, and every matching of them is enumerated by hand. A pair
+ * is allowed when each names the other, which is an edge in CLRS's terms.
+ */
+type Lists = Readonly<Record<string, readonly string[]>>;
+type Pairs = Readonly<Record<string, string>>;
+
+/** Every pair allowed by both lists, student first. */
+function allowedPairs(students: Lists, schools: Lists): [string, string][] {
+  const out: [string, string][] = [];
+  for (const [s, list] of Object.entries(students)) {
+    for (const c of list) if ((schools[c] ?? []).includes(s)) out.push([s, c]);
+  }
+  return out;
+}
+
+/** Every matching made of allowed pairs, the empty one included. */
+function everyMatching(edges: readonly (readonly [string, string])[]): Pairs[] {
+  const out: Pairs[] = [];
+  const grow = (from: number, chosen: Record<string, string>) => {
+    out.push({ ...chosen });
+    for (let k = from; k < edges.length; k += 1) {
+      const [s, c] = edges[k] as readonly [string, string];
+      if (s in chosen || Object.values(chosen).includes(c)) continue;
+      grow(k + 1, { ...chosen, [s]: c });
+    }
+  };
+  grow(0, {});
+  return out;
+}
+
+/**
+ * Every allowed pair not together in which each would rather have the other,
+ * with having nobody counted as worse than anybody allowed. That covers all
+ * three cases the forbidden-pairs question names.
+ */
+function forbiddenBlockers(students: Lists, schools: Lists, m: Pairs): [string, string][] {
+  const holder: Record<string, string> = {};
+  for (const [s, c] of Object.entries(m)) holder[c] = s;
+  const better = (list: readonly string[], x: string, has: string | undefined) =>
+    has === undefined || list.indexOf(x) < list.indexOf(has);
+  return allowedPairs(students, schools).filter(
+    ([s, c]) =>
+      m[s] !== c &&
+      better(students[s] as readonly string[], c, m[s]) &&
+      better(schools[c] as readonly string[], s, holder[c]),
+  );
+}
+
+/** The process on lists that may be short. Asks are counted; order can be reversed. */
+function runShort(askers: Lists, asked: Lists, reverse: boolean) {
+  const next: Record<string, number> = {};
+  const holding: Record<string, string> = {};
+  const free = Object.keys(askers);
+  if (reverse) free.reverse();
+  let asks = 0;
+  while (free.length > 0) {
+    const a = free.shift() as string;
+    const list = askers[a] as readonly string[];
+    const k = next[a] ?? 0;
+    if (k >= list.length) continue; // nobody left they are allowed to ask
+    next[a] = k + 1;
+    asks += 1;
+    const r = list[k] as string;
+    const theirs = asked[r] as readonly string[];
+    const current = holding[r];
+    if (current === undefined) holding[r] = a;
+    else if (theirs.indexOf(a) < theirs.indexOf(current)) {
+      holding[r] = a;
+      free.push(current);
+    } else free.push(a);
+  }
+  return { holding, asks };
+}
+
+const matchingKey = (m: Pairs) =>
+  JSON.stringify(Object.entries(m).sort(([a], [b]) => a.localeCompare(b)));
+
+describe('the stable matching beside the maximum one', () => {
+  const students: Lists = { priya: ['mit', 'nyu'], sam: ['mit'] };
+  const schools: Lists = { mit: ['priya', 'sam'], nyu: ['priya'] };
+  const NAMES: Readonly<Record<string, string>> = {
+    priya: 'Priya',
+    sam: 'Sam',
+    mit: 'MIT',
+    nyu: 'NYU',
+  };
+  const question = QUESTIONS.find((q) => q.id === 'stable-or-maximum');
+  const matchings = everyMatching(allowedPairs(students, schools));
+  const stable = matchings.filter((m) => forbiddenBlockers(students, schools, m).length === 0);
+  const most = Math.max(...matchings.map((m) => Object.keys(m).length));
+  const maximum = matchings.filter((m) => Object.keys(m).length === most);
+
+  it('prints exactly the lists it checks, and leaves out the pairs it says are forbidden', () => {
+    const width = Math.max(...Object.values(NAMES).map((n) => n.length));
+    const line = (who: string, list: readonly string[]) =>
+      `  ${(NAMES[who] as string).padEnd(width)}  ${list.map((x) => NAMES[x]).join(' > ')}`;
+    const expected = [
+      'Some pairs are forbidden, so each list names only who that person is allowed.',
+      'Students, best first:',
+      ...Object.entries(students).map(([s, list]) => line(s, list)),
+      'Schools, best first:',
+      ...Object.entries(schools).map(([c, list]) => line(c, list)),
+    ].join('\n');
+    expect(question?.quote).toBe(expected);
+    // Forbidden means forbidden on both lists: nobody names somebody who left them off.
+    for (const [s, list] of Object.entries(students)) {
+      for (const c of list) expect(schools[c], `${s} and ${c}`).toContain(s);
+    }
+    for (const [c, list] of Object.entries(schools)) {
+      for (const s of list) expect(students[s], `${c} and ${s}`).toContain(c);
+    }
+  });
+
+  it('has exactly one stable matching, Priya with MIT alone, and marks that option right', () => {
+    expect(stable).toEqual([{ priya: 'mit' }]);
+    expect(question?.kind).toBe('choice');
+    if (question?.kind !== 'choice') return;
+    const right = question.options.filter((o) => o.ok);
+    expect(right).toHaveLength(1);
+    expect(right[0]?.t.startsWith('Priya with MIT, and Sam and NYU with nobody.')).toBe(true);
+  });
+
+  it('has one maximum matching, of two pairs, leaving nobody out, which Priya and MIT break', () => {
+    expect(most).toBe(2);
+    expect(maximum).toEqual([{ priya: 'nyu', sam: 'mit' }]);
+    expect(forbiddenBlockers(students, schools, maximum[0] as Pairs)).toEqual([['priya', 'mit']]);
+    // so the stable one has one pair where the maximum has two
+    expect(Object.keys(stable[0] as Pairs)).toHaveLength(1);
+  });
+
+  it('ends both runs at Priya with MIT after two asks, in either order', () => {
+    for (const reverse of [false, true]) {
+      const byStudents = runShort(students, schools, reverse);
+      expect(byStudents.holding).toEqual({ mit: 'priya' });
+      expect(byStudents.asks).toBe(2);
+      const bySchools = runShort(schools, students, reverse);
+      expect(bySchools.holding).toEqual({ priya: 'mit' });
+      expect(bySchools.asks).toBe(2);
+    }
+  });
+
+  // The close says a stable matching has no allowed pair left with nobody on
+  // both ends, so nothing can be added to it, and so (CLRS Problem 35-4) it has
+  // at least half as many pairs as a maximum one. Checked on random lists, along
+  // with the claim the "None" option denies: some stable matching always exists.
+  it('never lets a stable matching be added to or fall below half a maximum one', () => {
+    let smaller = 0;
+    for (const n of [3, 4]) {
+      for (let seed = 1; seed <= 80; seed += 1) {
+        const rnd = mulberry32(seed * 7 + n);
+        const sIds = Array.from({ length: n }, (_, i) => `s${i}`);
+        const cIds = Array.from({ length: n }, (_, i) => `c${i}`);
+        const allowed = new Set<string>();
+        for (const s of sIds) for (const c of cIds) if (rnd() < 0.6) allowed.add(`${s}|${c}`);
+        const order = (xs: string[]) =>
+          xs.map((x) => [rnd(), x] as const).sort((a, b) => a[0] - b[0]);
+        const st: Record<string, string[]> = {};
+        const sc: Record<string, string[]> = {};
+        for (const s of sIds)
+          st[s] = order(cIds.filter((c) => allowed.has(`${s}|${c}`))).map((p) => p[1]);
+        for (const c of cIds)
+          sc[c] = order(sIds.filter((s) => allowed.has(`${s}|${c}`))).map((p) => p[1]);
+
+        const edges = allowedPairs(st, sc);
+        const all = everyMatching(edges);
+        const top = Math.max(...all.map((m) => Object.keys(m).length));
+        const good = all.filter((m) => forbiddenBlockers(st, sc, m).length === 0);
+        const label = `n=${n} seed=${seed}`;
+        expect(good.length, label).toBeGreaterThan(0);
+        for (const m of good) {
+          const used = new Set([...Object.keys(m), ...Object.values(m)]);
+          const addable = edges.filter(([s, c]) => !used.has(s) && !used.has(c));
+          expect(addable, label).toEqual([]);
+          expect(2 * Object.keys(m).length, label).toBeGreaterThanOrEqual(top);
+          if (Object.keys(m).length < top) smaller += 1;
+        }
+        // and the process lands on one of them
+        const ran = runShort(st, sc, false).holding;
+        const ranAsMatching: Record<string, string> = {};
+        for (const [c, s] of Object.entries(ran)) ranAsMatching[s] = c;
+        expect(good.map(matchingKey), label).toContain(matchingKey(ranAsMatching));
+      }
+    }
+    // the gap the question is about is not a one-off
+    expect(smaller).toBeGreaterThan(0);
+  });
+
+  // The README's CLRS section: with complete lists every pair is an edge, so the
+  // maximum matchings are exactly the perfect ones, and stability picks among them.
+  it('gives the worksheet 24 maximum matchings, all perfect, of which two hold', () => {
+    const worksheet = presetById('worksheet');
+    const perfect = allPerfectMatchings(worksheet);
+    expect(perfect).toHaveLength(24);
+    for (const m of perfect) expect(isPerfect(worksheet, m)).toBe(true);
+    expect(allStableMatchings(worksheet)).toHaveLength(2);
+  });
+});
 
 /**
  * One more claim from tier 4, this time about the shape of a run rather than

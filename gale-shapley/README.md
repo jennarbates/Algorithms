@@ -221,12 +221,15 @@ misreporting a list ever pays, and which of the assumptions are load-bearing.
 **Tier 4** is what the chapter proves and then sets as exercises: the measure of
 progress that bounds the loop and the proof that nobody is left out, which are
 facts (1.2) to (1.5) of the text; the good-and-bad-people argument and forbidden
-pairs, which are its two solved exercises; and hospitals with several posts and a
-surplus of students, and what indifference costs, which are exercises 4 and 5;
-and five more questions on lists with ties, which tell a strong instability from
-a weak one on particular lists and particular matchings, small enough to check by hand.
+pairs, which are its two solved exercises; one question that sets a stable
+matching beside the largest one, which is where CLRS comes in (see the CLRS
+section below); and hospitals with several posts and a surplus of students,
+and what indifference costs, which are exercises 4 and 5; and five more
+questions on lists with ties, which tell a strong instability from a weak one on
+particular lists and particular matchings, small enough to check by hand.
 
-Six to ten questions a tier, and the order inside a tier climbs too.
+Six to twelve questions a tier, thirty-seven in all, and the order inside a tier
+climbs too.
 
 | Tier 1 asks                               | The belief it is aimed at                                |
 | ----------------------------------------- | -------------------------------------------------------- |
@@ -262,6 +265,7 @@ Six to ten questions a tier, and the order inside a tier climbs too.
 | the proof that nobody is left out          | that it follows from the process finishing                      |
 | why every good student gets a good school  | that a claim about every arrangement can be proved from the run |
 | what forbidden pairs change                | that a forbidden pair is the same as being ranked last          |
+| which matching is stable, and how big      | that the matching with the most pairs is the one that holds     |
 | hospitals with several posts and a surplus | that unequal sides have no stable assignment                    |
 | what ties cost                             | that ties can always be broken away                             |
 | which pairs are strong instabilities       | that not minding is the same as wanting                         |
@@ -274,7 +278,8 @@ Tiers 2, 3 and 4 follow Kleinberg and Tardos chapter 1: its statements (1.1)
 through (1.9), its two solved exercises, and exercises 1, 2, 4, 5 and 8. The
 running time question and the `Ranking` array in tier 3 are chapter 2.3 of the
 same book, where the `O(n²)` bound is proved by saying which data structure
-makes each iteration constant time.
+makes each iteration constant time. One tier 4 question takes its definitions
+from CLRS instead, for the reason given in the CLRS section below.
 
 ### Nothing with a computable answer is written down
 
@@ -298,7 +303,7 @@ exactly Ravi and Maya, the two-by-two has no pair anywhere that is first on both
 lists, and the good-and-bad instance really does put every good student with a
 good school in every one of its stable arrangements.
 
-Tier 4 adds three claims that no preset can settle, so the suite settles them
+Tier 4 adds four claims that no preset can settle, so the suite settles them
 directly. The tie instance is enumerated to confirm that every matching of it
 has a weakly blocking pair while some matching has no strongly blocking pair.
 The hospitals variant is run by hand in the test, four students for three posts
@@ -307,7 +312,12 @@ instability the hospitals-and-residents definition names, including the one
 about a student who ends up with nothing. And the quantity the first question
 rejects is walked through every preset in both directions, confirming both
 halves of the reason it gives: the number of free people is allowed to stand
-still, which disqualifies it, and it never rises.
+still, which disqualifies it, and it never rises. The lists with forbidden pairs
+in `stable-or-maximum` are stored in the test, checked against the quote word
+for word, and every matching of them enumerated: exactly one is stable, Priya
+with MIT alone, and the only maximum matching has two pairs and is broken by
+Priya and MIT. Both runs are worked by hand on the short lists, in both orders,
+and land there in two asks.
 
 The questions on lists with ties quote their lists, since no preset has ties,
 and store them as well, in `tied`. The suite checks the quote against the stored
@@ -343,6 +353,49 @@ with every list ranking both good people on the other side above both bad ones.
 Every good student is with a good school in all four of its stable matchings,
 which is the claim tier 4 argues by counting and `tests/questions.test.ts`
 settles by exhaustive search.
+
+## CLRS
+
+The page follows Kleinberg and Tardos chapter 1, and that stays its convention.
+CLRS, third edition, does not cover stable matching. Searched end to end, it
+never mentions stable matching, stable marriage, Gale or Shapley, and nobody in
+it proposes to anybody. The fourth edition is said to add a section on stable
+matching, numbered 25.2. That has not been checked against the book here, and
+nothing on this page cites it.
+
+What the third edition does have is the vocabulary underneath, in its chapter on
+maximum flow, and it agrees with the page:
+
+| CLRS 3e                    | Page       | What it says                                                                                                                                | On this page                                                                                          |
+| -------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Appendix B.4               | 1172       | A bipartite graph is an undirected graph whose vertices split into two sets, with every edge going between them.                            | Students and schools are the two sets. With complete lists, every student and school pair is an edge. |
+| Section 26.3               | 732        | A matching is a set of edges with at most one touching any vertex; a vertex is matched or unmatched; a maximum matching has the most edges. | K&T's matching, and `Matching` in `core/types.ts`, where `null` is an unmatched student.              |
+| Exercise 26.3-4            | 735        | A perfect matching is one in which every vertex is matched. The exercise itself is Hall's theorem.                                          | K&T's perfect matching, and `isPerfect`.                                                              |
+| Section 35.1, Problem 35-4 | 1110, 1135 | A maximal matching is not a proper subset of any other; the problem has you prove it has at least half the edges of a maximum one.          | The close of `stable-or-maximum`.                                                                     |
+
+Where the two books differ, and what moves as a result:
+
+- **A CLRS matching lives inside a given graph.** Only edges of the graph can be
+  used, so a pair can simply not exist. K&T's problem allows every pair, and
+  pairs that are not allowed arrive only with the forbidden-pairs variant in
+  tier 4. In CLRS's terms that variant is a bipartite graph with edges missing.
+- **CLRS has no preferences, so its best matching is the biggest.** On the
+  page's own markets that never competes with stability: every pair is allowed
+  and the sides are equal, so the maximum matchings are exactly the perfect
+  ones, all n! of them, and stability chooses among them. The four-by-four
+  `worksheet` has 24, and 2 of them hold. With forbidden pairs the two come
+  apart, and `stable-or-maximum` is a market whose only stable matching has one
+  pair where the maximum has two. The suite checks it, and checks on 160 random
+  markets with forbidden pairs that a stable matching is always maximal, so
+  never below half a maximum one.
+- **Names.** CLRS writes the two sides L and R and an edge (u, v), with no
+  order. The K&T exercise tier 2 quotes writes (c, s), college then
+  student; the page writes student to school.
+
+Nothing else is lifted. The algorithm in section 26.3, Ford-Fulkerson on the
+flow network of Figure 26.8 in O(VE) time (page 735), and the Hopcroft-Karp
+algorithm of Problem 26-6 (page 763) find the biggest matching and never look at
+a preference, so they answer a different question from this page's.
 
 ## Your own lists
 
