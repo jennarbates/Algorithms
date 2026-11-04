@@ -185,6 +185,11 @@ export const FORMAL_TERMS: readonly Term[] = [
     replaces: 'nobody is left out, everybody on both sides ends up with somebody',
   },
   {
+    term: 'maximum matching',
+    replaces:
+      'an arrangement with as many pairs in it as any arrangement can have, whatever anybody wants',
+  },
+  {
     term: 'valid partner',
     replaces: 'somebody you are paired with in at least one arrangement that holds',
   },
@@ -1336,6 +1341,48 @@ export const QUESTIONS: readonly Question[] = [
     ],
     close:
       'The algorithm survives most variations with one change to the loop. Where the work moves is the definition of what it means to hold, and a definition with four cases instead of one is a definition somebody had to get right.',
+  },
+
+  // CLRS 3e, section 26.3 (page 732), defines a matching and a maximum matching
+  // on a graph with no preferences in it. This question puts that definition
+  // next to stability on lists with forbidden pairs, where the two come apart.
+  // tests/questions.test.ts enumerates every matching of the quoted lists.
+  {
+    id: 'stable-or-maximum',
+    tier: 4,
+    kind: 'choice',
+    tests: 'telling the largest matching from the stable one',
+    quote:
+      'Some pairs are forbidden, so each list names only who that person is allowed.\n' +
+      'Students, best first:\n' +
+      '  Priya  MIT > NYU\n' +
+      '  Sam    MIT\n' +
+      'Schools, best first:\n' +
+      '  MIT    Priya > Sam\n' +
+      '  NYU    Priya',
+    prompt:
+      'CLRS, section 26.3, calls a matching a maximum matching when no other matching has more pairs in it. Which matching of these lists is stable, and is it a maximum one?',
+    options: [
+      {
+        t: 'Priya with NYU and Sam with MIT. It is the maximum matching, nobody is left out, and a stable matching leaves out as few people as it can.',
+        why: 'It is the maximum matching, and Priya and MIT break it: Priya would rather have MIT than NYU, and MIT would rather have Priya than Sam. Stability is a test of what people want, and the number of pairs is not part of it. Whether a matching with nobody left out exists at all depends only on which pairs are allowed, which is what CLRS Exercise 26.3-4 (Hall’s theorem) is about, and it says nothing about anybody’s list.',
+      },
+      {
+        t: 'None. Sam and NYU cannot both be placed without moving Priya, so some pair always wants to switch.',
+        why: 'One exists, the same way it always does: run the process on the shortened lists. Two people left with nobody only break a matching if they are allowed each other, and Sam and NYU are not.',
+      },
+      {
+        t: 'Priya with MIT, and Sam and NYU with nobody. It has one pair, and the maximum matching has two.',
+        ok: true,
+        why: 'Priya and MIT are first on each other’s lists, so any matching that keeps them apart is broken by them, the maximum one included. Once they are together nobody can complain: Sam is allowed only MIT, which would rather keep Priya, and NYU is allowed only Priya, who would rather keep MIT. Sam and NYU both have nobody, but they are not allowed each other, so that is not a complaint either.',
+      },
+      {
+        t: 'Both Priya with MIT on its own and the maximum matching hold, and which one a run ends at depends on who asks.',
+        why: 'Only one holds, so both runs end at it. With the students asking, Priya is held by MIT, her first choice, and Sam’s one ask is MIT, which would rather have Priya. With the schools asking, MIT is held by Priya, and NYU’s one ask is Priya, who would rather have MIT. Two asks each way, in any order, and Priya with MIT both times.',
+      },
+    ],
+    close:
+      'Largest and stable are different questions about the same lists. The matchings in CLRS section 26.3 come with no preferences at all, so the best one is simply the biggest. Here every pair is two people with opinions, and the stable matching can be smaller than a maximum one. It is never smaller than half, though: a stable matching never leaves two people with nobody when they are allowed each other, so no pair can be added to it, and CLRS Problem 35-4 asks you to prove that a matching nothing can be added to has at least half as many pairs as a maximum one.',
   },
 
   {
