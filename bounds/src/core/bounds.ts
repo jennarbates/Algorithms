@@ -13,6 +13,15 @@ import type { Poly, Q } from './poly.ts';
  * a ceiling c₂, and one n₀ for both; the lecture's definition allows two
  * different thresholds, and taking the larger of them always works, so one n₀
  * is no restriction.
+ *
+ * This is the lecture's definition, as Kleinberg and Tardos §2.2 write it, and
+ * it is the one the page checks. CLRS §3.1 (pp. 44 to 48) defines the same
+ * three sets with two more conditions: 0 ≤ T(n) ≤ c·f(n) for O, 0 ≤ c·f(n) ≤
+ * T(n) for Ω, 0 ≤ c₁·f(n) ≤ T(n) ≤ c₂·f(n) for Θ, and n₀ positive. For
+ * functions that are eventually nonnegative, which CLRS assumes of every
+ * function inside the notation and every running time is, the two agree on
+ * whether T = O(f), Ω(f) or Θ(f). What can move is the smallest n₀, and
+ * `bestN0Clrs` works it out so that the page can say where.
  */
 
 export type Kind = 'O' | 'Ω' | 'Θ';
@@ -88,4 +97,28 @@ export function relationHolds(T: Poly, f: Poly, kind: Kind): boolean {
   const dT = T.length - 1;
   const dF = f.length - 1;
   return kind === 'O' ? dT <= dF : kind === 'Ω' ? dT >= dF : dT === dF;
+}
+
+/**
+ * The smallest n₀ for these constants under CLRS's definition (§3.1): as
+ * `bestN0`, and also n₀ ≥ 1, 0 ≤ T(n) from n₀ on for O, and 0 ≤ c·f(n) from n₀
+ * on for Ω and Θ (for Θ that already gives 0 ≤ T(n), since T(n) ≥ c₁·f(n)).
+ *
+ * Each condition is "some polynomial is ≥ 0 at every n ≥ n₀", and the n₀ that
+ * work for one of them are all the n₀ from its smallest on. So the n₀ that work
+ * for all of them at once start at the largest of those smallest values.
+ *
+ * Against the page's answer it moves in two ways only: from 0 to 1, since CLRS
+ * wants n₀ positive, and, for O, up to where T(n) stops being negative. For
+ * n − 10 against n with c = 1 the page says n₀ = 0 and CLRS says 10.
+ */
+export function bestN0Clrs(T: Poly, f: Poly, kind: Kind, w: Omit<Witness, 'n0'>): number | null {
+  const page = bestN0(T, f, kind, w);
+  if (page === null) return null;
+  let best = Math.max(1, page);
+  const also = kind === 'O' ? T : polyScale(f, w.lower as Q);
+  const n = smallestN0(also);
+  if (n === null) return null;
+  best = Math.max(best, n);
+  return best;
 }

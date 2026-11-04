@@ -197,6 +197,11 @@ export function Triangle() {
             way: lower bounds come from throwing work away, upper bounds from adding work that is
             not there.
           </p>
+          <p className="card__note">
+            <b>In CLRS.</b> Appendix A.2 makes both moves on the sum 1 + 2 + … + n itself: every
+            term at most n gives n², and splitting at n/2, dropping the bottom half and taking each
+            top term as at least n/2 gives (n/2)². It assumes n even, as the slide does.
+          </p>
         </div>
       </aside>
     </div>

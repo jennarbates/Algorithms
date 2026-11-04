@@ -35,7 +35,7 @@ export const EXAMPLES: readonly Example[] = [
     kind: 'Ω',
     lower: '0.5',
     slide: 'Lecture 3, slide 8 (clicker)',
-    note: 'Any c below 1 works, if you wait long enough: try 0.9, then 0.99. At 1 or above, n − 10 can never catch cn, and no n₀ helps.',
+    note: 'Any c below 1 works, if you wait long enough: try 0.9, then 0.99. At 1 or above, n − 10 can never catch cn, and no n₀ helps. Then switch to O with c = 1, where this page and CLRS give different smallest n₀.',
   },
   {
     id: 'four-n',

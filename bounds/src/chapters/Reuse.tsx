@@ -2,7 +2,16 @@ import { useMemo, useState } from 'react';
 import { relates, showGrowth } from '../core/growth';
 import { evalQ, mul, q, showQ } from '../core/poly';
 import type { Q } from '../core/poly';
-import { POWERS_FAST, POWERS_SLOW, TIMES_TABLE, X, countOf, written } from '../core/programs';
+import {
+  HORNER,
+  POLY_NAIVE,
+  POWERS_FAST,
+  POWERS_SLOW,
+  TIMES_TABLE,
+  X,
+  countOf,
+  written,
+} from '../core/programs';
 import type { Program } from '../core/programs';
 import { Chart } from '../components/Chart';
 import type { Series } from '../components/Chart';
@@ -169,6 +178,12 @@ export function Reuse() {
             {n > shown ? `, the first ${shown} of ${n}` : ''}. The slow one computes xᵏ⁻¹ on its way
             to xᵏ, throws it away, and computes it again next time round. The fast one keeps it:
             that is the whole speed-up.
+          </p>
+          <p className="card__note">
+            <b>In CLRS.</b> Problem 2-3 is the same pair for a polynomial a₀ + a₁x + … + aₙxⁿ: each
+            term from scratch takes {POLY_NAIVE.countText} multiplications ({countOf(POLY_NAIVE, n)}{' '}
+            at n = {n}), and Horner’s rule, y = aᵢ + x·y for i = n down to 0, takes{' '}
+            {HORNER.countText} ({countOf(HORNER, n)}).
           </p>
         </div>
 

@@ -8,8 +8,10 @@ T(n) <= c * f(n)   for all n >= n0
 
 One convention, stated once because every numeric answer on the page depends on
 it. The threshold is inclusive, `for all n >= n0`, which is how both Kleinberg
-and Tardos §2.2 and CLRS §3.2 write it, so `n0` names the **first** `n` the
-claim covers. Some books and courses write `for all n > n0` instead, making `n0`
+and Tardos §2.2 and CLRS §3.1 (3rd edition, pp. 44 to 48) write it, so `n0`
+names the **first** `n` the claim covers. CLRS also asks for `0 <= T(n)` and a
+positive `n0`, which moves no answer on this page; [`../bounds`](../bounds)
+names that difference where it does move one. Some books and courses write `for all n > n0` instead, making `n0`
 the last `n` that is allowed to fail. The two say exactly the same thing, since
 either witness converts to the other by adding or subtracting one, but every
 "smallest `n0`" answer moves by one between them: `c = 15` gives `n0 = 6` here

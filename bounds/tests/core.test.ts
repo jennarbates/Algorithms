@@ -1,22 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { bestN0, check, relationHolds } from '../src/core/bounds.ts';
+import { bestN0, bestN0Clrs, check, relationHolds } from '../src/core/bounds.ts';
 import { SLIDE_16, compare, isPolynomial, poly as g, relates } from '../src/core/growth.ts';
 import {
   evalQ,
   holdsFrom,
   parseQ,
   poly,
+  polyScale,
+  polySub,
   q,
   showPoly,
   showQ,
   sign,
   smallestN0,
 } from '../src/core/poly.ts';
-import type { Poly } from '../src/core/poly.ts';
+import type { Poly, Q as Frac } from '../src/core/poly.ts';
 import {
   BAR,
   DEEPER,
   FOO,
+  HORNER,
+  POLY_NAIVE,
   POWERS_FAST,
   POWERS_SLOW,
   PRINT1,
@@ -27,9 +31,12 @@ import {
   TRIANGLES,
   TRIPLE_LOOPS,
   X,
+  ascending,
   boxSize,
   countOf,
+  descending,
   inBox,
+  insertionSort,
   inSquare,
   squareCount,
   written,
@@ -172,6 +179,118 @@ describe('lecture 3: Ω and Θ', () => {
     const T = poly(6, 4, 14);
     expect(bestN0(T, n2, 'Θ', { lower: Q('1'), upper: Q('15') })).toBe(6);
     expect(bestN0(T, n2, 'Ω', { lower: Q('14') })).toBe(0);
+  });
+});
+
+describe("CLRS's definition: 0 ≤ T(n) for O, 0 ≤ c·f(n) for Ω, n₀ positive", () => {
+  /** The slow truth under CLRS: every condition scanned on its own, n₀ at least 1. */
+  function slowClrs(T: Poly, f: Poly, kind: 'O' | 'Ω' | 'Θ', lo: Frac, up: Frac): number | null {
+    const conds: Poly[] = [];
+    if (kind !== 'Ω') conds.push(polySub(polyScale(f, up), T));
+    if (kind !== 'O') conds.push(polySub(T, polyScale(f, lo)), polyScale(f, lo));
+    if (kind === 'O') conds.push(T);
+    let best = 1;
+    for (const c of conds) {
+      // Every root is below 1 + (largest coefficient)/(leading coefficient) ≤ 631 here.
+      const n = slowSmallestN0(c, 1000);
+      if (n === null) return null;
+      best = Math.max(best, n);
+    }
+    return best;
+  }
+
+  it('agrees with scanning every n, on 300 random pairs', () => {
+    let moved = 0;
+    for (let seed = 1; seed <= 300; seed++) {
+      const r = rng(seed * 7919);
+      const ints = (k: number) => [...Array(k).keys()].map(() => Math.floor(r() * 60) - 30);
+      const T = poly(...ints(2 + Math.floor(r() * 2)), 1 + Math.floor(r() * 5));
+      const f = poly(...ints(1 + Math.floor(r() * 2)), 1 + Math.floor(r() * 3));
+      const lo = q(1 + Math.floor(r() * 4), 2 + Math.floor(r() * 4));
+      const up = q(1 + Math.floor(r() * 20), 1);
+      for (const kind of ['O', 'Ω', 'Θ'] as const) {
+        const w = { lower: lo, upper: up };
+        const clrs = bestN0Clrs(T, f, kind, w);
+        expect(clrs, `seed ${seed}: ${showPoly(T)} against ${showPoly(f)}, ${kind}`).toBe(
+          slowClrs(T, f, kind, lo, up),
+        );
+        const page = bestN0(T, f, kind, w);
+        if (clrs !== null && page !== null && clrs > Math.max(1, page)) moved++;
+      }
+    }
+    // The nonnegativity conditions really do decide some of these, not just n₀ ≥ 1.
+    expect(moved).toBeGreaterThan(10);
+  });
+
+  it('n − 10 against n: the only pair on the page where more than 0 → 1 moves', () => {
+    const T = poly(-10, 1);
+    const n = poly(0, 1);
+    expect(bestN0(T, n, 'O', { upper: Q('1') })).toBe(0);
+    expect(bestN0Clrs(T, n, 'O', { upper: Q('1') })).toBe(10);
+    expect(bestN0Clrs(T, n, 'O', { upper: Q('5') })).toBe(10);
+    // Ω and Θ do not move: c·n is never negative, and n₀ is already past 1.
+    expect(bestN0Clrs(T, n, 'Ω', { lower: Q('0.5') })).toBe(bestN0(T, n, 'Ω', { lower: Q('0.5') }));
+    expect(bestN0Clrs(T, n, 'Ω', { lower: Q('0.99') })).toBe(1000);
+    // and where this page says 0, CLRS says 1
+    expect(bestN0(poly(10, 4), n, 'Ω', { lower: Q('4') })).toBe(0);
+    expect(bestN0Clrs(poly(10, 4), n, 'Ω', { lower: Q('4') })).toBe(1);
+  });
+
+  it("CLRS's witness for an + b = O(n²), c = a + |b| and n₀ = max(1, −b/a), on n − 10", () => {
+    const T = poly(-10, 1);
+    const n2 = poly(0, 0, 1);
+    expect(bestN0Clrs(T, n2, 'O', { upper: Q('11') })).toBe(10);
+    expect(bestN0(T, n2, 'O', { upper: Q('11') })).toBe(0);
+  });
+
+  it('never changes a verdict, only n₀', () => {
+    for (const [T, f] of [
+      [poly(-10, 1), poly(0, 1)],
+      [poly(1, 17, 32), poly(0, 0, 1)],
+      [poly(0, -3, '1/2'), poly(0, 0, 1)],
+      [poly(6, 4, 14), poly(0, 0, 1)],
+    ] as const) {
+      for (const c of ['0.01', '0.5', '1', '14', '33', '100']) {
+        for (const kind of ['O', 'Ω'] as const) {
+          const w = { lower: Q(c), upper: Q(c) };
+          expect(bestN0Clrs(T, f, kind, w) === null).toBe(bestN0(T, f, kind, w) === null);
+        }
+      }
+    }
+  });
+});
+
+describe('INSERTION-SORT, CLRS §2.2', () => {
+  it('sorts, and its times column matches the table on p. 26 in the best and worst case', () => {
+    for (let n = 1; n <= 40; n++) {
+      const best = insertionSort(ascending(n));
+      const worst = insertionSort(descending(n));
+      expect(best.sorted).toEqual(ascending(n));
+      expect(worst.sorted).toEqual(ascending(n));
+      const m = n - 1;
+      expect(best.times).toEqual([n, m, m, m, m, 0, 0, m]);
+      const tri = (n * (n + 1)) / 2;
+      expect(worst.times).toEqual([n, m, m, m, tri - 1, tri - n, tri - n, m]);
+    }
+  });
+
+  it('every order of 1 to n costs between the sorted and the reversed array', () => {
+    const perms = (xs: number[]): number[][] =>
+      xs.length <= 1
+        ? [xs]
+        : xs.flatMap((x, i) =>
+            perms([...xs.slice(0, i), ...xs.slice(i + 1)]).map((p) => [x, ...p]),
+          );
+    const total = (a: number[]) => insertionSort(a).times.reduce((s, t) => s + t, 0);
+    for (let n = 1; n <= 7; n++) {
+      const lo = total(ascending(n));
+      const hi = total(descending(n));
+      for (const p of perms(ascending(n))) {
+        expect(total(p)).toBeGreaterThanOrEqual(lo);
+        expect(total(p)).toBeLessThanOrEqual(hi);
+        expect(insertionSort(p).sorted).toEqual(ascending(n));
+      }
+    }
   });
 });
 
@@ -320,6 +439,17 @@ describe('chapter 6: same answer, less work', () => {
     for (let n = 0; n <= 40; n++) {
       expect(countOf(POWERS_FAST, n)).toBe(written(POWERS_FAST, n).length);
       expect(written(TIMES_TABLE, n)).toHaveLength(n * n);
+    }
+  });
+});
+
+describe('CLRS Problem 2-3: Horner against each term from scratch', () => {
+  it('both give the value of the polynomial with aₖ = k + 1', () => {
+    for (let n = 0; n <= 30; n++) {
+      let want = 0n;
+      for (let k = 0; k <= n; k++) want += BigInt(k + 1) * X ** BigInt(k);
+      expect(written(HORNER, n)).toEqual([String(want)]);
+      expect(written(POLY_NAIVE, n)).toEqual([String(want)]);
     }
   });
 });

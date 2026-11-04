@@ -1,17 +1,23 @@
-import { bestN0 } from '../core/bounds.ts';
+import { bestN0, bestN0Clrs } from '../core/bounds.ts';
 import type { Kind } from '../core/bounds.ts';
 import { factorial } from '../core/growth.ts';
 import { evalQ, parseQ, poly } from '../core/poly.ts';
 import type { Poly } from '../core/poly.ts';
 import {
   DEEPER,
+  HORNER,
+  INSERTION_SORT_LINES,
+  POLY_NAIVE,
   POWERS_FAST,
   POWERS_SLOW,
   PRINT1,
   SUM_PRODUCT,
   TRIANGLES,
+  ascending,
   boxSize,
   countOf,
+  descending,
+  insertionSort,
   squareCount,
 } from '../core/programs.ts';
 
@@ -27,6 +33,11 @@ import {
  *
  * The lecture's clicker questions are all here, marked with their slide, with
  * the wording kept where the wording is the point.
+ *
+ * The questions whose ids start `clrs-` are adapted from CLRS, third edition,
+ * and cite the section, exercise or problem. One of them, `clrs-o-nonneg`, is
+ * there to contrast the two definitions: CLRS asks 0 ≤ T(n) as well, and its
+ * smallest n₀ is not this page's.
  *
  * `../worksheets/bounds.mjs` imports this file directly, so the printable
  * workbook asks exactly these questions and its key comes from the same engine.
@@ -115,6 +126,30 @@ const speedupAt199 = countOf(POWERS_SLOW, 199) / countOf(POWERS_FAST, 199);
 /** The first n₀ from which n³/27 ≤ n(n − 1)(n − 2)/6 ≤ n³/6. */
 const trianglesN0 = bestN0(TRIANGLES.count, n3, 'Θ', { lower: Q('1/27'), upper: Q('1/6') }) ?? -1;
 
+/** n − 10 = O(n) with c = 1: this page's smallest n₀, and CLRS's, which also asks 0 ≤ n − 10. */
+const nonnegPage = bestN0(poly(-10, 1), n1, 'O', { upper: Q('1') }) ?? -1;
+const nonnegClrs = bestN0Clrs(poly(-10, 1), n1, 'O', { upper: Q('1') }) ?? -1;
+/** CLRS §3.1's worked example, ½n² − 3n = Θ(n²) with c₁ = 1/14 and c₂ = ½. */
+const HALF_MINUS_3N = poly(0, -3, '1/2');
+const halfThetaN0 = bestN0(HALF_MINUS_3N, n2, 'Θ', { lower: Q('1/14'), upper: Q('1/2') }) ?? -1;
+/** INSERTION-SORT at n = 10: line 5 is the while test, line 6 its body. */
+const insWorst = insertionSort(descending(10)).times;
+const insBest = insertionSort(ascending(10)).times;
+const whileWorst = insWorst[4] ?? -1;
+/** The largest n with f(n) ≤ budget, for CLRS Problem 1-1. */
+const largestWithin = (f: (n: number) => number, budget: number): number => {
+  let n = 0;
+  while (f(n + 1) <= budget) n++;
+  return n;
+};
+const square = (n: number) => n * n;
+const factAt1s = largestWithin(factorial, 1e9);
+const expAt1s = largestWithin((n) => 2 ** n, 1e9);
+const squareAt1s = largestWithin(square, 1e9);
+const hornerAt10 = countOf(HORNER, 10);
+const naiveAt10 = countOf(POLY_NAIVE, 10);
+const en = (x: number) => x.toLocaleString('en-US');
+
 export const QUESTIONS: readonly Question[] = [
   // --- Tier 1: floors and ceilings -------------------------------------------------
   {
@@ -140,7 +175,7 @@ export const QUESTIONS: readonly Question[] = [
       },
     ],
     close:
-      'O is a ceiling, like ≤. Knowing a ≤ b tells you nothing about whether b ≤ a. That gap is exactly why the lecture brings in Ω and Θ.',
+      'O is a ceiling, like ≤. Knowing a ≤ b tells you nothing about whether b ≤ a. That gap is exactly why the lecture brings in Ω and Θ. CLRS Problem 3-4(a) asks the same thing, as a conjecture to disprove.',
   },
   {
     id: 'largest-c',
@@ -184,6 +219,31 @@ export const QUESTIONS: readonly Question[] = [
       'Solving the inequality for n gives n₀ directly. Every witness on this page is found that way, and then checked at whole numbers.',
   },
   {
+    id: 'clrs-o-nonneg',
+    tier: 1,
+    kind: 'number',
+    tests: 'the same claim under CLRS’s definition',
+    prompt: `n − 10 = O(n) with c = 1. On this page n − 10 ≤ n holds at every n, so the smallest n₀ is ${nonnegPage}. CLRS §3.1 defines O(g(n)) as the functions f(n) with positive constants c and n₀ such that 0 ≤ f(n) ≤ c·g(n) for all n ≥ n₀. Under that definition, what is the smallest n₀ for c = 1?`,
+    unit: 'n₀ =',
+    answer: nonnegClrs,
+    why: `CLRS also asks 0 ≤ n − 10, which first holds at n = ${nonnegClrs}, where n − 10 is exactly 0. From there both halves hold, and before it the left half fails.`,
+    near: [
+      {
+        v: nonnegPage,
+        why: `That is this page’s answer, where only n − 10 ≤ n is asked. CLRS asks 0 ≤ n − 10 as well, and n − 10 is negative below ${nonnegClrs}.`,
+      },
+      {
+        v: 1,
+        why: 'CLRS does want n₀ positive, but at n = 1 the function is −9, below the 0 its definition asks for.',
+      },
+      {
+        v: nonnegClrs + 1,
+        why: `At n = ${nonnegClrs}, n − 10 is 0, and 0 ≤ 0 holds, so ${nonnegClrs} already counts.`,
+      },
+    ],
+    close: `The two definitions agree on which functions are O(n), since CLRS assumes every function inside the notation is eventually nonnegative, as every running time is. What moves is the smallest n₀: here from ${nonnegPage} to ${nonnegClrs}, and, for a function that is never negative, from 0 to 1 whenever this page’s answer is 0. CLRS’s own witness for an + b = O(n²), c = a + |b| and n₀ = max(1, −b/a), carries both conditions: −b/a is where an + b stops being negative.`,
+  },
+  {
     id: 'witness-4n',
     tier: 1,
     kind: 'witness',
@@ -193,7 +253,7 @@ export const QUESTIONS: readonly Question[] = [
     f: n1,
     rel: 'Ω',
     example: { lower: '4', n0: 0 },
-    why: 'c = 4 and n₀ = 0: 4n + 10 ≥ 4n at every n, since 10 ≥ 0. Any c ≤ 4 works from n = 0, and c just above 4 works for a while and then fails.',
+    why: 'c = 4 and n₀ = 0: 4n + 10 ≥ 4n at every n, since 10 ≥ 0. Any c ≤ 4 works from n = 0, and c just above 4 works for a while and then fails. (CLRS wants n₀ positive, so there it would be n₀ = 1.)',
     close:
       'For a floor, the easy move is to drop terms: 4n + 10 ≥ 4n because the dropped term is positive. For a ceiling, the move is to round up.',
   },
@@ -211,6 +271,21 @@ export const QUESTIONS: readonly Question[] = [
     why: `c₁ = 32 is a floor from n = 0, since 17n + 1 ≥ 0. c₂ = 33 needs n² ≥ 17n + 1, which first holds at n = ${ceil33}. So c₁ = 32, c₂ = 33, n₀ = ${ceil33}. c₂ = 50 works from n = 1.`,
     close:
       'Θ is two witnesses stapled together. Find each side on its own, then use the larger n₀ for both.',
+  },
+  {
+    id: 'clrs-half-n2',
+    tier: 1,
+    kind: 'witness',
+    tests: 'a floor with a negative term to pay for',
+    prompt:
+      'CLRS §3.1 works this one to show that lower-order terms can be ignored. Prove ½n² − 3n = Θ(n²): give a floor c₁, a ceiling c₂ and one n₀ where both hold.',
+    T: HALF_MINUS_3N,
+    f: n2,
+    rel: 'Θ',
+    example: { lower: '1/14', upper: '1/2', n0: halfThetaN0 },
+    why: `Divide by n²: c₁ ≤ ½ − 3/n ≤ c₂. The right side holds at every n ≥ 1 with c₂ = ½, since 3/n is positive. With c₁ = 1/14 the left side needs 3/n ≤ ½ − 1/14 = 3/7, so n ≥ ${halfThetaN0}, where both sides are exactly 3.5. Those are CLRS’s own constants: c₁ = 1/14, c₂ = ½, n₀ = ${halfThetaN0}.`,
+    close:
+      'The −3n costs part of the floor’s constant, just as −10 does against n. Any c₁ below ½ works once n is large enough; c₁ = ½ itself never does.',
   },
   {
     id: 'witness-million',
@@ -410,6 +485,67 @@ export const QUESTIONS: readonly Question[] = [
     ],
     close: 'To say two running times are the same, show both are Θ of the same thing.',
   },
+  {
+    id: 'clrs-insertion-while',
+    tier: 2,
+    kind: 'number',
+    tests: 'counting a loop test, which runs once more than its body',
+    prompt:
+      'CLRS §2.2 counts every line of INSERTION-SORT. On the reversed array 10, 9, …, 1 (n = 10), how many times does the while test on line 5 run?',
+    quote: INSERTION_SORT_LINES.map((l, k) => `${k + 1}  ${l}`).join('\n'),
+    unit: 'Times =',
+    answer: whileWorst,
+    why: `Each A[j] is smaller than everything before it, so the loop shifts all j − 1 of them, and the test runs once more to stop at i = 0: tⱼ = j. Adding j for j = 2 to 10 gives 10·11/2 − 1 = ${whileWorst}.`,
+    near: [
+      {
+        v: insWorst[5] ?? -1,
+        why: 'That is line 6, the loop body: the sum of tⱼ − 1. The test runs once more than the body for each j, the time it fails.',
+      },
+      { v: 55, why: 'That is 1 + 2 + … + 10. j starts at 2: A[1] on its own is already sorted.' },
+      {
+        v: insBest[4] ?? -1,
+        why: 'That is the best case, an array already sorted, where the test fails at once for every j: tⱼ = 1.',
+      },
+    ],
+    close:
+      'CLRS counts the loop tests as well as the bodies and gives each line its own cost cᵢ. That moves the constants, never the order of growth: the worst case comes out as an² + bn + c, so Θ(n²), and the best case as an + b, so Θ(n).',
+  },
+  {
+    id: 'clrs-insertion-bounds',
+    tier: 2,
+    kind: 'multi',
+    tests: 'what a bound on "the running time" claims when inputs differ',
+    prompt:
+      'INSERTION-SORT takes linear time on a sorted array and quadratic time on a reversed one (CLRS §2.2). Tick every true statement.',
+    options: [
+      {
+        t: 'Its running time is O(n²).',
+        ok: true,
+        why: 'The worst case is Θ(n²), and a ceiling on the worst case is a ceiling on every input.',
+      },
+      {
+        t: 'Its running time is Ω(n).',
+        ok: true,
+        why: 'Every input of size n costs at least the best case, which is linear.',
+      },
+      {
+        t: 'Its running time is Ω(n²).',
+        why: 'A sorted array takes only linear time, so no c·n² stays under the running time on every input.',
+      },
+      {
+        t: 'Its worst-case running time is Ω(n²).',
+        ok: true,
+        why: 'The reversed array makes about n²/2 shifts.',
+      },
+      {
+        t: 'Its running time is Θ(n²).',
+        why: 'That needs Ω(n²) on every input as well, and sorted arrays break it.',
+      },
+      { t: 'Its best-case running time is Θ(n).', ok: true, why: 'tⱼ = 1 for every j: an + b.' },
+    ],
+    close:
+      'A bound on "the running time", with no modifier, has to hold for every input of each size: O is then a ceiling on the worst case and Ω a floor on the best case. CLRS §3.1 says so on pp. 48 to 49, and Exercise 3.1-6 makes it exact: the running time is Θ(g(n)) when the worst case is O(g(n)) and the best case is Ω(g(n)), and only then.',
+  },
 
   // --- Tier 3: the triangle ----------------------------------------------------------
   {
@@ -480,6 +616,35 @@ export const QUESTIONS: readonly Question[] = [
     ],
     close:
       'Upper bounds: round the count up. Lower bounds: throw work away. Neither needs the exact count.',
+  },
+  {
+    id: 'clrs-split',
+    tier: 3,
+    kind: 'choice',
+    tests: 'why a floor needs a split, not the smallest term',
+    prompt:
+      'CLRS Appendix A.2 wants a lower bound on 1 + 2 + … + n, the hard-way count. Its first try bounds every term by the smallest one, 1. What does that give?',
+    options: [
+      {
+        t: 'n², the same as the ceiling.',
+        why: 'n² comes from bounding every term by the largest, n. The smallest term, 1, gives n.',
+      },
+      {
+        t: 'n(n + 1)/2.',
+        why: 'That is the exact sum. Bounding the terms only ever gives an inequality.',
+      },
+      {
+        t: 'A floor of n: true, but only Ω(n), far below the ceiling n², so it cannot show Θ(n²).',
+        ok: true,
+        why: 'Each of the n terms is at least 1. True, and much too weak, because most of the terms are far bigger than 1.',
+      },
+      {
+        t: 'Nothing: bounding terms from below is not a valid argument.',
+        why: 'It is valid: n terms, each at least 1, add up to at least n. It is just weak here.',
+      },
+    ],
+    close:
+      'CLRS’s fix is the easy way: split the sum at n/2, throw the bottom half away, and bound each of the n/2 terms in the top half by n/2. That gives (n/2)² for even n, which is Ω(n²). On the grid it keeps the top n/2 rows, n/2 cells of each: the square, one column narrower.',
   },
   {
     id: 'odd-n',
@@ -619,6 +784,32 @@ export const QUESTIONS: readonly Question[] = [
       'Ω(n!) against O(n²) is the gap slide 14 points at: "we must have done something clever".',
   },
   {
+    id: 'clrs-one-second',
+    tier: 4,
+    kind: 'number',
+    tests: 'how much a fixed time buys',
+    prompt:
+      'CLRS Problem 1-1 asks for the largest problem an algorithm can solve in a given time. At this page’s billion steps a second, what is the largest n for which n! steps take at most one second?',
+    unit: 'n =',
+    answer: factAt1s,
+    why: `${factAt1s}! = ${en(factorial(factAt1s))} steps, under a second; ${factAt1s + 1}! = ${en(factorial(factAt1s + 1))}, over ${Math.floor(factorial(factAt1s + 1) / 1e9)} seconds. In the same second an n² algorithm reaches n = ${en(squareAt1s)}.`,
+    near: [
+      {
+        v: factAt1s + 1,
+        why: `${factAt1s + 1}! is ${en(factorial(factAt1s + 1))} steps: over ${Math.floor(factorial(factAt1s + 1) / 1e9)} seconds.`,
+      },
+      {
+        v: expAt1s,
+        why: `That is the answer for 2ⁿ, which fits n = ${expAt1s} into the same second. n! grows faster still.`,
+      },
+      {
+        v: 10,
+        why: `10! takes ${((factorial(10) / 1e9) * 1e3).toFixed(1)} ms, so a little more fits.`,
+      },
+    ],
+    close: `A machine a thousand times faster reaches only n = ${largestWithin(factorial, 1e12)} for n!, while for n² it goes from ${en(squareAt1s)} to ${en(largestWithin(square, 1e12))}. A faster computer helps a polynomial algorithm a lot and an exponential one hardly at all.`,
+  },
+  {
     id: 'growth-choice',
     tier: 4,
     kind: 'choice',
@@ -646,6 +837,31 @@ export const QUESTIONS: readonly Question[] = [
     close: 'Asymptotic means eventually. The crossing point can be late; it cannot be missing.',
   },
   {
+    id: 'clrs-exp-constants',
+    tier: 4,
+    kind: 'choice',
+    tests: 'which changes to an exponent are constant factors',
+    prompt: 'CLRS Exercise 3.1-4: is 2ⁿ⁺¹ = O(2ⁿ)? Is 2²ⁿ = O(2ⁿ)?',
+    options: [
+      {
+        t: 'Both: changing the exponent is only a constant factor.',
+        why: '2²ⁿ = 4ⁿ, and 4ⁿ/2ⁿ = 2ⁿ grows without bound. No constant covers it.',
+      },
+      {
+        t: '2ⁿ⁺¹ = O(2ⁿ), but 2²ⁿ is not O(2ⁿ).',
+        ok: true,
+        why: '2ⁿ⁺¹ = 2 · 2ⁿ, so c = 2 works from n = 0. 2²ⁿ = 2ⁿ · 2ⁿ, and the extra factor 2ⁿ is not a constant.',
+      },
+      {
+        t: 'Neither: anything done to an exponent changes the class.',
+        why: 'Adding 1 to the exponent multiplies by 2, a constant. Doubling the exponent is what changes the class.',
+      },
+      { t: '2²ⁿ = O(2ⁿ), but 2ⁿ⁺¹ is not.', why: 'The other way round.' },
+    ],
+    close:
+      'Adding a constant to an exponent multiplies by a constant; multiplying the exponent changes the base. So 2ⁿ⁺¹ is Θ(2ⁿ), and 4ⁿ outgrows both, as 3ⁿ outgrows 2ⁿ on slide 16.',
+  },
+  {
     id: 'poly-closure',
     tier: 4,
     kind: 'choice',
@@ -669,7 +885,7 @@ export const QUESTIONS: readonly Question[] = [
       },
     ],
     close:
-      'Polynomials are closed under adding, multiplying and composing. That is another reason the definition works.',
+      'Polynomials are closed under adding, multiplying and composing. That is another reason the definition works, and it is the third of the reasons CLRS §34.1 gives for calling polynomial time tractable.',
   },
   // --- Tier 5: three loops deep ------------------------------------------------------
   {
@@ -875,6 +1091,31 @@ export const QUESTIONS: readonly Question[] = [
       'Look for an inner loop whose work for this round is the previous round’s work plus a little. Keep the previous result and add the little.',
   },
   {
+    id: 'clrs-horner',
+    tier: 6,
+    kind: 'number',
+    tests: 'reuse in a polynomial',
+    prompt:
+      'CLRS Problem 2-3 evaluates a₀ + a₁x + … + aₙxⁿ with Horner’s rule. How many multiplications does it do when n = 10?',
+    quote: HORNER.lines.join('\n'),
+    unit: 'Multiplications =',
+    answer: hornerAt10,
+    why: `The loop runs for i = 10 down to 0, which is n + 1 rounds, with one multiplication x · y in each: ${hornerAt10}. Computing each term aₖxᵏ from scratch instead takes 0 + 1 + … + 10 = ${naiveAt10}.`,
+    near: [
+      { v: 10, why: 'i runs from n down to 0: that is n + 1 rounds, not n.' },
+      {
+        v: naiveAt10,
+        why: 'That is the naive way, each xᵏ from scratch: the slow power table with a sum on the end.',
+      },
+      {
+        v: 2 * hornerAt10,
+        why: 'Each round does one multiplication and one addition. Only the first is a multiplication.',
+      },
+    ],
+    close:
+      'Horner never builds a power on its own: each round multiplies everything so far by x once more, so every earlier coefficient gets its next factor of x for free. Θ(n), and since it has to read all n + 1 coefficients, nothing does better than Ω(n).',
+  },
+  {
     id: 'strictly-faster',
     tier: 6,
     kind: 'choice',
@@ -957,7 +1198,7 @@ export const QUESTIONS: readonly Question[] = [
       },
       {
         t: 'Sort n numbers.',
-        why: 'The output is n numbers: Ω(n) from the output. Sorting by comparisons does need more, but the output alone does not show it.',
+        why: 'The output is n numbers: Ω(n) from the output. Sorting by comparisons does need Ω(n log n) comparisons in the worst case (CLRS Theorem 8.1), but the output alone does not show it.',
       },
     ],
     close:
