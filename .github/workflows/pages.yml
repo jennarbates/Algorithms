@@ -1,6 +1,7 @@
 name: Pages
 
-# Build the whole site with site/build.sh and publish it to GitHub Pages.
+# Check every project, then build the whole site with site/build.sh and publish
+# it to GitHub Pages. If a check fails, nothing is deployed.
 # Requires Settings -> Pages -> Source set to "GitHub Actions".
 
 on:
@@ -18,7 +19,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
   build:
+    needs: checks
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository

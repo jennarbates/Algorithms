@@ -1,0 +1,71 @@
+name: CI
+
+# Checks every project on each pull request. pages.yml also calls this before it
+# deploys, so a failing check keeps the site as it was.
+#
+# Like site/build.sh, this keeps no list of projects: every top-level folder with
+# a package.json is checked, running whichever of the steps below it defines.
+
+on:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  find:
+    name: Find projects
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.list.outputs.projects }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: List folders with a package.json
+        id: list
+        run: echo "projects=$(ls */package.json | xargs -n1 dirname | jq -Rcs 'split("\n") | map(select(length > 0))')" >> "$GITHUB_OUTPUT"
+
+  check:
+    name: ${{ matrix.project }}
+    needs: find
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJson(needs.find.outputs.projects) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Install
+        run: if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; fi
+
+      - name: Format check
+        run: npm run --if-present format:check
+
+      - name: Lint
+        run: npm run --if-present lint
+
+      - name: Typecheck
+        run: npm run --if-present typecheck
+
+      - name: Test
+        run: npm run --if-present test
+
+      - name: Project checks
+        run: npm run --if-present check
+
+      - name: Build
+        run: npm run --if-present build
