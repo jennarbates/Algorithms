@@ -12,6 +12,7 @@ self-contained in its own folder with its own tooling.
 | [`bounds/`](./bounds) | Big-Omega, Big-Theta and running-time analysis from lecture 3: floors and ceilings checked exactly on a chart you set, programs counted line by line, the sum-product triangle, and polynomial against exponential time, plus four tiers of practice | Live |
 | [`graphs/`](./graphs) | Graph traversal from lectures 4 to 6: BFS layers on the 1970 Internet, DFS and the queue-or-stack traversal, the two-colour bipartite test, and topological order, plus four tiers of practice | Live |
 | [`limited-search/`](./limited-search) | Breaking boards: finding a board's bending strength with one board, with plenty, and with two, where the reader brings the strategy and the page runs it against every possible strength, plus three tiers of practice | Live |
+| [`midterm-guide/`](./midterm-guide) | The CS 311 Midterm 1 learning guide as one page: ten lessons with hidden answers, a simulator for every worked example, flashcards and a timed practice exam | Live |
 
 ## Conventions
 
