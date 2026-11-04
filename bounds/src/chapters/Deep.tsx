@@ -244,6 +244,8 @@ export function Deep() {
           <p className="card__note">
             Those are the row totals, from the run. {P.sumText} At n = {n}, {P.countText} ={' '}
             {formula}, and the tests check the formula against the run for every n up to 40.
+            {P === DEEPER &&
+              ' The sum of the first n squares is equation (A.3) in CLRS Appendix A.1, which also gives the triangle’s 1 + 2 + … + n as (A.1).'}
           </p>
         </div>
 

@@ -187,6 +187,11 @@ export function Count() {
             The top row is counted by running the program. The bottom row is the formula. They agree
             at every n, and the tests check them up to n = 40.
           </p>
+          <p className="card__note">
+            <b>In CLRS.</b> §2.2 counts every line, each with its own cost cᵢ, and a loop's test
+            runs once more than its body. That changes the constants, never the Θ. Practice tier 2
+            does it for INSERTION-SORT, whose count depends on the input as well as on n.
+          </p>
         </div>
 
         <div className="card">

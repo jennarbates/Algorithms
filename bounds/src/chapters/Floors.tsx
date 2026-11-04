@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { bestN0, check } from '../core/bounds';
+import { bestN0, bestN0Clrs, check } from '../core/bounds';
 import type { Kind, Witness } from '../core/bounds';
 import { evalF, evalQ, parseQ, polyScale, showPoly, showQ, cmp } from '../core/poly';
 import { EXAMPLES } from '../content/examples';
@@ -20,7 +20,18 @@ import { Segmented } from '../components/Controls';
  *
  * The one fact the chapter is built to earn: Ω is the same kind of claim as O,
  * turned upside down, and Θ is the two at once.
+ *
+ * The definition checked is the lecture's (Kleinberg and Tardos). CLRS §3.1
+ * adds 0 ≤ T(n) for O, 0 ≤ c·f(n) for Ω and a positive n₀, which never changes
+ * a verdict on these pairs but can change the smallest n₀, so the claim card
+ * states CLRS's version and says when, and why, its smallest n₀ differs.
  */
+
+const CLRS_FORM: Readonly<Record<Kind, string>> = {
+  O: '0 ≤ T(n) ≤ c·f(n)',
+  Ω: '0 ≤ c·f(n) ≤ T(n)',
+  Θ: '0 ≤ c₁·f(n) ≤ T(n) ≤ c₂·f(n)',
+};
 
 const SUB = { lower: 'c₁', upper: 'c₂' } as const;
 
@@ -68,6 +79,7 @@ export function Floors() {
   };
   const verdict = valid ? check(ex.T, ex.f, kind, w) : null;
   const best = valid ? bestN0(ex.T, ex.f, kind, w) : null;
+  const clrs = valid ? bestN0Clrs(ex.T, ex.f, kind, w) : null;
   const failAt = verdict && !verdict.ok && verdict.side !== 'constant' ? verdict.at : null;
 
   const interesting = Math.max(w.n0, best ?? 0, failAt ?? 0);
@@ -250,6 +262,11 @@ export function Floors() {
           <p className="card__note">
             <b>{ex.slide}.</b> {ex.note}
           </p>
+          <p className="card__note">
+            <b>In CLRS.</b> §3.1 writes this as {CLRS_FORM[kind]} for all n ≥ n₀, with the constants
+            and n₀ all positive. It agrees on every verdict here; it can move the smallest n₀.{' '}
+            {clrsNote(best, clrs, kind)}
+          </p>
         </div>
 
         <div className="card">
@@ -304,6 +321,16 @@ export function Floors() {
       </aside>
     </div>
   );
+}
+
+/** Whether CLRS's smallest n₀ differs from this page's, and why. */
+function clrsNote(best: number | null, clrs: number | null, kind: Kind): string {
+  if (best === null || clrs === null) return '';
+  if (clrs === best) return `For these constants both give n₀ = ${best}.`;
+  if (best === 0 && clrs === 1)
+    return 'For these constants: n₀ = 0 here, 1 there, where n₀ has to be positive.';
+  const what = kind === 'O' ? 'T(n)' : 'c·f(n)';
+  return `For these constants: n₀ = ${best} here, ${clrs} there, because ${what} is still negative at n = ${clrs - 1} and CLRS also asks 0 ≤ ${what}.`;
 }
 
 function ConstantField({

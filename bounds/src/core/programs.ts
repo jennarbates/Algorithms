@@ -313,6 +313,69 @@ export const POWERS_FAST: Program = {
   unit: 'multiplications',
 };
 
+/**
+ * CLRS Problem 2-3 (p. 41), the same contrast for a polynomial: evaluate
+ * a₀ + a₁x + … + aₙxⁿ. The naive way computes each term aₖxᵏ from scratch,
+ * k multiplications for xᵏ, as the slow power table does; Horner's rule, CLRS's
+ * own three lines, folds one more coefficient into y each time round. The
+ * coefficients are aₖ = k + 1, and both write the value they end with, so the
+ * tests can check the two agree. `counted` is multiplications by x.
+ */
+const coef = (k: number) => BigInt(k + 1);
+
+export const POLY_NAIVE: Program = {
+  id: 'poly-naive',
+  title: 'polynomial, each term from scratch',
+  slide: 'CLRS Problem 2-3(b)',
+  lines: [
+    'y = 0',
+    'for k = 0 to n do',
+    '  term = a[k]',
+    '  for t = 1 to k do',
+    '    term = term · x',
+    '  y = y + term',
+  ],
+  run(n) {
+    const out: Step[] = [{ line: 1, counted: false }];
+    let y = 0n;
+    for (let k = 0; k <= n; k++) {
+      let term = coef(k);
+      out.push({ line: 3, k, counted: false });
+      for (let t = 1; t <= k; t++) {
+        term *= X;
+        out.push({ line: 5, k, j: t, counted: true });
+      }
+      y += term;
+      out.push({ line: 6, k, ...(k === n ? { out: String(y) } : {}), counted: false });
+    }
+    return out;
+  },
+  count: poly(0, '1/2', '1/2'),
+  countText: 'n(n + 1)/2',
+  growth: grows(2),
+  unit: 'multiplications',
+};
+
+export const HORNER: Program = {
+  id: 'horner',
+  title: 'polynomial, Horner’s rule',
+  slide: 'CLRS Problem 2-3(a)',
+  lines: ['y = 0', 'for i = n downto 0 do', '  y = a[i] + x · y'],
+  run(n) {
+    const out: Step[] = [{ line: 1, counted: false }];
+    let y = 0n;
+    for (let i = n; i >= 0; i--) {
+      y = coef(i) + X * y;
+      out.push({ line: 3, i, ...(i === 0 ? { out: String(y) } : {}), counted: true });
+    }
+    return out;
+  },
+  count: poly(1, 1),
+  countText: 'n + 1',
+  growth: grows(1),
+  unit: 'multiplications',
+};
+
 /** An n × n times table: n² entries to write, so no algorithm for it is faster than Ω(n²). */
 export const TIMES_TABLE: Program = {
   id: 'times-table',
@@ -345,6 +408,8 @@ export const PROGRAMS: readonly Program[] = [
   DEEPER,
   POWERS_SLOW,
   POWERS_FAST,
+  POLY_NAIVE,
+  HORNER,
   TIMES_TABLE,
 ];
 
@@ -364,3 +429,64 @@ export const countOf = (p: Program, n: number): number => p.run(n).filter((s) =>
 export const inSquare = (n: number, i: number, j: number): boolean => 2 * i <= n && 2 * j >= n;
 
 export const squareCount = (n: number): number => Math.floor(n / 2) * (Math.floor(n / 2) + 1);
+
+/**
+ * INSERTION-SORT as CLRS §2.2 prints it (p. 26), run on a real array, with a
+ * count of how many times each of its eight lines executes: the "times"
+ * column of CLRS's table, measured instead of derived. `times[k − 1]` is line
+ * k. Line 3 is a comment, which CLRS lists with cost 0 and n − 1 executions,
+ * and it is counted the same way here.
+ *
+ * As CLRS notes, a loop that exits through its test runs the test once more
+ * than its body: line 1 runs n times for n − 1 rounds, and line 5 runs tⱼ
+ * times for the tⱼ − 1 shifts on lines 6 and 7. On a sorted array tⱼ = 1, on a
+ * reversed one tⱼ = j, and every other order of the same numbers lies between.
+ */
+export const INSERTION_SORT_LINES: readonly string[] = [
+  'for j = 2 to A.length',
+  '  key = A[j]',
+  '  // insert A[j] into the sorted A[1 .. j − 1]',
+  '  i = j − 1',
+  '  while i > 0 and A[i] > key',
+  '    A[i + 1] = A[i]',
+  '    i = i − 1',
+  '  A[i + 1] = key',
+];
+
+export function insertionSort(input: readonly number[]): {
+  readonly sorted: number[];
+  readonly times: number[];
+} {
+  const A = [...input];
+  const times = [0, 0, 0, 0, 0, 0, 0, 0];
+  const tick = (line: number) => {
+    times[line - 1] = (times[line - 1] ?? 0) + 1;
+  };
+  // A is 1-indexed in the pseudocode: A[j] here is A[j − 1].
+  const at = (k: number) => A[k - 1] as number;
+  for (let j = 2; ; j++) {
+    tick(1);
+    if (j > A.length) break;
+    const key = at(j);
+    tick(2);
+    tick(3);
+    let i = j - 1;
+    tick(4);
+    for (;;) {
+      tick(5);
+      if (!(i > 0 && at(i) > key)) break;
+      A[i] = at(i);
+      tick(6);
+      i -= 1;
+      tick(7);
+    }
+    A[i] = key;
+    tick(8);
+  }
+  return { sorted: A, times };
+}
+
+/** 1, 2, …, n: insertion sort's best case. */
+export const ascending = (n: number): number[] => Array.from({ length: n }, (_, k) => k + 1);
+/** n, n − 1, …, 1: insertion sort's worst case. */
+export const descending = (n: number): number[] => Array.from({ length: n }, (_, k) => n - k);
