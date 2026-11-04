@@ -215,7 +215,7 @@ export function renderKey(num, q, opts = {}) {
     const shown = q._shown;
     const letterOf = (j) => L(shown.indexOf(j));
     s = `<p class="ans">Order: <b>${q.items.map((_, j) => letterOf(j)).join(' &lt; ')}</b></p>
-      <ol class="whys ordered">${q.items.map((it, j) => `<li><b>${letterOf(j)} · ${esc(it.t)}</b> — ${esc(it.why)}</li>`).join('')}</ol>`;
+      <ol class="whys ordered">${q.items.map((it, j) => `<li><b>${letterOf(j)} · ${esc(it.t)}</b>: ${esc(it.why)}</li>`).join('')}</ol>`;
   } else if (k === 'proof') {
     s = `<p class="ans">Lines: <b>${q.steps.map((st, i) => `${i + 1}${L(st.options.findIndex((o) => o.ok))}`).join(' · ')}</b></p>`
       + q.steps.map((st, si) => `<div class="kstep"><div class="plead">Line ${si + 1} · ${esc(st.lead)}</div><ul class="whys">${st.options.map((o, j) =>

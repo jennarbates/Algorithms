@@ -10,7 +10,7 @@ import { renderQ, renderKey, doc, esc, writeLines, L } from './lib.mjs';
 import { bfs, bfsStateAt, BFS_LINES } from '../graphs/src/core/bfs.ts';
 import { colour, colourRun } from '../graphs/src/core/bipartite.ts';
 import { dfs } from '../graphs/src/core/dfs.ts';
-import { checkOrder, countOrders, topoSort } from '../graphs/src/core/directed.ts';
+import { byFinishing, checkOrder, countOrders, topoSort } from '../graphs/src/core/directed.ts';
 import { edgeKey, hasEdge } from '../graphs/src/core/graph.ts';
 import { WALK_LABELS, classifyWalk } from '../graphs/src/core/paths.ts';
 import { traverse } from '../graphs/src/core/traverse.ts';
@@ -191,10 +191,11 @@ function part1(keys) {
 <li>A <b>path</b> is a sequence of nodes where each one after the first is joined by an edge to the one before. Nodes may repeat.</li>
 <li>A <b>simple path</b> repeats no node. A <b>cycle</b> ends where it starts, repeats no other node and no edge, and goes round at least three nodes.</li>
 <li>The <b>distance</b> from u to v is the fewest edges on any path from u to v.</li>
-<li>A graph is <b>connected</b> if there is a path between every pair of nodes. A <b>connected component</b> is a largest set of nodes with a path between every pair.</li></ul></div>
+<li>A graph is <b>connected</b> if there is a path between every pair of nodes. A <b>connected component</b> is a largest set of nodes with a path between every pair.</li>
+<li><b>In CLRS</b> (Appendix B.4), path, simple path and connected component mean the same. What is called a cycle here, CLRS calls a <b>simple cycle</b>: its plain "cycle" may pass through a node twice. CLRS writes V and E for the sets of nodes and edges, so O(m + n) is its O(V + E).</li></ul></div>
 <h3>Breadth-first search, layer by layer</h3>
 <pre>${BFS_LINES.map((l) => esc(l.text)).join('\n')}</pre>
-<p><b>Layer i is exactly the nodes at distance i from s.</b> So there is a path from s to t exactly when t is in some layer. The order you look at neighbours in can change which edges end up in the tree, but never the layers.</p>
+<p><b>Layer i is exactly the nodes at distance i from s.</b> So there is a path from s to t exactly when t is in some layer. The order you look at neighbours in can change which edges end up in the tree, but never the layers. (CLRS §22.2 runs BFS with a queue and stores the layer of v as v.d. Its white, gray and black mean undiscovered, discovered and explored.)</p>
 <h3>Worked example: the Internet in 1970, from MIT</h3>
 <p class="small muted">Neighbours are looked at in this order throughout: ${g.nodes.join(', ')}.</p>
 ${figure(svgGraph(ARPANET, { w: 600, badge: (n) => run.layerOf.get(n), stroke: treeStroke(run.parent) }), 'Badges: layer. Solid: BFS tree edges. Dashed: edges BFS looked at and did not need.')}
@@ -227,7 +228,7 @@ function part2(keys) {
     if v is not explored
       add (u, v) to T
       DFS(v)</pre>
-<p>DFS goes as deep as it can before backing up: a call only returns when every edge out of its node has been looked at. It is O(m + n) over all the calls together.</p>
+<p>DFS goes as deep as it can before backing up: a call only returns when every edge out of its node has been looked at. It is O(m + n) over all the calls together. CLRS (§22.3) also stamps each node with u.d when its call starts and u.f when it returns, on one clock that runs from 1 to 2n.</p>
 <h3>Worked example: the 8-node graph, from 1</h3>
 ${figure(svgGraph(EIGHT, { w: 260, badge: (n) => run.order.indexOf(n) + 1, stroke: treeStroke(run.parent) }), 'Badges: the order DFS explores nodes in (neighbours in increasing order). Solid: DFS tree. Dashed: non-tree edges.')}
 <p>Order: ${run.order.join(', ')}. The non-tree edges are ${run.nonTree.map((e) => `${e[0]}–${e[1]}`).join(', ')}, and every one joins a node to one of its <b>ancestors</b>. That always happens: if x is explored first, DFS(x) looks along the edge (x, y) before it returns, so y is found inside DFS(x) and ends up below x.</p>
@@ -239,7 +240,7 @@ while A is not empty
     mark v explored
     for each edge (v, w)
       put w in A</pre>
-<p>If A is a <b>queue</b> (first in, first out) this is BFS. If A is a <b>stack</b> (last in, first out) it is DFS. Either way it explores exactly what s can reach.</p>
+<p>If A is a <b>queue</b> (first in, first out) this is BFS. If A is a <b>stack</b> (last in, first out) it is DFS. Either way it explores exactly what s can reach. A node is marked when it comes <i>out</i> of A. CLRS’s BFS marks a node as it goes in, which is fine for a queue, but with a stack that rule builds a tree that is not depth first.</p>
 <h3>Every component</h3>
 <p>While some node is unexplored, start a search there. Each search finds one connected component, and the total is still O(m + n), because each search only pays for its own piece.</p></div>
 <div class="flow"><span class="tag">Part 2 · Try it</span><h2>Run the one-word difference</h2>
@@ -260,7 +261,7 @@ function part3(keys) {
   const layerOf = bfs(ARPANET.graph, 'MIT').layerOf;
 
   return `<div class="page"><span class="tag">Part 3 · Learn</span><h2>Two colours</h2>
-<p>A graph is <b>bipartite</b> if its nodes can be split into two sides, X and Y, with every edge joining X to Y. Colour one side blue and the other orange: no edge joins two nodes of the same colour. Students and colleges are the standard example; every application joins one of each.</p>
+<p>A graph is <b>bipartite</b> if its nodes can be split into two sides, X and Y, with every edge joining X to Y. Colour one side blue and the other orange: no edge joins two nodes of the same colour. Students and colleges are the standard example; every application joins one of each. (CLRS Appendix B.4 defines it the same way.)</p>
 <div class="defn"><b>The test</b><ol style="margin:4pt 0 0"><li>Run BFS from any node.</li><li>Colour even layers blue and odd layers orange.</li><li>Look at every edge. If one joins two nodes in the same layer, say "not bipartite". Otherwise say "bipartite", with X the even layers and Y the odd ones.</li></ol></div>
 <p><b>Why it is right.</b> BFS never lets an edge skip a layer. So an edge joins neighbouring layers (different colours, fine) or one layer. If the answer is "bipartite", every edge is the first kind. If it is "not bipartite", take the edge (x, y) inside layer j and walk x and y up the BFS tree until they meet at z, in layer i. The two tree paths plus the edge are a cycle of length 2(j − i) + 1: odd. And an odd cycle cannot be two-coloured, since colours alternate all the way round.</p>
 <p><b>So: a graph is bipartite exactly when it has no odd cycle.</b></p>
@@ -286,6 +287,7 @@ function part4(keys) {
 <h3>Worked example: course prerequisites</h3>
 ${figure(svgGraph(COURSES, { w: 380 }))}
 <p>Always taking the first source available gives ${r.order.map(nm).join(', ')}. Choosing differently when there is a choice gives other orders, and all ${countOrders(COURSES.graph)} of them are right.</p>
+<p class="small"><b>In CLRS.</b> §22.4 sorts with DFS instead: run it over the whole graph and list the nodes in decreasing finishing time. On these courses that gives ${byFinishing(COURSES.graph).map(nm).join(', ')}, another of the valid orders. The sort above is CLRS Exercise 22.4-5.</p>
 <p class="small"><b>Beyond DAGs.</b> A <b>strongly connected component</b> is a largest set of nodes that can all reach each other. Squash each to one node and what is left is always a DAG. Tarjan (1972) finds them in O(m + n).</p>
 <div class="try"><span class="tag">Warm-up W4 · one bad rule</span>
 ${figure(svgGraph(COURSES_LOOP, { w: 380 }))}
@@ -300,7 +302,7 @@ function summary() {
 <h3>Generic traversal</h3><ul><li>A queue → BFS. A stack → DFS.</li><li>Every neighbour goes into A; w ≠ s goes in deg(w) times when all is explored.</li><li>Loop over unexplored nodes → one search per component, O(m + n) total.</li></ul>
 </div><div>
 <h3>Bipartite</h3><ul><li>Two sides, every edge across. Bipartite ⇔ no odd cycle.</li><li>Test: BFS, colour by layer parity, look for a same-layer edge.</li><li>Same-layer edge in layer j, lowest common ancestor in layer i → odd cycle of length 2(j − i) + 1.</li></ul>
-<h3>Directed graphs</h3><ul><li>Reachability is one-way. Who can reach t: BFS on the reversed graph.</li><li>DAG: no directed cycle. Topological order: every edge forward.</li><li>Has a topological order ⇔ is a DAG.</li><li>Sort: take a source, delete it, repeat. Any source is fine. Stuck ⇔ cycle.</li><li>A DAG on n nodes has at most n(n − 1)/2 edges.</li><li>Strong components squash to a DAG.</li></ul>
+<h3>Directed graphs</h3><ul><li>Reachability is one-way. Who can reach t: BFS on the reversed graph.</li><li>DAG: no directed cycle. Topological order: every edge forward.</li><li>Has a topological order ⇔ is a DAG.</li><li>Sort: take a source, delete it, repeat. Any source is fine. Stuck ⇔ cycle. (CLRS: decreasing DFS finishing time.)</li><li>A DAG on n nodes has at most n(n − 1)/2 edges.</li><li>Strong components squash to a DAG.</li></ul>
 <h3>Proof moves</h3><ul><li>Count how often each line runs.</li><li>"Whichever end is discovered first."</li><li>Take the least common ancestor.</li><li>Walk backwards until something repeats.</li></ul>
 </div></div></div>`;
 }

@@ -7,7 +7,7 @@
 // for real, the growth classes.
 
 import { renderQ, renderKey, doc, esc, writeLines } from './lib.mjs';
-import { bestN0, check } from '../bounds/src/core/bounds.ts';
+import { bestN0, bestN0Clrs, check } from '../bounds/src/core/bounds.ts';
 import { SLIDE_16, isPolynomial, showGrowth, factorial } from '../bounds/src/core/growth.ts';
 import { evalQ, parseQ, poly, polyScale, showPoly, showQ } from '../bounds/src/core/poly.ts';
 import { PRINT1, PRINT2, SUM_PRODUCT, TRIANGLES, DEEPER, POWERS_SLOW, POWERS_FAST, TIMES_TABLE, boxSize, countOf, inSquare, squareCount, written } from '../bounds/src/core/programs.ts';
@@ -97,7 +97,8 @@ function part1(keys) {
 <table class="wide" style="margin-top:4pt"><tr><th>Claim</th><th class="l">Means</th><th class="l">Picture</th></tr>
 <tr><td>T(n) = O(f(n))</td><td class="l mono small">T(n) ≤ c·f(n) for all n ≥ n₀</td><td class="l">ceiling</td></tr>
 <tr><td>T(n) = Ω(f(n))</td><td class="l mono small">T(n) ≥ c·f(n) for all n ≥ n₀</td><td class="l">floor</td></tr>
-<tr><td>T(n) = Θ(f(n))</td><td class="l mono small">c₁·f(n) ≤ T(n) ≤ c₂·f(n) for all n ≥ n₀</td><td class="l">both: tight</td></tr></table></div>
+<tr><td>T(n) = Θ(f(n))</td><td class="l mono small">c₁·f(n) ≤ T(n) ≤ c₂·f(n) for all n ≥ n₀</td><td class="l">both: tight</td></tr></table>
+<p class="small" style="margin-top:4pt"><b>In CLRS</b> (§3.1) the same three read 0 ≤ T(n) ≤ c·f(n), 0 ≤ c·f(n) ≤ T(n) and 0 ≤ c₁·f(n) ≤ T(n) ≤ c₂·f(n), with n₀ positive too. The verdicts never change for functions that end up nonnegative, as running times do; the smallest n₀ can. n − 10 = O(n) with c = 1 has n₀ = ${bestN0(T, n1, 'O', { upper: Q('1') })} here and ${bestN0Clrs(T, n1, 'O', { upper: Q('1') })} in CLRS, which also asks 0 ≤ n − 10; and for a T(n) that is never negative, n₀ = 0 here is n₀ = 1 there.</p></div>
 <h3>Worked example: n − 10 = Ω(n) (the slide 8 clicker)</h3>
 <p>We need n − 10 ≥ cn. That rearranges to (1 − c)n ≥ 10, which is possible only if c &lt; 1. With c = 0.5 it holds from n = ${bestN0(T, n1, 'Ω', { lower: Q('0.5') })}; with c = 0.99 from n = ${bestN0(T, n1, 'Ω', { lower: Q('0.99') })}, where the two sides are exactly equal; with c = 2 or 20, never.</p>
 ${valuesTable(T, n1, '0.5', [0, 19, 20, 21, 100], 'Ω')}
@@ -204,7 +205,7 @@ function part6(keys) {
 
 function summary() {
   return `<div class="page summary"><span class="tag">Keep this page</span><h2>One-page summary</h2><div class="two"><div>
-<h3>Definitions</h3><ul><li>O: T ≤ c·f from n₀ on. A ceiling, and it can be loose.</li><li>Ω: T ≥ c·f from n₀ on. A floor.</li><li>Θ: both, c₁·f ≤ T ≤ c₂·f, one n₀ (the later one). Tight.</li><li>f = O(g) says nothing about whether g = O(f).</li></ul>
+<h3>Definitions</h3><ul><li>O: T ≤ c·f from n₀ on. A ceiling, and it can be loose.</li><li>Ω: T ≥ c·f from n₀ on. A floor.</li><li>Θ: both, c₁·f ≤ T ≤ c₂·f, one n₀ (the later one). Tight.</li><li>f = O(g) says nothing about whether g = O(f).</li><li>CLRS also asks 0 ≤ T (for O), 0 ≤ c·f (for Ω) and n₀ &gt; 0: same verdicts, but the smallest n₀ can move.</li></ul>
 <h3>Finding witnesses</h3><ul><li>Ceiling: round every term up to the biggest shape.</li><li>Floor: drop positive terms; pay for negative ones with part of the constant.</li><li>Solve for n₀, then check the first whole number (≥ allows equality).</li><li>For Ω, c must be below the leading coefficient; for O, above it (or equal, if the rest is ≤ 0).</li></ul>
 </div><div>
 <h3>Counting</h3><ul><li>Count exactly first; the bound comes from the count.</li><li>Add per round, don't multiply by nesting depth (Print2 is 2n).</li><li>Upper bound: add work that is not there. Lower bound: throw work away.</li><li>1 + 2 + … + n = n(n + 1)/2 = Θ(n²).</li><li>If f = O(g) and both ≥ 0: f + g = Θ(g).</li></ul>
@@ -226,7 +227,7 @@ export function buildBounds() {
 <li>Work in order: each part is a Learn page with worked examples, a warm-up, then questions.</li>
 <li>Questions marked <b>clicker</b> are the lecture's own.</li>
 <li>For a witness question, any constants and n₀ that really hold are right. The key shows one and says how to check yours.</li>
-<li>The threshold is inclusive throughout: "for all n ≥ n₀", as in the lecture.</li></ol>
+<li>The threshold is inclusive throughout: "for all n ≥ n₀", as in the lecture and in CLRS. Questions that name CLRS are adapted from its third edition, which also asks 0 ≤ T(n) (Part 1 says where that matters).</li></ol>
 <table class="toc" style="margin-top:14pt">${[1, 2, 3, 4, 5, 6].map((t) => `<tr><td><b>Part ${t}</b></td><td>${TIER_LABELS[t]}</td><td>${byTier[t].length} questions</td></tr>`).join('')}
 <tr><td><b>Summary</b></td><td>One page to keep</td><td></td></tr><tr><td><b>Key</b></td><td>Warm-ups and every question</td><td></td></tr></table></div>`;
 

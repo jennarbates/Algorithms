@@ -187,6 +187,14 @@ const pascalScratch = (n) => {
   return c;
 };
 const pascalEntries = (n) => ((n + 1) * (n + 2)) / 2;
+// 1² + 2² + … + n², added up, and the floor CLRS §A.2's splitting gives it:
+// drop k ≤ n/2, bound each of the n − n/2 terms left below by (n/2)².
+const sumSquares = (n) => {
+  let c = 0;
+  for (let k = 1; k <= n; k++) c += k * k;
+  return c;
+};
+const splitFloor = (n) => (n - Math.floor(n / 2)) * Math.floor(n / 2) ** 2;
 
 for (let n = 0; n <= 40; n++) {
   assert(runPrefixy(n) === prefixyExact(n), `prefix count at n = ${n}`);
@@ -196,6 +204,9 @@ for (let n = 0; n <= 40; n++) {
   assert(pascalScratch(n) === (2 * n * (n + 1) * (n + 2)) / 3, `pascal at n = ${n}`);
   if (n >= 4) assert(boxSteps(n) >= boxPairs(n) * Math.ceil(n / 4) && boxSteps(n) <= runPrefixy(n), `box at n = ${n}`);
   if (n >= 8) assert(boxSteps(n) >= (n * n * n) / 64, `box ≥ n³/64 at n = ${n}`);
+  assert(sumSquares(n) === (n * (n + 1) * (2 * n + 1)) / 6, `(A.3) at n = ${n}`);
+  assert(splitFloor(n) <= sumSquares(n) && sumSquares(n) <= n ** 3, `split floor and term ceiling at n = ${n}`);
+  if (n % 2 === 0) assert(splitFloor(n) === n ** 3 / 8, `split floor is n³/8 at n = ${n}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -325,11 +336,24 @@ function part1Questions() {
       options: [
         { t: 'Running it on the example from the problem and getting the right answer.', why: 'One instance shows it works on one instance. Correctness is a claim about every input.' },
         { t: 'Running it on 1,000 random inputs and getting the right answer each time.', why: 'Evidence, not proof. Bugs live in the inputs you did not generate: the empty one, the tied one, the one where everything is equal.' },
-        { t: 'An invariant that holds at the start, is kept by every step, and at the end implies the output is right.', ok: true, why: 'This is a proof, and it covers every input at once.' },
+        { t: 'An invariant that holds at the start, is kept by every step, and at the end implies the output is right.', ok: true, why: 'This is a proof, and it covers every input at once. CLRS §2.1 calls the three steps initialization, maintenance and termination.' },
         { t: 'A proof by contradiction: suppose the output is wrong, and derive something impossible.', ok: true, why: 'Also a proof. Gale-Shapley’s stability proof is this shape: suppose a blocking pair, then someone proposed where they could not have.' },
         { t: '"It clearly works, since each step is reasonable."', why: 'This is intuition, part (b). Useful, but the grader asked for (c) as well.' },
       ],
       close: 'Examples find bugs. Only an argument about every input shows there are none.',
+    },
+    {
+      kind: 'choice',
+      tests: 'the three steps of a loop invariant (CLRS §2.1)',
+      prompt: 'Linear search, as in CLRS Exercise 2.1-3, with the invariant "at the start of the iteration for i, v is not in A[1..i − 1]". CLRS proves an invariant in three steps. In which step does the reason the loop stopped get used?',
+      code: 'for i = 1 to n\n  if A[i] = v\n    return i\nreturn NIL',
+      options: [
+        { t: 'Initialization: it holds before the first iteration.', why: 'At i = 1 the range A[1..0] is empty, so the invariant holds trivially. Nothing has stopped yet.' },
+        { t: 'Maintenance: if it holds before an iteration, it holds before the next.', why: 'This step uses what one iteration does: the loop only goes on to i + 1 when A[i] ≠ v, so v is not in A[1..i] either.' },
+        { t: 'Termination: when the loop stops, the invariant gives the answer.', ok: true, why: 'There are two ways out. Returning i happens only when A[i] = v, so i is right. Leaving the loop means i = n + 1, and the invariant then says v is not in A[1..n], so NIL is right.' },
+        { t: 'None of them: an invariant that holds before every iteration already proves the output right.', why: 'Holding at every step says nothing about the output until you look at how the loop ends. CLRS calls termination "perhaps the most important" of the three.' },
+      ],
+      close: 'Initialization and maintenance are the base case and the step of an induction. Termination is the extra step that turns the invariant into the answer, and it is the one most often left out.',
     },
     {
       kind: 'open',
@@ -352,7 +376,7 @@ function part1Questions() {
         { t: 'n^2.99', why: 'n^2.99/n³ = n^(−0.01) → 0, slowly, but it does. Qualifies.' },
         { t: 'n³ / 1000', ok: true, why: 'The ratio is 1/1000, a constant, not 0. Dividing by a constant never changes the growth: this is still Θ(n³).' },
       ],
-      close: 'Strictly slower means a different growth class, not a smaller constant.',
+      close: 'Strictly slower means a different growth class, not a smaller constant. CLRS §3.1 writes this g(n) = o(n³). It defines o with "for any positive constant c > 0" (page 50), and gives the limit as equation (3.1) (page 51), noting that some authors use the limit as the definition. For these g the two say the same.',
     },
   ];
 }
@@ -466,7 +490,7 @@ function part3Questions() {
       code: 'for i = 1 to n\n  for j = 1 to n\n    for k = 1 to min(i, j)\n      one step',
       unit: 'steps',
       answer: runMin(n),
-      why: `For each (i, j) the inner loop runs min(i, j) times. Group by the value m = min(i, j): it equals m on 2(n − m) + 1 pairs. Or count by k: step k runs for every (i, j) with both ≥ k, which is (n − k + 1)² pairs, so the total is 1² + 2² + … + n² = n(n + 1)(2n + 1)/6 = ${runMin(n)} at n = ${n}.`,
+      why: `For each (i, j) the inner loop runs min(i, j) times. Group by the value m = min(i, j): it equals m on 2(n − m) + 1 pairs. Or count by k: step k runs for every (i, j) with both ≥ k, which is (n − k + 1)² pairs, so the total is 1² + 2² + … + n² = n(n + 1)(2n + 1)/6 = ${runMin(n)} at n = ${n}. That sum is CLRS equation (A.3).`,
       near: [
         { v: n ** 3, why: 'That is n³: it assumes every inner loop runs n times. That is the upper bound, not the count.' },
         { v: (n * n * (n + 1)) / 2, why: 'That treats the inner loop as running i times (or j). It runs min(i, j) times, which is smaller.' },
@@ -480,12 +504,26 @@ function part3Questions() {
       code: 'for i = 1 to n\n  for j = i + 1 to n\n    for k = j + 1 to n\n      one step',
       unit: 'steps',
       answer: runTriples(n),
-      why: `Each step is one triple i < j < k chosen from 1..n, and each triple is visited once: C(n, 3) = n(n − 1)(n − 2)/6 = ${runTriples(n)}.`,
+      why: `Each step is one triple i < j < k chosen from 1..n, and each triple is visited once: C(n, 3) = n(n − 1)(n − 2)/6 = ${runTriples(n)}, the number of ways to choose 3 from n, CLRS equation (C.2) with k = 3.`,
       near: [
         { v: n ** 3, why: 'n³ counts ordered triples with repeats, like (2, 2, 5) and (5, 2, 2).' },
         { v: n * (n - 1) * (n - 2), why: 'That counts ordered triples of distinct values. Each set {i, j, k} is visited once, in increasing order, not 3! = 6 times.' },
       ],
       close: 'Θ(n³), with constant 1/6. A floor argument does not need the constant, only that it is not zero.',
+    },
+    {
+      kind: 'number',
+      tests: 'a floor on a sum by splitting it (CLRS §A.2)',
+      prompt: `Find a floor for 1² + 2² + … + n² the way CLRS Appendix A.2 bounds a sum by splitting it: throw away the terms with k ≤ n/2, and bound each term that is left from below by (n/2)². What floor does that give at n = ${bn}?`,
+      unit: 'floor',
+      answer: splitFloor(bn),
+      why: `The terms left are k = ${bn / 2 + 1} to ${bn}: ${bn / 2} of them, each at least ${bn / 2}² = ${(bn / 2) ** 2}. So the sum is at least ${bn / 2} · ${(bn / 2) ** 2} = ${splitFloor(bn)}, which is n³/8. The exact sum is n(n + 1)(2n + 1)/6 = ${sumSquares(bn)}, CLRS equation (A.3).`,
+      near: [
+        { v: bn, why: 'That bounds every term by the smallest one, 1², and keeps them all: n. CLRS shows this failing on its own example: the smallest term is too small to be useful. Splitting first is the fix.' },
+        { v: sumSquares(bn), why: 'That is the exact sum, (A.3). The question asks for the floor the split gives, which is smaller and much easier to get.' },
+        { v: (bn / 2) * (bn / 2 + 1) ** 2, why: `That uses ${bn / 2 + 1}², the smallest term kept. It is a correct floor too, but the question fixed (n/2)², so that the floor comes out as n³/8 for every even n.` },
+      ],
+      close: 'The ceiling: n terms, each at most n², so n³ (CLRS calls this bounding the terms). With the floor n³/8, the sum is Θ(n³). The box in the next question is the same split, with three indices.',
     },
     {
       kind: 'open',
@@ -513,7 +551,7 @@ function part3Questions() {
       prompt: 'Fill in the table C[i, j] = "i choose j" for every 0 ≤ j ≤ i ≤ n. The obvious way computes each entry from its factorial formula, i! / (j! (i − j)!), building each factorial by multiplying from 1. Give a four-part answer for a faster algorithm, and say how much faster.',
       lines: 9,
       key: `<p><b>(a)</b> For i = 0 to n: set C[i, 0] = C[i, i] = 1, then for j = 1 to i − 1 set C[i, j] = C[i − 1, j − 1] + C[i − 1, j].</p>
-<p><b>(b)</b> Row i can be built from row i − 1, which is already in the table: choosing j from i items either uses item i (and j − 1 from the rest) or does not (and j from the rest).</p>
+<p><b>(b)</b> Row i can be built from row i − 1, which is already in the table: choosing j from i items either uses item i (and j − 1 from the rest) or does not (and j from the rest). CLRS Exercise C.1-7 asks for exactly this proof, and Exercise C.1-8 builds the table, Pascal’s triangle.</p>
 <p><b>(c)</b> Induction on i. Row 0 is right. If row i − 1 is right, each entry of row i is the sum of two right entries, and Pascal’s rule (the sentence in (b)) says that sum is i choose j.</p>
 <p><b>(d)</b> One addition per entry, (n + 1)(n + 2)/2 entries: Θ(n²). The factorial way costs about 2i multiplications per entry of row i, ${pascalScratch(10)} at n = 10 against ${pascalEntries(10)} entries, Θ(n³). The ratio → 0. And Θ(n²) is the best possible here, since there are Θ(n²) entries to write.</p>`,
       close: 'Look for an answer you can build from answers already in your table. Then each one costs O(1) instead of a fresh computation.',
@@ -540,7 +578,7 @@ function part3Questions() {
         { t: 'B[i, j] = 0', why: 'One write into a table. Constant.' },
         { t: 'copy A[1..i] into C', ok: true, why: 'Copying i entries takes i steps.' },
       ],
-      close: 'Before counting, rewrite every line that hides a loop as the loop. Then count loops as usual.',
+      close: 'Before counting, rewrite every line that hides a loop as the loop. Then count loops as usual. CLRS makes the same warning in §2.2 (footnote 5, page 25): a step written in English, like "sort the points", can take more than constant time.',
     },
   ];
 }
@@ -604,9 +642,9 @@ ${tries.map((t) => `<p class="small"><b>${t.k} proposals</b> (trace: ${run(t.ins
       options: [
         { t: 'One instance with n = 100 that takes 5,000 proposals.', why: 'One n says nothing about growth. Ω is a claim about all large n.' },
         { t: 'For every n, an instance of that size, and a proof that it takes at least c·n² proposals for some constant c > 0.', ok: true, why: 'A family of instances, one per n, with a count you can prove, not just observe.' },
-        { t: 'A proof that every instance takes at least c·n² proposals.', why: 'More than a worst-case bound asks for, and false besides: question 4.1’s instance takes only 4 proposals.' },
+        { t: 'A proof that every instance takes at least c·n² proposals.', why: `More than a worst-case bound asks for, and false besides: question 4.1’s instance takes only ${q1} proposals.` },
       ],
-      close: 'A lower bound on the worst case needs one bad instance per n, described by a rule, with its count proved.',
+      close: 'A lower bound on the worst case needs one bad instance per n, described by a rule, with its count proved. CLRS §3.1 (page 49) draws the same line for insertion sort: its worst-case running time is Ω(n²), but its running time is not, since a sorted input takes only linear time.',
     },
   ];
 }
@@ -631,6 +669,9 @@ function part5Questions() {
   const top = Math.min(...moves.map((m) => m.r));
   assert(moves.filter((m) => m.r === top).length === 1, 'one best move');
   const bin = binaryTests(100);
+  // The text writes 2⁶ and 2⁷ out, and argues that bin − 1 tests are too few for 101 strengths.
+  assert(bin === 7 && 2 ** (bin - 1) < 101 && 101 <= 2 ** bin, 'binary search at n = 100');
+  for (let n = 1; n <= 300; n++) assert(2 ** (binaryTests(n) - 1) < n + 1 && n + 1 <= 2 ** binaryTests(n), `decision-tree floor at n = ${n}`);
   return [
     {
       kind: 'choice',
@@ -649,7 +690,7 @@ function part5Questions() {
       prompt: 'With as many boards as you like, n = 100, how many tests does binary search need in the worst case? (There are 101 possible answers, 0 to 100.)',
       unit: 'tests',
       answer: bin,
-      why: `Each test at least halves the range of possible strengths, in the worst case. 2⁶ = 64 < 101 ≤ 128 = 2⁷, so ${bin}.`,
+      why: `Each test at least halves the range of possible strengths, in the worst case. 2⁶ = 64 < 101 ≤ 128 = 2⁷, so ${bin}. No plan does better, however many boards it has: ${bin - 1} tests, each holding or breaking, can come out at most 2⁶ = ${2 ** (bin - 1)} ways, and 101 strengths need 101 different ones. That is the decision-tree argument of CLRS §8.1 (the proof of Theorem 8.1, page 193), with strengths in place of orderings. CLRS Exercise 2.3-5 asks for binary search’s worst case as Θ(lg n), where lg is log₂.`,
       near: [{ v: 6, why: '2⁶ = 64 is fewer than the 101 possible answers.' }],
       close: 'log₂ n with unlimited boards, n with one board. The interesting cases are in between.',
     },
@@ -732,6 +773,11 @@ function learn1() {
 <p><b>(c)</b> If the answer is yes, every edge joins different colours, so the colouring is a witness. If it is no, some edge joins two vertices in layers of the same parity; with the two BFS paths back to their common ancestor, that edge closes an odd cycle, and an odd cycle cannot be two-coloured. So no two-colouring exists.</p>
 <p><b>(d)</b> BFS is O(m + n) over all components; the edge check is O(m). Total O(m + n).</p>
 <div class="note"><b>Note what (c) did.</b> Both answers got a proof: "yes" by showing the witness, "no" by showing an obstacle. An algorithm that answers yes or no needs both directions.</div>
+<div class="defn"><b>The same parts in CLRS.</b> CLRS chapter 2 goes in the same order, without a labelled intuition part: insertion sort is given as pseudocode, proved correct (§2.1), and its running time counted line by line, cost times number of runs (§2.2). Its correctness proofs for loops use a <b>loop invariant</b> in three steps (§2.1, pages 18 to 20):<br>
+&nbsp;• <b>Initialization</b>: it is true before the first iteration;<br>
+&nbsp;• <b>Maintenance</b>: if it is true before an iteration, it is true before the next;<br>
+&nbsp;• <b>Termination</b>: when the loop stops, the invariant, with the reason it stopped, shows the output is right.<br>
+The first two are an induction. The third is the step that gets forgotten. The course asks for part (b) as well, so write it even when the book you are reading does not.</div>
 <div class="try"><span class="tag">Warm-up W1 · grade this answer</span>
 <p>"Algorithm: run Gale-Shapley. It works because the lecture proved it does. It makes at most n² proposals." A classmate wrote this for "find a stable matching when n students and n colleges have strict rankings". Which parts are present, and which are missing or too thin?</p>${writeLines(3)}</div></div>`;
 }
@@ -779,10 +825,11 @@ function learn3() {
 <pre>for i = 1 to n
   for j = 1 to i
     total = A[1] + A[2] + … + A[j]      ← a loop of j steps</pre>
-<h3>Exact</h3><p>Pair (i, j) costs j. Summing over j ≤ i gives i(i + 1)/2, and summing that over i gives n(n + 1)(n + 2)/6. At n = ${n}: ${runPrefixy(n)} steps (the program, run, agrees for every n up to 40).</p>
+<h3>Exact</h3><p>Pair (i, j) costs j. Summing over j ≤ i gives i(i + 1)/2 (CLRS equation (A.1)), and summing that over i, with (A.1) and (A.3), gives n(n + 1)(n + 2)/6. At n = ${n}: ${runPrefixy(n)} steps (the program, run, agrees for every n up to 40).</p>
 <h3>Ceiling: add work that is not there</h3><p>Every loop runs at most n times, so at most n · n · n = n³ steps. O(n³).</p>
 <h3>Floor: throw work away</h3><p>Keep only the pairs with i ≥ n/2 and n/4 ≤ j ≤ n/2. Each really runs (j ≤ n/2 ≤ i), each costs j ≥ n/4 steps, and there are about (n/2)(n/4) of them. So at least about n³/32 steps: Ω(n³). At n = ${n}: ${boxPairs(n)} pairs in the box, ${boxSteps(n)} steps.</p>
 <p>Ceiling and floor together: <b>Θ(n³)</b>. The floor did not need the exact count, only a box where the number of i, the number of j and the inner work each grow like n.</p>
+<div class="defn"><b>In CLRS.</b> Appendix A.1 lists the exact sums by number: (A.1) for 1 + 2 + … + n and (A.3) for 1² + 2² + … + n² (pages 1146 to 1147). Appendix A.2 has the two shortcuts used here, on one index: <b>bounding the terms</b>, every term by the largest (the ceiling, page 1151), and <b>splitting the summation</b>, keeping only the part where every term is large (the floor, page 1152). The box is a split with three indices. CLRS §2.2 counts insertion sort the same way: each line’s cost times the number of times it runs.</div>
 <h3>Same answers, less work</h3>
 <p>Suppose you need P[k] = xᵏ for every k from 1 to n. Computing each from scratch takes k − 1 multiplications: ${powersScratch(n)} at n = ${n}, Θ(n²) in all. But xᵏ is xᵏ⁻¹ times x, and xᵏ⁻¹ is already in the table: <b>P[k] = P[k − 1] · x</b>, one multiplication each, ${powersReuse(n)} at n = ${n}, Θ(n).</p>
 <div class="note"><b>Where the speed-up came from.</b> The slow version redid work it had just done. Ask of any slow loop: can this answer be built from answers I already have? Then keep them.</div>
@@ -801,7 +848,7 @@ function learn4() {
 <h3>Worked instance</h3>${strictTables(P_WORKED)}
 <table class="wide small"><tr><th>#</th><th>asks</th><th>whom</th><th class="l">what happens</th></tr>${log.map((e, i) => `<tr><td>${i + 1}</td><td>${e.a}</td><td>${e.b}</td><td class="l">${e.what}</td></tr>`).join('')}</table>
 <p><b>${log.length} proposals</b>, against a ceiling of 9. Look at where each student ended up on their own list, and add the positions: you get the same number. Question 4.3 asks you to explain why that always works.</p>
-<div class="note"><b>Two kinds of claim.</b> "At most n²" is a ceiling for every instance. "It can take Ω(n²)" or "it can finish in O(n)" are claims about the <i>best</i> or <i>worst</i> instance, and are proved by giving, for every n, an instance and its count.</div>
+<div class="note"><b>Two kinds of claim.</b> "At most n²" is a ceiling for every instance. "It can take Ω(n²)" or "it can finish in O(n)" are claims about the <i>best</i> or <i>worst</i> instance, and are proved by giving, for every n, an instance and its count. CLRS §3.1 (page 49) makes the same distinction: an Ω bound on the running time, with no modifier, holds for every input, while an Ω bound on the worst case needs only one bad input for each n.</div>
 <div class="try"><span class="tag">Warm-up W4 · ceiling or not</span><p>Could any instance with n = 3 need 10 proposals? Why or why not?</p>${writeLines(2)}</div></div>`;
 }
 
@@ -823,13 +870,13 @@ function learn5() {
 
 function summary() {
   return `<div class="page summary"><span class="tag">Keep this page</span><h2>One-page summary</h2><div class="two"><div>
-<h3>Writing it up</h3><ul><li>Four labelled parts: algorithm, intuition, correctness, running time.</li><li>Correctness covers every input. Examples are not proofs.</li><li>Yes/no answers: prove both directions.</li><li>"Strictly slower" means g/f → 0: a different growth class, not a smaller constant.</li></ul>
+<h3>Writing it up</h3><ul><li>Four labelled parts: algorithm, intuition, correctness, running time.</li><li>Correctness covers every input. Examples are not proofs.</li><li>Yes/no answers: prove both directions.</li><li>Loop invariant (CLRS §2.1): initialization, maintenance, termination. Termination uses the reason the loop stopped.</li><li>"Strictly slower" means g/f → 0: a different growth class, not a smaller constant.</li></ul>
 <h3>Always or not</h3><ul><li>Try n = 2 and 3 first; try to break your guess.</li><li>No: one concrete instance, every candidate ruled out.</li><li>Yes: algorithm or reduction, with proof and time.</li><li>Reduction: transform, run what you trust, translate back, prove an instability would carry over.</li></ul>
 <h3>Ties</h3><ul><li>Prefers = strictly. Indifferent = tied.</li><li>Strong: both gain. Weak: one gains, the other does not lose.</li><li>Strong ⊆ weak. No weak ones is the harder demand.</li><li>Check one side at a time: gain, level, or lose.</li></ul>
 </div><div>
-<h3>Counting</h3><ul><li>Rewrite hidden loops (scan, copy, max, search) as loops.</li><li>Ceiling: every loop runs to n.</li><li>Floor: keep a box where the number of each index and the inner work all grow like n.</li><li>Output size is a floor on any algorithm.</li><li>Faster: build each answer from answers you already have.</li></ul>
+<h3>Counting</h3><ul><li>Rewrite hidden loops (scan, copy, max, search) as loops.</li><li>Ceiling: every loop runs to n (CLRS A.2: bound each term by the largest).</li><li>Floor: keep a box where the number of each index and the inner work all grow like n (CLRS A.2: split the sum).</li><li>Exact sums: CLRS (A.1) and (A.3).</li><li>Output size is a floor on any algorithm.</li><li>Faster: build each answer from answers you already have.</li></ul>
 <h3>Proposals</h3><ul><li>Count every proposal, turned down or not.</li><li>Total = sum of each student’s final position on their own list.</li><li>Best/worst-case claims need an instance for every n, described by a rule, with its count proved.</li></ul>
-<h3>Limited failures</h3><ul><li>Last board: scan one at a time.</li><li>Plan = first-board weights; cost = tests so far + gap width.</li><li>Worst case = costliest gap. Balance the gaps against the tests.</li></ul>
+<h3>Limited failures</h3><ul><li>Last board: scan one at a time.</li><li>Plenty of boards: binary search, and no plan beats it, since t tests have at most 2ᵗ outcomes (CLRS §8.1).</li><li>Plan = first-board weights; cost = tests so far + gap width.</li><li>Worst case = costliest gap. Balance the gaps against the tests.</li></ul>
 </div></div></div>`;
 }
 
