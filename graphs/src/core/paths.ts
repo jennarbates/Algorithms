@@ -15,6 +15,15 @@ import type { Edge, Graph, NodeId } from './graph.ts';
  *
  * The four answers are exclusive and the most specific one wins: a simple path
  * is reported as "simple path", not as "path".
+ *
+ * CLRS Appendix B.4 agrees on "path" and "simple path" (its footnote says some
+ * books call them "walk" and "path"). Its words for cycles differ: in an
+ * undirected graph a CLRS "cycle" only needs distinct edges and may pass
+ * through a node twice, and what is called a cycle here is its "simple
+ * cycle". In a directed graph CLRS counts u → v → u, and a self-loop, as
+ * cycles. The k > 3 rule here is the undirected one, and the page only asks it
+ * about undirected graphs. The topological sort treats u → v → u as a cycle,
+ * as CLRS does.
  */
 
 export type WalkKind = 'not-a-path' | 'path' | 'simple-path' | 'cycle';

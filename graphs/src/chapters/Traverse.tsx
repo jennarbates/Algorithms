@@ -305,7 +305,7 @@ export function Traverse() {
           <p className="card__note">
             {ds
               ? 'O(m + n) across all the calls together: each node gets one call, and each call looks along its own edges, 2m looks in all.'
-              : 'BFS if A is a queue (first in, first out). DFS if A is a stack (last in, first out). Nothing else in the code changes.'}
+              : 'BFS if A is a queue (first in, first out). DFS if A is a stack (last in, first out). Nothing else in the code changes. A node is marked when it comes out of A, not when it goes in. CLRS’s BFS marks on the way in, which is fine for a queue, but with a stack it no longer builds a depth-first tree.'}
           </p>
         </div>
       </aside>
@@ -349,7 +349,9 @@ function DfsWork({
         )}
         <p className="card__note">
           The deepest call is on top. A call only returns when every edge out of its node has been
-          looked at, which is why DFS goes as far as it can before it backs up.
+          looked at, which is why DFS goes as far as it can before it backs up. CLRS (§22.3) paints
+          a node gray while its call is on this stack and black once it returns, and stamps the two
+          moments as u.d and u.f.
         </p>
       </div>
 
@@ -370,6 +372,7 @@ function DfsWork({
         <p className="card__note">
           Every one of them joins a node to its own ancestor. Whichever end is explored first, its
           call looks along the edge before it returns, so the other end is found inside that call.
+          CLRS calls these back edges: its Theorem 22.10 says an undirected graph has no other kind.
         </p>
       </div>
 

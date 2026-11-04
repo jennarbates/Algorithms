@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { bfs, bfsStateAt, edgeSpans } from '../src/core/bfs.ts';
 import { colour } from '../src/core/bipartite.ts';
-import { dfs, dfsStateAt, isAncestor } from '../src/core/dfs.ts';
-import { checkOrder, countOrders, isDag, topoSort } from '../src/core/directed.ts';
+import { dfs, dfsStateAt, isAncestor, timestamps } from '../src/core/dfs.ts';
+import { byFinishing, checkOrder, countOrders, isDag, topoSort } from '../src/core/directed.ts';
 import { graph, hasEdge } from '../src/core/graph.ts';
 import type { Edge, Graph } from '../src/core/graph.ts';
 import { traverse } from '../src/core/traverse.ts';
@@ -119,6 +119,27 @@ describe('DFS', () => {
     }
   });
 
+  it('CLRS Theorem 22.7: two intervals are nested exactly when one node is below the other, else apart', () => {
+    for (const seed of SEEDS) {
+      const g = randomGraph(seed);
+      const run = dfs(g);
+      const { d, f } = timestamps(run);
+      for (const u of g.nodes) {
+        for (const v of g.nodes) {
+          if (u === v) continue;
+          const at = (m: ReadonlyMap<string, number>, n: string) => m.get(n) ?? NaN;
+          const [du, fu, dv, fv] = [at(d, u), at(f, u), at(d, v), at(f, v)];
+          const vInsideU = du < dv && fv < fu;
+          const apart = fu < dv || fv < du;
+          expect(vInsideU).toBe(isAncestor(run.parent, u, v));
+          if (!isAncestor(run.parent, u, v) && !isAncestor(run.parent, v, u)) {
+            expect(apart).toBe(true);
+          }
+        }
+      }
+    }
+  });
+
   it('components partition the nodes, and no edge crosses between them', () => {
     for (const seed of SEEDS) {
       const g = randomGraph(seed);
@@ -140,6 +161,19 @@ describe('the generic traversal', () => {
         expect([...run.order].sort()).toEqual(reach);
         for (const [u, v] of run.tree) expect(hasEdge(g, u, v)).toBe(true);
       }
+    }
+  });
+
+  it('with a stack it is recursive DFS with every neighbour list read back to front', () => {
+    for (const seed of SEEDS) {
+      const g = randomGraph(seed);
+      const s = g.nodes[0] as string;
+      const run = traverse(g, s, 'stack');
+      const rec = dfs(g, [s], 'reversed');
+      expect(run.order).toEqual(rec.components[0]);
+      expect(run.parent).toEqual(
+        new Map([...rec.parent].filter(([n]) => rec.component.get(n) === 0)),
+      );
     }
   });
 });
@@ -196,6 +230,21 @@ describe('topological order', () => {
           expect(g.edges.some(([a, b]) => a === u && b === v)).toBe(true);
         }
       }
+    }
+  });
+
+  it('CLRS TOPOLOGICAL-SORT, by decreasing finishing time, orders every DAG (Theorem 22.12)', () => {
+    for (const seed of SEEDS) {
+      const g = randomGraph(seed, true, true);
+      expect(checkOrder(g, byFinishing(g))).toEqual({ ok: true });
+    }
+  });
+
+  it('CLRS Lemma 22.11: DFS meets an edge into a running call exactly when there is a cycle', () => {
+    for (const seed of SEEDS) {
+      const g = randomGraph(seed, true);
+      const back = dfs(g).events.some((e) => e.k === 'edge' && e.kind === 'ancestor');
+      expect(back).toBe(!isDag(g));
     }
   });
 

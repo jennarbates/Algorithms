@@ -205,7 +205,9 @@ export function Wave() {
           </ol>
           <p className="card__note">
             L<sub>i</sub> is every node at distance exactly i from {start}: the fewest edges on any
-            path to it. No node is in two layers, and a node in no layer cannot be reached.
+            path to it. No node is in two layers, and a node in no layer cannot be reached. CLRS
+            (§22.2) builds the same layers with a queue and stores the layer of v as v.d. Its white,
+            gray and black are undiscovered, discovered and explored here.
           </p>
         </div>
 

@@ -16,6 +16,16 @@ import type { Edge, Graph, NeighbourOrder, NodeId } from './graph.ts';
  * invisible, and on a graph in pieces it is the whole point, so it is always on.
  *
  * Like BFS, the run is a list of events and every picture is a replay.
+ *
+ * This is CLRS's DFS(G) and DFS-VISIT (§22.3), less the bookkeeping. CLRS
+ * paints a node white before its call, gray while the call is on the stack
+ * and black once it returns; here that is unexplored, explored and finished.
+ * CLRS also stamps each node with a discovery time u.d and a finishing time
+ * u.f from one clock, which `timestamps` reads back off the events. The edge
+ * kinds below are for undirected graphs, where CLRS Theorem 22.10 says every
+ * edge is a tree edge or a back edge. On a directed graph `ancestor` is still
+ * exactly CLRS's back edge, but `descendant` would lump forward and cross
+ * edges together, and no page here asks it to tell them apart.
  */
 
 export type DfsEvent =
@@ -142,6 +152,25 @@ export function dfsStateAt(g: Graph, events: readonly DfsEvent[], step: number):
     } else done = true;
   }
   return { explored, finished, stack, parent, component, edge, back, done };
+}
+
+/**
+ * CLRS's timestamps: one clock, ticking once when a call starts (u.d, the
+ * discovery time) and once when it returns (u.f, the finishing time), so the
+ * stamps run from 1 to 2n. Read off the run's events, not kept by the search.
+ */
+export function timestamps(run: DfsResult): {
+  readonly d: ReadonlyMap<NodeId, number>;
+  readonly f: ReadonlyMap<NodeId, number>;
+} {
+  const d = new Map<NodeId, number>();
+  const f = new Map<NodeId, number>();
+  let time = 0;
+  for (const e of run.events) {
+    if (e.k === 'enter') d.set(e.u, ++time);
+    else if (e.k === 'exit') f.set(e.u, ++time);
+  }
+  return { d, f };
 }
 
 /** True if a is b or an ancestor of b in the tree given by `parent`. */
