@@ -8,7 +8,8 @@ import { Replay } from '../components/Replay';
  *
  * Binary search, as in lecture: test the middle of the strengths still
  * possible, and throw away half of them either way. With boards to spare that
- * is ⌈log₂(n + 1)⌉ tests. Then the same procedure with a fixed number of
+ * is ⌈log₂(n + 1)⌉ tests, and the decision-tree count (CLRS §8.1) shows no
+ * plan does better. Then the same procedure with a fixed number of
  * boards, so the reader can watch it run out and see exactly what is left
  * unknown when it does.
  */
@@ -85,7 +86,8 @@ export function ManyBoards() {
             <p>
               {n + 1} possible strengths, and each test keeps at most half of them (rounding up).
               After t tests at most ⌈(n + 1)/2ᵗ⌉ are left, so it takes ⌈log₂(n + 1)⌉ = {log2Ceil(n)}{' '}
-              tests to get down to one.
+              tests to get down to one. CLRS Exercise 2.3-5 asks for the same argument about binary
+              search in a sorted array, as Θ(lg n). CLRS writes lg for log₂.
             </p>
             <p className="card__note">
               {ev.worstAt.length <= 8
@@ -118,6 +120,22 @@ export function ManyBoards() {
           <p className="card__note">
             Set the boards to 2 and pick a low strength, then a high one. High strengths are found
             without a single break; low ones use up both boards early.
+          </p>
+        </div>
+
+        <div className="card">
+          <h2 className="card__title">Why no plan does better</h2>
+          <p>
+            Every test has two answers, holds or breaks. Two strengths that get the same answer to
+            every test cannot be told apart, so each of the {n + 1} strengths needs its own string
+            of answers. t tests give at most 2ᵗ different strings: {2 ** (log2Ceil(n) - 1)} for t ={' '}
+            {log2Ceil(n) - 1}, too few for {n + 1}. So every plan needs {log2Ceil(n)} tests for some
+            strength, however many boards it has. Halving, with boards to spare, needs no more.
+          </p>
+          <p className="card__note">
+            This is the decision-tree argument CLRS §8.1 uses for sorting: draw the plan as a tree
+            with a test at each fork and a strength at each leaf. A tree of height h has at most 2ʰ
+            leaves.
           </p>
         </div>
 

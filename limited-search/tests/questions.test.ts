@@ -47,6 +47,23 @@ function walk(list: readonly number[], n: number, s: number): number {
   }
   return tests;
 }
+/** Halving's worst case, walked by hand: the middle of lo..hi each time. */
+function worstOfHalving(n: number): number {
+  let most = 0;
+  for (let s = 0; s <= n; s++) {
+    let lo = 0;
+    let hi = n;
+    let tests = 0;
+    while (lo < hi) {
+      const w = lo + Math.ceil((hi - lo) / 2);
+      tests++;
+      if (w > s) hi = w - 1;
+      else lo = w;
+    }
+    most = Math.max(most, tests);
+  }
+  return most;
+}
 const slowWorst = (list: readonly number[], n: number) =>
   Math.max(...Array.from({ length: n + 1 }, (_, s) => walk(list, n, s)));
 
@@ -58,11 +75,11 @@ describe('shape', () => {
     expect(new Set(places).size).toBeGreaterThan(2);
   });
 
-  it('ids unique, every tier populated, 8 to 12 questions', () => {
+  it('ids unique, every tier populated, 8 to 13 questions', () => {
     expect(new Set(QUESTIONS.map((q) => q.id)).size).toBe(QUESTIONS.length);
     for (const t of TIERS) expect(questionsIn(t).length).toBeGreaterThanOrEqual(3);
     expect(QUESTIONS.length).toBeGreaterThanOrEqual(8);
-    expect(QUESTIONS.length).toBeLessThanOrEqual(12);
+    expect(QUESTIONS.length).toBeLessThanOrEqual(13);
   });
 
   it('choices have one right option, multis at least one', () => {
@@ -145,6 +162,21 @@ describe('written claims', () => {
 
   it('add-front: 4 at the front raises the worst case', () => {
     expect(slowWorst([4, 8, 16, 24], 30)).toBeGreaterThan(slowWorst([8, 16, 24], 30));
+  });
+
+  it('no-plan-beats: the counts in the options, and the floor they argue', () => {
+    // One test fewer than halving needs at n = 100, and how few answers that allows.
+    let t = 0;
+    while (2 ** t < 101) t++;
+    const opts = options('no-plan-beats');
+    expect(opts[0]?.ok).toBe(true);
+    expect(opts[0]?.t).toContain(`${t - 1} tests`);
+    expect(opts[0]?.t).toContain(`= ${2 ** (t - 1)} different ways`);
+    expect(2 ** (t - 1)).toBeLessThan(101);
+    // At n = 63 there are 64 strengths, and six halvings are just enough.
+    expect(opts[3]?.why).toContain('halving needs 6 tests');
+    expect(2 ** 6).toBe(64);
+    expect(worstOfHalving(63)).toBe(6);
   });
 
   it('list-30-where: the counts quoted in the options', () => {

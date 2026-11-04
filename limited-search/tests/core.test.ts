@@ -94,6 +94,24 @@ describe('the evaluator', () => {
     }
   });
 
+  it('with plenty of boards no plan beats halving (the decision-tree count, CLRS §8.1)', () => {
+    // best[m]: the fewest tests that pin down one of m consecutive strengths in the
+    // worst case, over every plan, when boards are never short. A test splits the m
+    // into a part that breaks (size b) and a part that holds (size m - b).
+    const best = [0, 0];
+    for (let m = 2; m <= 301; m++) {
+      let low = Infinity;
+      for (let b = 1; b < m; b++) low = Math.min(low, 1 + Math.max(best[b] ?? 0, best[m - b] ?? 0));
+      best.push(low);
+    }
+    for (let n = 1; n <= 300; n++) {
+      expect(best[n + 1], `n = ${n}`).toBe(evaluate(halving(), n).worst);
+      // and the count itself: 2^(t - 1) answers are too few for n + 1 strengths
+      expect(2 ** (log2Ceil(n) - 1)).toBeLessThan(n + 1);
+      expect(2 ** log2Ceil(n)).toBeGreaterThanOrEqual(n + 1);
+    }
+  });
+
   it('halving with two boards fails, and says where and why', () => {
     const ev = evaluate(halving(2), 100);
     expect(ev.ok).toBe(false);
