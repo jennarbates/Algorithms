@@ -82,6 +82,13 @@ const halvingTwoLeft = (() => {
   return o.kind === 'stranded' ? o.hi - o.lo + 1 : -1;
 })();
 const skipFail = evaluate(stride(2), 20).failure;
+/** The claim in `no-plan-beats`: one test fewer than halving at n = 100. */
+const fewer = halving100.worst - 1;
+const strings = 2 ** fewer;
+const halving63 = evaluate(halving(), 63);
+const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+/** 2 to the power k, written 2ᵏ with superscript digits. */
+const twoTo = (k: number) => `2${[...String(k)].map((d) => SUP[Number(d)] ?? d).join('')}`;
 
 const L30 = [8, 16, 24] as const;
 const w30 = worstOf(L30, 30);
@@ -172,6 +179,34 @@ export const QUESTIONS: readonly Question[] = [
     ],
     close:
       'Plenty of boards: about log₂ n tests. One board: n. Two boards sit somewhere between, and where is the question the page leaves you.',
+  },
+  {
+    id: 'no-plan-beats',
+    tier: 1,
+    kind: 'choice',
+    tests: 'why nothing beats halving (CLRS §8.1)',
+    prompt: `Still as many boards as you like, n = 100. Someone says they have a plan that always finds the strength in ${fewer} tests. Why can no such plan exist?`,
+    options: [
+      {
+        t: `${fewer} tests, each one holding or breaking, can come out at most ${twoTo(fewer)} = ${strings} different ways, and the 101 strengths each need a different way`,
+        ok: true,
+        why: `Two strengths that get the same answer to every test cannot be told apart. ${strings} < 101, so some two always share. This is the decision-tree argument CLRS §8.1 uses for sorting, with strengths in place of orderings.`,
+      },
+      {
+        t: `${fewer} tests would break more boards than there are`,
+        why: 'There are as many boards as you like. Running out is not what stops it.',
+      },
+      {
+        t: 'Halving is the only plan there is, and it needs more',
+        why: 'There are many plans: any weight can go first. The argument has to rule out all of them at once, which counting the possible answers does.',
+      },
+      {
+        t: '100 is not a power of 2',
+        why: `What matters is the number of strengths, 101. At n = 63 there are 64, and halving needs ${halving63.worst} tests there: ${twoTo(halving63.worst)} = ${2 ** halving63.worst} is just enough.`,
+      },
+    ],
+    close:
+      'Counting the possible answers gives a floor for every plan at once, whatever the number of boards. With plenty of boards, halving meets it.',
   },
   {
     id: 'halving-two',
