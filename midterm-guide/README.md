@@ -2,7 +2,7 @@
 
 The study guide for lectures 1 to 10 as one page: ten lessons, a math toolkit, a
 proof cheat sheet and a 12-problem practice exam. Answers stay hidden until you
-ask for them, and every worked example runs step by step.
+ask for them, and the guide's algorithms run step by step.
 
 | Part | What it does |
 | --- | --- |

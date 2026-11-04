@@ -522,14 +522,14 @@ page = f"""<!DOCTYPE html>
 <main class="main" id="main">
 <section class="view" data-view="start" hidden><div class="view__grid"><div class="view__main">
   <header class="view__head home"><div class="eyebrow">Lectures 1 to 10</div><h1>CS 311 Midterm 1 Learning Guide</h1>
-  <p class="home__lead">Every lesson from the guide, with the answers hidden until you ask and every example turned into something you can step through.</p>
+  <p class="home__lead">Every lesson from the guide, with the answers hidden until you ask and the guide's algorithms turned into simulators you can step through.</p>
   <div id="home-resume" class="home__cta"></div></header>
   <div id="home-stats" class="stats"></div>
   <h2 class="home__h">Lessons</h2>
   <div id="home-lessons" class="lessons"></div>
   <h2 class="home__h">How to use this guide</h2>
   {how}
-  <aside class="callout"><p><strong>What is different on this page.</strong> Every example has a simulator: press Next to advance, or turn on Quiz me to predict each step before you see it. Mark each question Got it or Review later, and the ones you flag collect in the <a href="#review">Review queue</a>. Your progress and exam answers stay in this browser.</p></aside>
+  <aside class="callout"><p><strong>What is different on this page.</strong> The guide's pictures are now simulators. On most of them you press Next to advance, or turn on Quiz me to predict each step before you see it. Mark each question Got it or Review later, and the ones you flag collect in the <a href="#review">Review queue</a>. Your progress and exam answers stay in this browser.</p></aside>
 </div></div></section>
 {views_html}
 <section class="view" data-view="cards" hidden><div class="view__grid"><div class="view__main"><header class="view__head"><div class="eyebrow">State them exactly</div><h1>Flashcards</h1></header><div id="cards-root"></div></div></div></section>
