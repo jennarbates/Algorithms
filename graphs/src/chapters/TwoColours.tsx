@@ -206,7 +206,8 @@ export function TwoColours() {
           <p className="card__note">
             {checks.length} of {g.edges.length} edges checked. Only one kind of edge can fail: BFS
             never lets an edge skip a layer, so an edge joins neighbouring layers (two colours) or
-            one layer (one colour).
+            one layer (one colour). Blue and orange are the two sides. CLRS’s white, gray and black
+            are something else: how far its search has got with a node.
           </p>
         </div>
 

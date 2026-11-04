@@ -259,7 +259,8 @@ export function Forward() {
           <p className="card__note">
             An order with every edge forward cannot contain a cycle, since a cycle has to come back.
             And on a DAG this algorithm never gets stuck, and with the right data structures it runs
-            in O(m + n).
+            in O(m + n). CLRS (§22.4) sorts another way, by running DFS and listing the nodes in
+            decreasing finishing time. This method is its Exercise 22.4-5.
           </p>
         </div>
 
@@ -269,7 +270,7 @@ export function Forward() {
             In a directed graph, a strongly connected component is a largest set of nodes that can
             all reach each other. Squash each one to a single node and what is left is always a DAG:
             a cycle through two components would make them one. Tarjan (1972) finds them all in O(m
-            + n).
+            + n). CLRS (§22.5) does it in the same time with two depth-first searches.
           </p>
         </div>
       </aside>

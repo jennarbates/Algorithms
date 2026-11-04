@@ -1,8 +1,8 @@
 import { bfs } from '../core/bfs.ts';
-import { dfs } from '../core/dfs.ts';
-import { countOrders, maxRestarts } from '../core/directed.ts';
+import { dfs, timestamps } from '../core/dfs.ts';
+import { byFinishing, countOrders, inDegrees, maxRestarts, topoSort } from '../core/directed.ts';
 import type { NodeId } from '../core/graph.ts';
-import { ARPANET, CHAIN, PASTA, SCATTER, TOWN } from './graphs.ts';
+import { ARPANET, BOWTIE, CHAIN, COURSES, PASTA, SCATTER, TOWN, nameOf } from './graphs.ts';
 
 /**
  * The practice questions, one tier per chapter.
@@ -25,6 +25,10 @@ import { ARPANET, CHAIN, PASTA, SCATTER, TOWN } from './graphs.ts';
  * The lecture clicker questions are here, word for word where the wording is
  * the point, marked `clicker` with the slide they come from. The slides do not
  * print their answers; the answers here are worked out and then checked.
+ *
+ * Some questions are lifted from the exercises of CLRS (third edition) chapter
+ * 22, and some closes name where CLRS says the same thing differently. Each
+ * one says which exercise or theorem it is, and the README lists them.
  *
  * `../worksheets/graphs.mjs` imports this file directly (Node runs it with the
  * types stripped), so the printable workbook asks exactly these questions.
@@ -143,6 +147,20 @@ const pastaOrders = countOrders(PASTA.graph);
 const chainRestarts = maxRestarts(CHAIN.graph);
 const dagEdges = (n: number) => (n * (n - 1)) / 2;
 
+const arpanetN = ARPANET.graph.nodes.length;
+const arpanetM = ARPANET.graph.edges.length;
+
+const bowtieRun = dfs(BOWTIE.graph, ['R']);
+const bowtie = timestamps(bowtieRun);
+const stamp = (n: NodeId) => `${bowtie.d.get(n) ?? 0}/${bowtie.f.get(n) ?? 0}`;
+const bowtieSd = bowtie.d.get('S') ?? 0;
+
+const course = (n: NodeId) => nameOf(COURSES, n);
+const coursesPage = topoSort(COURSES.graph).order;
+const coursesClrs = byFinishing(COURSES.graph);
+const coursesFirstDone = coursesClrs[coursesClrs.length - 1] as NodeId;
+const coursesIn = inDegrees(COURSES.graph);
+
 export const QUESTIONS: readonly Question[] = [
   // --- Tier 1: the expanding wave ----------------------------------------------
   {
@@ -245,6 +263,35 @@ export const QUESTIONS: readonly Question[] = [
       'The running-time proof is exactly this count, done in general: each line runs at most n times or at most 2m times, so the whole thing is O(m + n).',
   },
   {
+    id: 'matrix-bfs',
+    tier: 1,
+    kind: 'choice',
+    tests: 'what the O(m + n) bound assumes about how the graph is stored',
+    prompt:
+      'Store the graph as an adjacency matrix instead of adjacency lists: an n × n table with a 1 in row v, column w when (v, w) is an edge. Now BFS can only find the neighbours of v by reading all of row v. What is its running time?',
+    options: [
+      {
+        t: 'O(m + n), as before.',
+        why: 'The 2m in that bound counts neighbours handed over one at a time by a list. A row has n entries whatever the degree of v, and every one has to be read.',
+      },
+      {
+        t: 'O(n²)',
+        ok: true,
+        why: `Each node’s row is read once, when that node is explored: n rows of n entries. On the 1970 Internet that is ${arpanetN * arpanetN} entries read, against ${2 * arpanetM} entries in all the adjacency lists put together.`,
+      },
+      {
+        t: 'O(nm)',
+        why: 'That would be reading a whole row once per edge. Each row is read once, when its node is explored.',
+      },
+      {
+        t: 'O(n)',
+        why: 'That is one row. BFS reads a row for every node it explores.',
+      },
+    ],
+    close:
+      'This is CLRS Exercise 22.2-4. CLRS §22.1 makes the same trade for storage: lists take Θ(m + n) space and a matrix Θ(n²) whatever m is. (CLRS writes Θ(V + E) and Θ(V²), with V and E standing for n and m.) On a sparse graph like the 1970 Internet the lists win. On a dense one m is close to n² and the two come to the same.',
+  },
+  {
     id: 'layer-order',
     tier: 1,
     kind: 'choice',
@@ -272,7 +319,7 @@ export const QUESTIONS: readonly Question[] = [
       },
     ],
     close:
-      'Layers are a property of the graph. The tree is a property of the run. Anything you prove about BFS layers holds however the run is ordered.',
+      'Layers are a property of the graph. The tree is a property of the run. Anything you prove about BFS layers holds however the run is ordered. CLRS Exercise 22.2-5 asks for exactly this: the distances BFS finds do not depend on the order, and the tree can.',
   },
   {
     id: 'no-skip',
@@ -301,7 +348,7 @@ export const QUESTIONS: readonly Question[] = [
       },
     ],
     close:
-      'This fact does real work later: the bipartite test in chapter 3 rests on it. An edge joins the same layer or neighbouring layers, and nothing else.',
+      'This fact does real work later: the bipartite test in chapter 3 rests on it. An edge joins the same layer or neighbouring layers, and nothing else. CLRS states it as Lemma 22.1, δ(s, v) ≤ δ(s, u) + 1 for every edge (u, v), and in an undirected graph that holds both ways round.',
   },
   {
     id: 'arpanet-false',
@@ -347,6 +394,33 @@ export const QUESTIONS: readonly Question[] = [
     pick: 'dfs-tree',
     close:
       'DFS goes as deep as it can before it backs up, so its tree is long and thin where BFS’s is short and wide. Both have n - 1 edges on a connected graph.',
+  },
+  {
+    id: 'bowtie-stamps',
+    tier: 2,
+    kind: 'number',
+    tests: 'CLRS’s discovery and finishing times',
+    prompt:
+      'CLRS runs DFS with a clock that ticks once when a call starts and once when it returns. Node u is stamped u.d when DFS(u) starts and u.f when it returns, so the stamps run from 1 to 2n. Run recursive DFS on the two triangles from R, neighbours in alphabetical order. What is S.d?',
+    graphId: 'bowtie',
+    unit: 'S.d =',
+    answer: bowtieSd,
+    why: `R starts at ${bowtie.d.get('R')} and calls P at ${bowtie.d.get('P')}, which calls Q at ${bowtie.d.get('Q')}. Q finds nothing new and returns at ${bowtie.f.get('Q')}, P returns at ${bowtie.f.get('P')}, and only then does the loop in DFS(R) reach S, at ${bowtieSd}.`,
+    near: [
+      {
+        v: bowtieRun.order.indexOf('S') + 1,
+        why: 'That is the place of S in the order DFS explores nodes: R, P, Q, S. The clock also ticks when a call returns, and DFS(Q) and DFS(P) both return before DFS(S) starts.',
+      },
+      {
+        v: bowtie.f.get('S') ?? 0,
+        why: 'That is S.f, when DFS(S) returns, after T, U and V have each been started and finished inside it.',
+      },
+      {
+        v: bowtie.f.get('P') ?? 0,
+        why: 'That is P.f, when DFS(P) returns. S starts on the next tick.',
+      },
+    ],
+    close: `A node’s two stamps bracket the stamps of everything below it: S is ${stamp('S')}, and T, U and V all fall inside. P is ${stamp('P')}, and P and S never overlap, since neither is below the other. That is CLRS’s parenthesis theorem (Theorem 22.7): two intervals are nested or apart, never half overlapping. The lectures do not timestamp, but CLRS builds its topological sort on u.f.`,
   },
   {
     id: 'degree-sum',
@@ -408,7 +482,7 @@ export const QUESTIONS: readonly Question[] = [
       },
     ],
     close:
-      'The page’s traversal counts every put. Run it on the 8-node graph and check C: each node other than the start goes in exactly as many times as it has edges.',
+      'The page’s traversal counts every put. Run it on the 8-node graph and check C: each node other than the start goes in exactly as many times as it has edges. CLRS’s BFS (§22.2) marks a node gray as it goes into the queue instead, so there nothing goes in twice and B would be false. The code here marks on the way out, which is what lets the same code be DFS with a stack.',
   },
   {
     id: 'scatter-pieces',
@@ -436,7 +510,7 @@ export const QUESTIONS: readonly Question[] = [
       },
     ],
     close:
-      'Finding every component is still O(m + n) in total. Each search costs time for its own component’s nodes and edges, and the components share none.',
+      'Finding every component is still O(m + n) in total. Each search costs time for its own component’s nodes and edges, and the components share none. CLRS’s DFS always runs this loop, and its Exercise 22.3-12 is this question: the depth-first forest has one tree per component.',
   },
   {
     id: 'stack-swap',
@@ -467,6 +541,38 @@ export const QUESTIONS: readonly Question[] = [
       'The whole difference between breadth first and depth first is which end of A you take from.',
   },
   {
+    id: 'eager-stack',
+    tier: 2,
+    kind: 'choice',
+    tests: 'why the stack version marks a node when it comes out, not when it goes in',
+    prompt:
+      'A common rewrite of the traversal marks w as soon as it is put in A, and never puts in a node that is already marked, so nothing goes in twice. With A a queue that is still BFS. Make A a stack and run it on the 8-node graph from 1, neighbours in increasing order. Is the tree it builds a depth-first tree?',
+    graphId: 'eight',
+    quote:
+      'mark s; put s in A\nwhile A is not empty\n  take a node v from A\n  for each edge (v, w)\n    if w is not marked\n      mark w; put w in A; add (v, w) to T',
+    options: [
+      {
+        t: 'Yes. It is the page’s stack version with the duplicates left out.',
+        why: 'Leaving out the duplicates changes who gets to be a parent. The page’s version lets the newest copy of a node win. This one fixes the parent at the first put, which is the oldest.',
+      },
+      {
+        t: 'No, because it explores different nodes.',
+        why: 'It explores exactly what 1 can reach, like every version. What goes wrong is the shape of the tree.',
+      },
+      {
+        t: 'No. Taking 1 marks both 2 and 3 and puts them in, so both hang from 1, and the edge 2–3 then joins two nodes neither of which is an ancestor of the other.',
+        ok: true,
+        why: 'In a depth-first tree that cannot happen: whichever of 2 and 3 is explored first would find the other inside its own call. CLRS Theorem 22.10 says a DFS of an undirected graph has only tree edges and back edges, and 2–3 is neither.',
+      },
+      {
+        t: 'Yes, since any search that uses a stack is depth first.',
+        why: 'The stack only decides which node is taken next. Marking on the way in fixes each parent too early, before the search has gone deep.',
+      },
+    ],
+    close:
+      'Where the mark goes matters. CLRS’s BFS marks a node gray as it joins the queue, and for a queue that is fine. CLRS Exercise 22.3-7 asks for DFS with a stack instead of recursion, and the safe way is the page’s: mark a node when it comes out. The page’s stack version is then recursive DFS with every neighbour list read back to front.',
+  },
+  {
     id: 'dfs-non-tree',
     tier: 2,
     kind: 'choice',
@@ -492,7 +598,7 @@ export const QUESTIONS: readonly Question[] = [
       },
     ],
     close:
-      'BFS non-tree edges run sideways, within a layer or to the next one. DFS non-tree edges run up and down one branch. Same graph, opposite shapes.',
+      'BFS non-tree edges run sideways, within a layer or to the next one. DFS non-tree edges run up and down one branch. Same graph, opposite shapes. CLRS calls these back edges, and its Theorem 22.10 is this claim: in a DFS of an undirected graph every edge is a tree edge or a back edge.',
   },
 
   // --- Tier 3: two colours ---------------------------------------------------------
@@ -610,6 +716,35 @@ export const QUESTIONS: readonly Question[] = [
     close:
       'Plenty of problems come with the two sides built in: students and colleges, clients and servers, jobs and machines. Then the colouring is free.',
   },
+  {
+    id: 'wrestlers',
+    tier: 3,
+    kind: 'choice',
+    tests: 'recognising the two-colour test in a problem that does not say "graph"',
+    prompt:
+      'There are n professional wrestlers and a list of r pairs of them who are rivals. Can each wrestler be made a "babyface" (good guy) or a "heel" (bad guy) so that every rivalry is between a babyface and a heel? Which of these answers it, and gives the split, in O(n + r) time?',
+    options: [
+      {
+        t: 'Run the BFS two-colour test once, from any wrestler.',
+        why: 'Nothing says every wrestler is linked to every other through rivalries. One search only colours its own piece, and wrestlers in the other pieces are never reached.',
+      },
+      {
+        t: 'Make a node for each wrestler and an edge for each rivalry. While some wrestler has no colour, run the BFS two-colour test from them. Blue are babyfaces, orange are heels.',
+        ok: true,
+        why: 'The question is exactly "is this graph bipartite", on n nodes and r edges. Each search pays only for its own piece, so together they are O(n + r), and a same-layer edge in any piece means the answer is no.',
+      },
+      {
+        t: 'Try every way of splitting them, 2ⁿ in all.',
+        why: 'Correct, but exponential. The test never guesses: once one wrestler in a piece is fixed, every rival’s side is forced.',
+      },
+      {
+        t: 'Run Gale–Shapley, with babyfaces proposing to heels.',
+        why: 'Who is a babyface is what has to be found, not something given, and nobody has preferences. This is a colouring problem, not a matching one.',
+      },
+    ],
+    close:
+      'This is CLRS Exercise 22.2-7. The two sides are not handed over, the way students and colleges were. The test finds them, or finds an odd cycle of feuds (three wrestlers who all feud with one another, say), and no split can satisfy that.',
+  },
 
   // --- Tier 4: all edges forward --------------------------------------------------
   {
@@ -661,6 +796,35 @@ export const QUESTIONS: readonly Question[] = [
     ],
     close:
       'To check an order, look at every edge and make sure it points forward. One edge pointing back is enough to rule it out, and naming that edge is the whole explanation.',
+  },
+  {
+    id: 'dfs-topo',
+    tier: 4,
+    kind: 'choice',
+    tests: 'CLRS’s topological sort, by finishing time',
+    prompt: `CLRS sorts a DAG another way: run DFS over the whole graph, starting a new search at each unexplored node in turn, and as each call returns put its node at the front of a list. Run it on the courses, taking nodes and neighbours in the order ${COURSES.graph.nodes.map(course).join(', ')}. What comes out?`,
+    graphId: 'courses',
+    options: [
+      {
+        t: `${coursesPage.map(course).join(', ')}, the same as the page’s sort, since a DAG has only one right order.`,
+        why: `These courses have ${countOrders(COURSES.graph)} valid orders, and the two methods need not land on the same one. Math 132 is started first, but its call returns before CS 187 is even started.`,
+      },
+      {
+        t: `${coursesClrs.map(course).join(', ')}: a different order from the page’s, and just as valid.`,
+        ok: true,
+        why: 'When DFS looks along an edge (u, v), v is either new, so it finishes inside the call for u, or finished already. It cannot still be running, since that would make a cycle. So every course finishes before anything that leads to it, and the last to finish goes first.',
+      },
+      {
+        t: `${[...coursesClrs].reverse().map(course).join(', ')}: the courses in the order their calls return.`,
+        why: `That is backwards. ${course(coursesFirstDone)} finishes first because no arrow leaves it, so it belongs at the end. Each finished course goes on the front of the list, and the last one to finish ends up first.`,
+      },
+      {
+        t: 'Nothing: DFS needs a single start, and two courses have no prerequisites.',
+        why: 'CLRS’s DFS loops over every node and starts a new tree at any it has not reached, the same loop that finds every component in chapter 2.',
+      },
+    ],
+    close:
+      'This is CLRS’s TOPOLOGICAL-SORT (§22.4, Theorem 22.12). It rests on Lemma 22.11: a directed graph is a DAG exactly when DFS finds no back edge, no edge into a call that is still running. The page’s sort, always taking a node nothing points into, is the lectures’ own and CLRS Exercise 22.4-5. Both are O(m + n), and both are right.',
   },
   {
     id: 'dag-max-edges',
@@ -739,7 +903,7 @@ export const QUESTIONS: readonly Question[] = [
       },
     ],
     close:
-      'Every directed graph is a DAG of strongly connected pieces. Knowing that shape is often most of an algorithm.',
+      'Every directed graph is a DAG of strongly connected pieces. Knowing that shape is often most of an algorithm. CLRS Lemma 22.13 is the same argument, and CLRS §22.5 finds the pieces with two depth-first searches, one on G and one on G with every edge turned round.',
   },
   {
     id: 'source-exists',
@@ -768,6 +932,35 @@ export const QUESTIONS: readonly Question[] = [
     ],
     close:
       'With this fact the sort cannot get stuck on a DAG. Take a source, delete it, and what is left is still a DAG, so it has a source too. That is the induction.',
+  },
+  {
+    id: 'linear-sort',
+    tier: 4,
+    kind: 'choice',
+    tests: 'making the source-removal sort O(m + n)',
+    prompt:
+      'CLRS Exercise 22.4-5 asks for the page’s sort, repeatedly taking a node with no incoming edges and deleting it, in O(m + n) time. What makes it that fast?',
+    options: [
+      {
+        t: 'Before each step, scan every node left for one with no incoming edges.',
+        why: 'Each scan has to count incoming edges again, up to O(m + n) a time, and there are n steps.',
+      },
+      {
+        t: 'Sort the nodes once by how many incoming edges they start with, and place them in that order.',
+        why: `The counts change as nodes are deleted, so the starting ones mislead. CS 311 starts with ${coursesIn.get('C311')} incoming edge and CS 250 with ${coursesIn.get('C250')}, so CS 311 would go first, but CS 250 → CS 311 says it comes after.`,
+      },
+      {
+        t: 'Nothing can: just finding a source takes O(n), so n steps cost O(n²).',
+        why: 'Finding a source is O(1) if sources are kept in a list as they appear. The work then goes into keeping the counts up to date, and that is one subtraction per edge.',
+      },
+      {
+        t: 'Count each node’s incoming edges once. Keep the nodes whose count is 0 in a list. Placing a node subtracts one from the count of each node it points to, and any count that reaches 0 joins the list.',
+        ok: true,
+        why: 'Counting is O(m + n). Each edge is subtracted once, when the node it leaves is placed, and each node joins and leaves the list once. O(m + n) in all.',
+      },
+    ],
+    close:
+      'If there is a cycle, the list runs dry while nodes are left, which is "stuck" in chapter 4, and the nodes left over contain the cycle. CLRS asks about that case in the same exercise. The page’s own code just rescans, since its graphs are small.',
   },
 ];
 

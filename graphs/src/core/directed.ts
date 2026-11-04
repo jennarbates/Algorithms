@@ -1,4 +1,5 @@
 import { bfs } from './bfs.ts';
+import { dfs } from './dfs.ts';
 import { edgeKey, reversed } from './graph.ts';
 import type { Edge, Graph, NodeId } from './graph.ts';
 
@@ -15,6 +16,9 @@ import type { Edge, Graph, NodeId } from './graph.ts';
  * right, and the page lets the reader choose. When none qualifies the graph has
  * a cycle among what is left, and `cycleAmong` finds it, because "stuck" is a
  * claim and a cycle is the evidence.
+ *
+ * CLRS §22.4 sorts the other way, and `byFinishing` is its TOPOLOGICAL-SORT,
+ * kept for comparing the two. CLRS Exercise 22.4-5 is this file's sort.
  */
 
 export const reachableFrom = (g: Graph, s: NodeId): NodeId[] => bfs(g, s).layers.flat();
@@ -72,6 +76,19 @@ export function topoSort(
 }
 
 export const isDag = (g: Graph): boolean => topoSort(g).ok;
+
+/**
+ * CLRS's TOPOLOGICAL-SORT (§22.4): run DFS over the whole graph, starting a new
+ * tree at each unexplored node in node order, and put each node at the front
+ * of the list as its call returns. So the list is in decreasing finishing
+ * time. On a DAG, every edge (u, v) has v finishing before u (CLRS Theorem
+ * 22.12), so every edge points forward. On a graph with a cycle it still
+ * returns a list, just not a valid one; `checkOrder` says so.
+ */
+export function byFinishing(g: Graph): NodeId[] {
+  const finished = dfs(g).events.flatMap((e) => (e.k === 'exit' ? [e.u] : []));
+  return finished.reverse();
+}
 
 /**
  * A directed cycle among `nodes`, all of which have an edge coming in from

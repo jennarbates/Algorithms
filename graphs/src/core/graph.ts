@@ -6,6 +6,11 @@
  * a graph is drawn; positions live with the content, next to the graph they
  * belong to.
  *
+ * No edge may join a node to itself, directed or not. CLRS Appendix B.4 allows
+ * such self-loops in a directed graph (and counts one as a cycle of length 1
+ * and, in DFS, a back edge); none of the lectures' graphs has one, so `graph`
+ * refuses them rather than handle a case nothing uses.
+ *
  * **Neighbour order is part of the input.** BFS finds the same layers whatever
  * order it looks at neighbours in, but the tree it builds, the order DFS walks,
  * and which source a topological sort peels first all depend on it. So the
