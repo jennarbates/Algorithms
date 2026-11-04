@@ -2,7 +2,7 @@
   "name": "midterm-guide",
   "version": "0.1.0",
   "private": true,
-  "description": "The CS 311 Midterm 1 learning guide as one page: ten lessons with hidden answers, a simulator for every worked example, flashcards and a timed practice exam.",
+  "description": "The CS 311 Midterm 1 learning guide as one page: ten lessons with hidden answers, simulators for its algorithms, flashcards and a timed practice exam.",
   "scripts": {
     "build": "python3 build.py",
     "test": "node test.js"
